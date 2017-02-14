@@ -1,0 +1,15 @@
+README.rst
+setup.py
+bplogofuntest/__init__.py
+bplogofuntest/bplogofuntest.py
+bplogofuntest/nsb_entropy.py
+bplogofuntest/seq.py
+bplogofuntest.egg-info/PKG-INFO
+bplogofuntest.egg-info/SOURCES.txt
+bplogofuntest.egg-info/dependency_links.txt
+bplogofuntest.egg-info/entry_points.txt
+bplogofuntest.egg-info/requires.txt
+bplogofuntest.egg-info/top_level.txt
+bplogofuntest/eps/Template.eps
+bplogofuntest/eps/inverse_template.eps
+src/exact.c
