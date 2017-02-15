@@ -166,7 +166,7 @@ def logo_output(seqStruct, info, height_dict, file_prefix, inverse_info = {}, in
                 coord_length = len(str(coord))
             logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
             for aainfo in sorted(logo_outputDict[base][coord].items(), key = itemgetter(1)):
-                if (aainfo[1] < 0.00001 or mt.isnan(aainfo[1])):
+                if (aainfo[1] < 0.01 or mt.isnan(aainfo[1])):
                     continue
                 logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
             logodata += "grestore\nshift\n"
@@ -188,7 +188,7 @@ def logo_output(seqStruct, info, height_dict, file_prefix, inverse_info = {}, in
                 coord_length = len(str(coord))
             logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
             for aainfo in sorted(inverse_logo_outputDict[base][coord].items(), key = itemgetter(1)):
-                if (aainfo[1] < 0.00001 or mt.isnan(aainfo[1])):
+                if (aainfo[1] < 0.01 or mt.isnan(aainfo[1])):
                     continue
                 logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
             logodata += "grestore\nshift\n"
@@ -396,11 +396,11 @@ def main():
                 for aa_class in height_class:
                     height_dict_inverse[singles][state][aa_class] = height_class[aa_class]/sum(height_class.values())
 
-    #def text_output(seqStruct, info, height, inverse_info = {}, inverse_height = {}):
     if (args.stdout):
         text_output(seqStructInfo, info, height_dict)
-#def logo_output(seqStruct, info, height_dict, file_prefix, inverse_info = {}, inverse_height = {}, p = {}):
+
     if (args.logo):
         logo_output(seqStructInfo, info, height_dict, args.file_preifx, info_inverse, height_dict_inverse)
+
 if __name__ == "__main__":
     main()

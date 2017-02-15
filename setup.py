@@ -10,7 +10,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 #bpexact_ext = Extension('bplogofun.exact', ['src/exact.c'])
 
 setup(name = "bplogofuntest",
-      install_requires=['statsmodels', 'numpy', 'scipy', 'pandas', 'patsy'],
+      install_requires=['statsmodels', 'numpy', 'scipy', 'pandas', 'patsy', 'mpmath'],
       packages = ["bplogofuntest"],
       package_data={'bplogofuntest': ['eps/Template.eps', 'eps/inverse_template.eps']},
       entry_points = {

@@ -31,6 +31,7 @@ class Seq:
 
 class SeqStructure:
     def __init__(self, basepairs):
+        self.exact = []
         self.basepairs = basepairs
         self.pos = 0
         self.sequences = []
@@ -65,7 +66,7 @@ class SeqStructure:
         for p in range(numPerm):
             indices.append(self.permuted(aa_classes))
         for index in indices:
-            permStruct = SeqStructure(self.basepairs, self.basetriples)
+            permStruct = SeqStructure(self.basepairs)
             for i, seqs in enumerate(self.sequences):
                 permStruct.add_sequence(index[i], seqs.seq)
             permStructList.append(permStruct)
@@ -84,6 +85,18 @@ class SeqStructure:
                 self.permutationList = []
                 for x in perm_results:
                     self.permutationList += x
+
+    def calculate_exact(self, n):
+        p = [x/sum(list(self.functions.values())) for x in self.functions.values()]
+        exact_list = []
+        for i in range(1,n+1):
+            exact_list.append((i, p, len(self.functions.values())))
+
+        with Pool(processes=7) as pool:
+            exact_results = pool.starmap(self.exact_run, exact_list)
+
+        for x in exact_results:
+            self.exact.append(x[1])
 
     def calculate_entropy(self, permute = 0, method = "NSB", overlap = False, exact = 0, corrections = ["fdr_bh"]):
         pass
