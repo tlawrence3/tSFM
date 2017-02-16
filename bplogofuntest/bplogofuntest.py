@@ -9,7 +9,6 @@ from multiprocessing import Pool
 import argparse
 import re
 import sys
-import glob
 import math as mt
 import bplogofuntest.exact
 import bplogofuntest.nsb_entropy as nb
@@ -20,102 +19,6 @@ import time
 import pkgutil
 import bisect
 import bplogofuntest.seq as seq
-
-def parse_sequences(file_prefix, seqStruct):
-    for fn in glob.glob("{}_?.aln".format(file_prefix)):
-        match = re.search("_([A-Z])\.aln", fn)
-        aa_class = match.group(1)
-        with open(fn, "r") as ALN:
-            good = False
-            begin_seq = False
-            interleaved = False
-            seq = {}
-            for line in ALN:
-                match = re.search("^(\S+)\s+(\S+)", line)
-                if (re.search("^CLUSTAL", line)):
-                    good = True
-                    continue
-                elif (re.search("^[\s\*\.\:]+$", line) and not interleaved and begin_seq):
-                    interleaved = True
-                elif (re.search("^[\s\*\.\:]+$", line) and interleaved and begin_seq):
-                    continue
-                elif (match and not interleaved):
-                    begin_seq = True
-                    if (not good):
-                        sys.exit("File {} appears not to be a clustal file".format(fn))
-                    seq[match.group(1)] = match.group(2)
-                elif (match and interleaved):
-                    seq[match.group(1)] += match.group(2)
-        for sequence in seq.values():
-            seqStruct.add_sequence(aa_class, sequence.upper().replace("T", "U"))
-
-    print("{} alignments parsed".format(len(seqStruct.functions.keys())), file=sys.stderr)
-
-def parse_struct(struct_file, kind):
-    print("Parsing base-pair coordinates", file=sys.stderr)
-    basepairs = []
-    if (kind == "cove"):
-        ss = ""
-        pairs = defaultdict(list)
-        tarm = 0
-        stack = []
-        with open(struct_file, "r") as cove:
-            for line in cove:
-                line = line.strip()
-                ss += line.split()[1]
-        
-        state = "start"
-        for count, i in enumerate(ss):
-            if (i == ">" and (state == "start" or state == "AD")):
-                if (state == "start"):
-                    state = "AD"
-                stack.append(count)
-    
-            elif (i == "<" and (state == "AD" or state == "D")):
-                if (state == "AD"):
-                    state = "D"
-                pairs[state].append([stack.pop(), count])
-    
-            elif (i == ">" and (state == "D" or state == "C")):
-                if (state == "D"):
-                    state = "C"
-                stack.append(count)
-    
-            elif (i == "<" and (state == "C" or state == "cC")):
-                if (state == "C"):
-                    state = "cC"
-                pairs["C"].append([stack.pop(), count])
-    
-            elif (i == ">" and (state == "cC" or state == "T")):
-                if (state == "cC"):
-                    state = "T"
-                stack.append(count)
-                tarm += 1
-    
-            elif (i == "<" and (state == "T" and tarm > 0)):
-                pairs[state].append([stack.pop(), count])
-                tarm -= 1
-    
-            elif (i == "<" and (state == "T" or state == "A") and tarm == 0):
-                state = "A"
-                pairs[state].append([stack.pop(), count])
-        
-        for arm in pairs:
-            for pair in pairs[arm]:
-                basepairs.append((pair[0], pair[1]))
-        
-
-    if (kind == "text"):
-         with open(struct_file, "r") as struct:
-            for line in struct:
-                line = line.split(";")[1]
-                coords = line.split(",")
-                for coord in coords:
-                    pos = coord.split(":")
-                    pos = [int(x) for x in pos]
-                    basepairs.append((pos[0], pos[1]))
-
-    return seq.SeqStructure(basepairs)
 
 def logo_output(seqStruct, info, height_dict, file_prefix, inverse_info = {}, inverse_height = {}, p = {}):
     coord_length = 0 #used to determine eps height
@@ -272,7 +175,7 @@ def main():
     group.add_argument("-t", "--text", action="store_true", help="Structure file is in text format")
     parser.add_argument("-v","--inverse", action="store_true", help="calculate anti-determinates")
     parser.add_argument("-a", "--alpha", type=float, default=0.05, help="Alpha value used for statistical tests. Default = 0.05")
-    parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy of. Default = 10", type=int, default=10)
+    parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy of.", type=int)
     parser.add_argument('--logo', help='Produce function logo ps files. If permutation statistical options used the first test in multiple test correction list is used', action="store_true")
     parser.add_argument("-s", "--single", action="store_true", help="Calculate information statistics for single sites in addition to base-pair information statistics.")
     parser.add_argument("-B", help="Number of permutations. Default value is 100", type=int, default=0)
@@ -284,13 +187,17 @@ def main():
     args = parser.parse_args()
 
     if (args.text):
-        seqStructInfo = parse_struct(args.struct, "text")
+        seqStructInfo = seq.SeqStructure(args.struct, "text")
     if (args.cove):
-        seqStructInfo = parse_struct(args.struct, "cove")
+        seqStructInfo = seq.SeqStructure(args.struct, "cove")
 
-    parse_sequences(args.file_preifx, seqStructInfo)
+    seqStructInfo.parse_sequences(args.file_preifx)
+
     if (args.B):
         seqStructInfo.permute(args.B)
+
+    if (args.max):
+        seqStructInfo.calculate_exact(args.x)
 
     info = defaultdict(lambda : defaultdict(float))
     height_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))

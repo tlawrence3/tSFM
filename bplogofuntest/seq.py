@@ -9,6 +9,8 @@ import random
 import time
 import math as mt
 import exact
+import glob
+import re
 
 class InfoResults:
     def __init__(self):
@@ -30,24 +32,123 @@ class Seq:
 
 
 class SeqStructure:
-    def __init__(self, basepairs):
+    def __init__(self, struct_file, kind = None):
         self.exact = []
-        self.basepairs = basepairs
+        if (kind):
+            self.parse_struct(struct_file, kind)
+        else:
+            self.basepairs = struct_file
         self.pos = 0
         self.sequences = []
         self.pairs = set()
         self.singles = set()
         self.functions = Counter()
 
+    def parse_sequences(self, file_prefix):
+        for fn in glob.glob("{}_?.aln".format(file_prefix)):
+            match = re.search("_([A-Z])\.aln", fn)
+            aa_class = match.group(1)
+            with open(fn, "r") as ALN:
+                good = False
+                begin_seq = False
+                interleaved = False
+                seq = {}
+                for line in ALN:
+                    match = re.search("^(\S+)\s+(\S+)", line)
+                    if (re.search("^CLUSTAL", line)):
+                        good = True
+                        continue
+                    elif (re.search("^[\s\*\.\:]+$", line) and not interleaved and begin_seq):
+                        interleaved = True
+                    elif (re.search("^[\s\*\.\:]+$", line) and interleaved and begin_seq):
+                        continue
+                    elif (match and not interleaved):
+                        begin_seq = True
+                        if (not good):
+                            sys.exit("File {} appears not to be a clustal file".format(fn))
+                        seq[match.group(1)] = match.group(2)
+                    elif (match and interleaved):
+                        seq[match.group(1)] += match.group(2)
+            for sequence in seq.values():
+                self.add_sequence(aa_class, sequence.upper().replace("T", "U"))
+
+        print("{} alignments parsed".format(len(self.functions.keys())), file=sys.stderr)
+
+    def parse_struct(self, struct_file, kind):
+        print("Parsing base-pair coordinates", file=sys.stderr)
+        basepairs = []
+        if (kind == "cove"):
+            ss = ""
+            pairs = defaultdict(list)
+            tarm = 0
+            stack = []
+            with open(struct_file, "r") as cove:
+                for line in cove:
+                    line = line.strip()
+                    ss += line.split()[1]
+
+            state = "start"
+            for count, i in enumerate(ss):
+                if (i == ">" and (state == "start" or state == "AD")):
+                    if (state == "start"):
+                        state = "AD"
+                    stack.append(count)
+
+                elif (i == "<" and (state == "AD" or state == "D")):
+                    if (state == "AD"):
+                        state = "D"
+                    pairs[state].append([stack.pop(), count])
+
+                elif (i == ">" and (state == "D" or state == "C")):
+                    if (state == "D"):
+                        state = "C"
+                    stack.append(count)
+
+                elif (i == "<" and (state == "C" or state == "cC")):
+                    if (state == "C"):
+                        state = "cC"
+                    pairs["C"].append([stack.pop(), count])
+
+                elif (i == ">" and (state == "cC" or state == "T")):
+                    if (state == "cC"):
+                        state = "T"
+                    stack.append(count)
+                    tarm += 1
+
+                elif (i == "<" and (state == "T" and tarm > 0)):
+                    pairs[state].append([stack.pop(), count])
+                    tarm -= 1
+
+                elif (i == "<" and (state == "T" or state == "A") and tarm == 0):
+                    state = "A"
+                    pairs[state].append([stack.pop(), count])
+
+            for arm in pairs:
+                for pair in pairs[arm]:
+                    basepairs.append((pair[0], pair[1]))
+
+
+        if (kind == "text"):
+             with open(struct_file, "r") as struct:
+                for line in struct:
+                    line = line.split(";")[1]
+                    coords = line.split(",")
+                    for coord in coords:
+                        pos = coord.split(":")
+                        pos = [int(x) for x in pos]
+                        basepairs.append((pos[0], pos[1]))
+
+        self.basepairs = basepairs
+
     def approx_expect(self, H, k, N):
-        return H - ((k - 1)/((mt.log(4)) * N)) 
+        return H - ((k - 1)/((mt.log(4)) * N))
 
     def exact_run(self, n, p, numclasses):
         j = exact.calc_exact(n, p, numclasses)
         print("{:2} {:07.5f}".format(n, j[1]), file=sys.stderr)
         return j
 
-    def permuted(self, items, pieces = 2): 
+    def permuted(self, items, pieces = 2):
         sublists = [[] for i in range(pieces)]
         for x in items:
             sublists[random.randint(0, pieces - 1)].append(x)
