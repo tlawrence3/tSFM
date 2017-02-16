@@ -176,27 +176,27 @@ class SeqStructure:
             permStructList.append(permStruct)
         return permStructList
 
-    def permute(self, permute_num):
-            with Pool(processes = 7) as pool:
+    def permute(self, permute_num, proc):
+            with Pool(processes = proc) as pool:
                 perm_jobs = []
-                for x in range(7):
+                for x in range(proc):
                     if (x == 0):
-                        perm_jobs.append((permute_num//7+permute_num%7, self.get_functions()))
+                        perm_jobs.append((permute_num//proc+permute_num%proc, self.get_functions()))
                     else:
-                        perm_jobs.append((permute_num//7, self.get_functions()))
+                        perm_jobs.append((permute_num//proc, self.get_functions()))
 
                 perm_results = pool.starmap(self.permutations, perm_jobs)
                 self.permutationList = []
                 for x in perm_results:
                     self.permutationList += x
 
-    def calculate_exact(self, n):
+    def calculate_exact(self, n, proc):
         p = [x/sum(list(self.functions.values())) for x in self.functions.values()]
         exact_list = []
         for i in range(1,n+1):
             exact_list.append((i, p, len(self.functions.values())))
 
-        with Pool(processes=7) as pool:
+        with Pool(processes=proc) as pool:
             exact_results = pool.starmap(self.exact_run, exact_list)
 
         for x in exact_results:
