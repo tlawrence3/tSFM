@@ -15,10 +15,234 @@ import math as mt
 import bplogofuntest.exact as exact
 import glob
 import re
+import statsmodels.stats.multitest as smm
+
+class ResultProcess:
+    def __init__(self, name, basepairs, pos, sequences, pairs, singles, info = {}, height = {}, inverseInfo = {}, inverseHeight = {}, p = {},
+                 inverse_p = {}):
+        self.name = name
+        self.info = info
+        self.height = height
+        self.inverseInfo = inverseInfo
+        self.inverseHeight = inverseHeight
+        self.p = p
+        self.inverse_p = inverse_p
+        self.correction = ""
+        self.basepairs = basepairs
+        self.pos = pos
+        self.sequences = sequences
+        self.pairs = pairs
+        self.singles = singles
+
+    def add_information(self, info, height, inverse = False):
+        if (inverse):
+            self.inverseInfo = info
+            self.inverseHeight = height
+        else:
+            self.info = info
+            self.height = height
+    
+    def add_stats(self, distribution, correction, inverse = False):
+        self.correction = correction
+        if (inverse):
+            self.inverse_p = distribution.stat_test(self.inverseInfo, self.inverseHeight,
+                                                    correction)
+        else:
+            self.p = distribution.stat_test(self.info, self.height, correction)
+
+    def get(self, position, state):
+        ret_counter = Counter()
+        if (len(position) == 1):
+            for x in self.sequences:
+                if (x.seq[position[0]] == state[0]):
+                    ret_counter[x.function] += 1
+        if (len(position) == 2):
+            for x in self.sequences:
+                if (x.seq[position[0]] == state[0] and x.seq[position[1]] == state[1]):
+                    ret_counter[x.function] += 1
+
+        return ret_counter
+
+    def text_output(self):
+        #build output heading
+        file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
+        heading_dict = {}
+        if (self.p):
+            heading_dict['P'] = "\tp-value\t{}".format(self.correction)
+            heading_dict['p'] =  "\tclass:height:p-value:{}".format(self.correction)
+        else:
+            heading_dict['P'] = ""
+            heading_dict['p'] = "\tclass:height"
+
+        print("#bp\tbp\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+        for coord in sorted(self.basepairs, key = itemgetter(0)):
+            if (coord in self.info):
+                for pairtype in sorted(self.info[coord]):
+                    output_string = "bp:\t{}".format(coord)
+                    output_string += "\t{}\t{}\t{:05.3f}\t".format(pairtype, sum(self.get(coord, pairtype).values()), self.info[coord][pairtype])
+                    if (self.p):
+                        output_string += "{:08.6f}".format(self.p['P'][coord][pairtype])
+                        output_string += "\t{:08.6f}".format(self.p['P_corrected'][coord][pairtype])
+
+                    output_string += "\t"
+                    for aainfo in sorted(self.height[coord][pairtype].items(), key = itemgetter(1), reverse = True):
+                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        if (self.p):
+                            output_string += ":{:08.6f}".format(self.p['p'][coord][pairtype][aainfo[0].upper()])
+                            output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+
+                    print(output_string, file = file_handle)
+
+        if (self.inverseInfo):
+            print("#ibp\tbp\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+        for coord in sorted(self.basepairs, key = itemgetter(0)):
+            if (coord in self.inverseInfo):
+                for pairtype in sorted(self.inverseInfo[coord]):
+                    output_string = "ibp:\t{}".format(coord)
+                    output_string += "\t{}\t{}\t{:05.3f}\t".format(pairtype, sum(self.get(coord, pairtype).values()), self.inverseInfo[coord][pairtype])
+                    if (self.p):
+                        output_string += "{:08.6f}".format(self.inverse_p['P'][coord][pairtype])
+                        output_string += "\t{:08.6f}".format(self.inverse_p['P_corrected'][coord][pairtype])
+
+                    output_string += "\t"
+                    for aainfo in sorted(self.inverseHeight[coord][pairtype].items(), key = itemgetter(1), reverse = True):
+                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        if (self.p):
+                            output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][pairtype][aainfo[0].upper()])
+                            output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+
+                    print(output_string, file = file_handle)
+
+        print("#ss\t\tcoord\tf\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+        for coord in range(self.pos):
+            if (coord in self.info):
+                for base in sorted(self.info[coord]):
+                    output_string = "ss:\t\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
+                                                                         sum(self.get([coord], base).values()),
+                                                                         self.info[coord][base])
+                    if (self.p):
+                        output_string += "\t{:08.6f}".format(self.p['P'][coord][base])
+                        output_string += "\t{}".format(self.p['P_corrected'][coord][base])
+
+                    output_string += "\t"
+                    for aainfo in sorted(self.height[coord][base].items(), key = itemgetter(1), reverse = True):
+                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        if (self.p):
+                            output_string += ":{:08.6f}".format(self.p['p'][coord][base][aainfo[0].upper()])
+                            output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][base][aainfo[0].upper()])
+
+                    print(output_string, file = file_handle)
+
+        if (self.inverseInfo):
+            print("#iss\t\tcoord\tf\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+        for coord in range(self.pos):
+            if (coord in self.inverseInfo):
+                for base in sorted(self.inverseInfo[coord]):
+                    output_string = "iss:\t\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
+                                                                         sum(self.get([coord], base).values()),
+                                                                         self.inverseInfo[coord][base])
+                    if (self.p):
+                        output_string += "\t{:08.6f}".format(self.inverse_p['P'][coord][base])
+                        output_string += "\t{}".format(self.inverse_p['P_corrected'][coord][base])
+
+                    output_string += "\t"
+                    for aainfo in sorted(self.inverseHeight[coord][base].items(), key = itemgetter(1), reverse = True):
+                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        if (self.p):
+                            output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][base][aainfo[0].upper()])
+                            output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][base][aainfo[0].upper()])
+
+                    print(output_string, file = file_handle)
+        file_handle.close()
+
+    def logo_output(self):
+        coord_length = 0 #used to determine eps height
+        coord_length_addition = 0
+
+        logo_outputDict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
+        inverse_logo_outputDict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
+
+        #logo output dict construction
+        for coord in sorted(self.basepairs, key = itemgetter(0)):
+            for pairtype in sorted(self.pairs):
+                if (pairtype in self.info[coord]):
+                    for aainfo in sorted(self.height[coord][pairtype].items(), key = itemgetter(1), reverse = True):
+                        logo_outputDict[pairtype][coord][aainfo[0]] = self.info[coord][pairtype] * aainfo[1]
+                else:
+                    logo_outputDict[pairtype][coord] = {}
+
+        for coord in range(self.pos):
+            for base in sorted(self.singles):
+                if (base in self.info[coord]):
+                    for aainfo in sorted(self.height[coord][base].items(), key = itemgetter(1), reverse = True):
+                        logo_outputDict[base][coord][aainfo[0]] = self.info[coord][base] * aainfo[1]
+                else:
+                    logo_outputDict[base][coord] = {}
+
+        #inverse logo output dict construction
+        for coord in sorted(self.basepairs, key = itemgetter(0)):
+            for pairtype in sorted(self.pairs):
+                if (pairtype in self.inverseInfo[coord]):
+                    for aainfo in sorted(self.inverseHeight[coord][pairtype].items(), key = itemgetter(1), reverse = True):
+                        inverse_logo_outputDict[pairtype][coord][aainfo[0]] = self.inverseInfo[coord][pairtype] * aainfo[1]
+                else:
+                    inverse_logo_outputDict[pairtype][coord] = {}
+
+        for coord in range(self.pos):
+            for base in sorted(self.singles):
+                if (base in self.inverseInfo[coord]):
+                    for aainfo in sorted(self.inverseHeight[coord][base].items(), key = itemgetter(1), reverse = True):
+                        inverse_logo_outputDict[base][coord][aainfo[0]] = self.inverseInfo[coord][base] * aainfo[1]
+                else:
+                    inverse_logo_outputDict[base][coord] = {}
+
+        #output logos
+        for base in logo_outputDict:
+            logodata = ""
+            for coord in sorted(logo_outputDict[base].keys()):
+                if (len(str(coord)) > coord_length):
+                    coord_length = len(str(coord))
+                logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
+                for aainfo in sorted(logo_outputDict[base][coord].items(), key = itemgetter(1)):
+                    if (aainfo[1] < 0.0001 or mt.isnan(aainfo[1])):
+                        continue
+                    logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
+                logodata += "grestore\nshift\n"
+            #output logodata to template
+            template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
+            logo_template = template_byte.decode('utf-8')
+            with open("{}_{}.eps".format(base, self.name.split("/")[-1]), "w") as logo_output:
+                src = Template(logo_template)
+                if (len(base) == 2):
+                    logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()), 'high': max(logo_outputDict[base].keys()), 'length': 21 * len(logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
+                else:
+                    logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()), 'high': max(logo_outputDict[base].keys()), 'length': 15.68 * len(logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
+                logo_output.write(src.substitute(logodata_dict))
+
+        for base in inverse_logo_outputDict:
+            logodata = ""
+            for coord in sorted(inverse_logo_outputDict[base].keys()):
+                if (len(str(coord)) > coord_length):
+                    coord_length = len(str(coord))
+                logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
+                for aainfo in sorted(inverse_logo_outputDict[base][coord].items(), key = itemgetter(1)):
+                    if (aainfo[1] < 0.0001 or mt.isnan(aainfo[1])):
+                        continue
+                    logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
+                logodata += "grestore\nshift\n"
+            #output logodata to template
+            template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
+            logo_template = template_byte.decode('utf-8')
+            with open("inverse_{}_{}.eps".format(base, self.name.split("/")[-1]), "w") as logo_output:
+                src = Template(logo_template)
+                if (len(base) == 2):
+                    logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 21 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
+                else:
+                    logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 15.68 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
+                logo_output.write(src.substitute(logodata_dict))
 
 class InfoResults:
     def __init__(self):
-        infoStates = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
 
         self.bpinfodist = defaultdict(int)
         self.bpheightdist = defaultdict(int)
@@ -37,7 +261,83 @@ class InfoResults:
         for x in singledata[1]:
             self.singleheightdist[x] += 1
 
-    def rtp(data, point, keys_sorted):
+        self.bpinfo_sorted_keys = sorted(self.bpinfodist.keys())
+        self.bpheight_sorted_keys = sorted(self.bpheightdist.keys())
+        self.ssinfo_sorted_keys = sorted(self.singleinfodist.keys())
+        self.ssheight_sorted_keys = sorted(self.singleheightdist.keys())
+
+    def stat_test(self, info, height, correction):
+        P = defaultdict(lambda: defaultdict(float))
+        P_corrected = defaultdict(lambda: defaultdict(float))
+        p = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        p_corrected = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        bp_coords = []
+        ss_coords = []
+        for coord in info:
+            for pairtype in info[coord]:
+                if ("," in str(coord)):
+                    bp_coords.append(coord)
+                    P[coord][pairtype] = self.rtp(self.bpinfodist, info[coord][pairtype], self.bpinfo_sorted_keys)
+                    for aa in height[coord][pairtype]:
+                        p[coord][pairtype][aa] = self.rtp(self.bpheightdist, info[coord][pairtype]*height[coord][pairtype][aa],
+                                                          self.bpheight_sorted_keys)
+                else:
+                    ss_coords.append(coord)
+                    P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype], self.ssinfo_sorted_keys)
+                    for aa in height[coord][pairtype]:
+                        p[coord][pairtype][aa] = self.rtp(self.singleheightdist, info[coord][pairtype]*height[coord][pairtype][aa],
+                                                          self.ssheight_sorted_keys)
+        test_bp = []
+        test_ss = []
+        bp_coords.sort()
+        ss_coords.sort()
+        for coord in bp_coords:
+            for pairtype in sorted(P[coord]):
+                    test_bp.append(P[coord][pairtype])
+
+        for coord in ss_coords:
+            for pairtype in sorted(P[coord]):
+                test_ss.append(P[coord][pairtype])
+
+        test_bp_results = smm.multipletests(test_bp, method = correction)[1].tolist()
+        test_ss_results = smm.multipletests(test_ss, method = correction)[1].tolist()
+
+        for coord in bp_coords:
+            for pairtype in sorted(P[coord]):
+                P_corrected[coord][pairtype] = test_bp_results.pop(0)
+
+        for coord in ss_coords:
+            for pairtype in sorted(P[coord]):
+                P_corrected[coord][pairtype] = test_ss_results.pop(0)
+
+        test_bp = []
+        test_ss = []
+        for coord in bp_coords:
+            for pairtype in sorted(p[coord]):
+                for aa in sorted(p[coord][pairtype]):
+                    test_bp.append(p[coord][pairtype][aa])
+
+        for coord in ss_coords:
+            for pairtype in sorted(p[coord]):
+                for aa in sorted(p[coord][pairtype]):
+                    test_ss.append(p[coord][pairtype][aa])
+
+        test_bp_results = smm.multipletests(test_bp, method = correction)[1].tolist()
+        test_ss_results = smm.multipletests(test_ss, method = correction)[1].tolist()
+
+        for coord in bp_coords:
+            for pairtype in sorted(p[coord]):
+                for aa in sorted(p[coord][pairtype]):
+                    p_corrected[coord][pairtype][aa] = test_bp_results.pop(0)
+
+        for coord in ss_coords:
+            for pairtype in sorted(p[coord]):
+                for aa in sorted(p[coord][pairtype]):
+                    p_corrected[coord][pairtype][aa] = test_ss_results.pop(0)
+        
+        return {'P': P, 'p': p, "P_corrected": P_corrected, "p_corrected": p_corrected} 
+
+    def rtp(self, data, point, keys_sorted):
         if (point > 0):
             part = 0
             total = sum(data.values())
@@ -114,10 +414,10 @@ class SeqStructure:
             pairs = defaultdict(list)
             tarm = 0
             stack = []
-            with open(struct_file, "r") as cove:
-                for line in cove:
-                    line = line.strip()
-                    ss += line.split()[1]
+            for line in struct_file:
+                line = line.strip()
+                ss += line.split()[1]
+            struct_file.seek(0)
 
             state = "start"
             for count, i in enumerate(ss):
@@ -161,14 +461,13 @@ class SeqStructure:
 
 
         if (kind == "text"):
-             with open(struct_file, "r") as struct:
-                for line in struct:
-                    line = line.split(";")[1]
-                    coords = line.split(",")
-                    for coord in coords:
-                        pos = coord.split(":")
-                        pos = [int(x) for x in pos]
-                        basepairs.append((pos[0], pos[1]))
+            for line in struct_file:
+                line = line.split(";")[1]
+                coords = line.split(",")
+                for coord in coords:
+                    pos = coord.split(":")
+                    pos = [int(x) for x in pos]
+                    basepairs.append((pos[0], pos[1]))
 
         self.basepairs = basepairs
 
@@ -195,7 +494,6 @@ class SeqStructure:
     def permutations(self, numPerm, aa_classes):
         indices = []
         permStructList = []
-        print("Generating permuted alignment data", file=sys.stderr)
         for p in range(numPerm):
             indices.append(self.permuted(aa_classes))
         for index in indices:
@@ -220,6 +518,10 @@ class SeqStructure:
                 self.permutationList += x
 
     def permInfo(self, method, proc, inverse = False):
+        bp_info = []
+        bp_height = []
+        single_info = []
+        single_height = []
         with Pool(processes = proc) as pool:
             if (not inverse):
                 if (method == "NSB"):
@@ -232,7 +534,15 @@ class SeqStructure:
                 else:
                     perm_info_results = pool.map(self.perm_info_calc_inverse_MM, self.permutationList, len(self.permutationList)//proc)
 
-        return perm_info_results
+        for perm in perm_info_results:
+            bp_info.extend(perm[0])
+            single_info.extend(perm[1])
+            bp_height.extend(perm[2])
+            single_height.extend(perm[3])
+
+        perm_dist = InfoResults()
+        perm_dist.weighted_dist((bp_info, bp_height), (single_info, single_height))
+        return perm_dist
 
     def perm_info_calc_MM(self, x):
         total_info_bp = []
@@ -240,7 +550,6 @@ class SeqStructure:
         total_info_ss = []
         height_info_ss = []
         info, height_dict = x.calculate_entropy_MM()
-
         for coord in sorted(self.basepairs, key = itemgetter(0)):
             if (coord in info):
                 for pairtype in sorted(info[coord]):
@@ -641,199 +950,6 @@ class SeqStructure:
         for key, val in self.functions.items():
             function_list.extend([key]*val)
         return function_list
-
-    def text_output(self, info, height_dict, inverse_info = {}, inverse_height = {}, p = {}):
-        #build output heading
-        heading_dict = {}
-        if (p):
-            pstring = "\tp-value"
-            for m in multipletesting:
-                pstring += "\t{}".format(m)
-            heading_dict['p'] = pstring
-        else:
-            heading_dict['p'] = ""
-        if (p):
-            Pstring = "\tclass:height:p-value"
-            for m in multipletesting:
-                Pstring += ":{}".format(m)
-            heading_dict['P'] = Pstring
-        else:
-            heading_dict['P'] = "\tclass:height"
-
-        print("#bp\tbp\tN\tinfo{p}{P}".format(**heading_dict))
-        for coord in sorted(self.basepairs, key = itemgetter(0)):
-            if (coord in info):
-                for pairtype in sorted(info[coord]):
-                    output_string = "bp:\t{}".format(coord)
-                    output_string += "\t{}\t{}\t{:05.3f}\t".format(pairtype, sum(self.get(coord, pairtype).values()), info[coord][pairtype])
-                    if (p):
-                        output_string += "{:08.6f}".format(pvalsp[coord][pairtype])
-                        for x in multipletesting:
-                            output_string += "\t{:08.6f}".format(adjusted_pvals[x]['p'][coord][pairtype])
-
-                    output_string += "\t"
-                    for aainfo in sorted(height_dict[coord][pairtype].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
-                        if (p):
-                            output_string += ":{:08.6f}".format(pvalsP[coord][pairtype][aainfo[0].upper()])
-                            for x in multipletesting:
-                                output_string += ":{:08.6f}".format(adjusted_pvals[x]['P'][coord][pairtype][aainfo[0].upper()])
-
-                    print(output_string)
-
-        if (inverse_info):
-            print("#ibp\tbp\tN\tinfo{p}{P}".format(**heading_dict))
-        for coord in sorted(self.basepairs, key = itemgetter(0)):
-            if (coord in inverse_info):
-                for pairtype in sorted(inverse_info[coord]):
-                    output_string = "ibp:\t{}".format(coord)
-                    output_string += "\t{}\t{}\t{:05.3f}\t".format(pairtype, sum(self.get(coord, pairtype).values()), inverse_info[coord][pairtype])
-                    if (p):
-                        output_string += "{:08.6f}".format(pvalsp[coord][pairtype])
-                        for x in multipletesting:
-                            output_string += "\t{:08.6f}".format(adjusted_pvals[x]['p'][coord][pairtype])
-
-                    output_string += "\t"
-                    for aainfo in sorted(inverse_height[coord][pairtype].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
-                        if (p):
-                            output_string += ":{:08.6f}".format(pvalsP[coord][pairtype][aainfo[0].upper()])
-                            for x in multipletesting:
-                                output_string += ":{:08.6f}".format(adjusted_pvals[x]['P'][coord][pairtype][aainfo[0].upper()])
-
-                    print(output_string)
-
-        print("#ss\t\tcoord\tf\tN\tinfo{p}{P}".format(**heading_dict))
-        for coord in range(self.pos):
-            if (coord in info):
-                for base in sorted(info[coord]):
-                    output_string = "ss:\t\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
-                                                                         sum(self.get([coord], base).values()),
-                                                                         info[coord][base])
-                    if (p):
-                        output_string += "\t{:08.6f}".format(pvalsp[coord][base])
-                        for x in multipletesting:
-                            output_string += "\t{}".format(adjusted_pvals[x]['p'][coord][base])
-
-                    output_string += "\t"
-                    for aainfo in sorted(height_dict[coord][base].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
-                        if (p):
-                            output_string += ":{:08.6f}".format(pvalsP[coord][base][aainfo[0].upper()])
-                            for x in multipletesting:
-                                output_string += ":{:08.6f}".format(adjusted_pvals[x]['P'][coord][base][aainfo[0].upper()])
-
-                    print(output_string)
-
-        if (inverse_info):
-            print("#iss\t\tcoord\tf\tN\tinfo{p}{P}".format(**heading_dict))
-        for coord in range(self.pos):
-            if (coord in inverse_info):
-                for base in sorted(inverse_info[coord]):
-                    output_string = "iss:\t\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
-                                                                         sum(self.get([coord], base).values()),
-                                                                         inverse_info[coord][base])
-                    if (p):
-                        output_string += "\t{:08.6f}".format(pvalsp[coord][base])
-                        for x in multipletesting:
-                            output_string += "\t{}".format(adjusted_pvals[x]['p'][coord][base])
-
-                    output_string += "\t"
-                    for aainfo in sorted(inverse_height[coord][base].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
-                        if (p):
-                            output_string += ":{:08.6f}".format(pvalsP[coord][base][aainfo[0].upper()])
-                            for x in multipletesting:
-                                output_string += ":{:08.6f}".format(adjusted_pvals[x]['P'][coord][base][aainfo[0].upper()])
-
-                    print(output_string)
-
-    def logo_output(self, info, height_dict, file_prefix, inverse_info = {}, inverse_height = {}, p = {}):
-        coord_length = 0 #used to determine eps height
-        coord_length_addition = 0
-
-        logo_outputDict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
-        inverse_logo_outputDict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
-
-        #logo output dict construction
-        for coord in sorted(self.basepairs, key = itemgetter(0)):
-            for pairtype in sorted(self.pairs):
-                if (pairtype in info[coord]):
-                    for aainfo in sorted(height_dict[coord][pairtype].items(), key = itemgetter(1), reverse = True):
-                        logo_outputDict[pairtype][coord][aainfo[0]] = info[coord][pairtype] * aainfo[1]
-                else:
-                    logo_outputDict[pairtype][coord] = {}
-
-        for coord in range(self.pos):
-            for base in sorted(self.singles):
-                if (base in info[coord]):
-                    for aainfo in sorted(height_dict[coord][base].items(), key = itemgetter(1), reverse = True):
-                        logo_outputDict[base][coord][aainfo[0]] = info[coord][base] * aainfo[1]
-                else:
-                    logo_outputDict[base][coord] = {}
-
-        #inverse logo output dict construction
-        for coord in sorted(self.basepairs, key = itemgetter(0)):
-            for pairtype in sorted(self.pairs):
-                if (pairtype in inverse_info[coord]):
-                    for aainfo in sorted(inverse_height[coord][pairtype].items(), key = itemgetter(1), reverse = True):
-                        inverse_logo_outputDict[pairtype][coord][aainfo[0]] = inverse_info[coord][pairtype] * aainfo[1]
-                else:
-                    inverse_logo_outputDict[pairtype][coord] = {}
-
-        for coord in range(self.pos):
-            for base in sorted(self.singles):
-                if (base in inverse_info[coord]):
-                    for aainfo in sorted(inverse_height[coord][base].items(), key = itemgetter(1), reverse = True):
-                        inverse_logo_outputDict[base][coord][aainfo[0]] = inverse_info[coord][base] * aainfo[1]
-                else:
-                    inverse_logo_outputDict[base][coord] = {}
-
-        #output logos
-        for base in logo_outputDict:
-            logodata = ""
-            for coord in sorted(logo_outputDict[base].keys()):
-                if (len(str(coord)) > coord_length):
-                    coord_length = len(str(coord))
-                logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
-                for aainfo in sorted(logo_outputDict[base][coord].items(), key = itemgetter(1)):
-                    if (aainfo[1] < 0.0001 or mt.isnan(aainfo[1])):
-                        continue
-                    logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
-                logodata += "grestore\nshift\n"
-            #output logodata to template
-            template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
-            logo_template = template_byte.decode('utf-8')
-            with open("{}_{}.eps".format(base, file_prefix), "w") as logo_output:
-                src = Template(logo_template)
-                if (len(base) == 2):
-                    logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()), 'high': max(logo_outputDict[base].keys()), 'length': 21 * len(logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
-                else:
-                    logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()), 'high': max(logo_outputDict[base].keys()), 'length': 15.68 * len(logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
-                logo_output.write(src.substitute(logodata_dict))
-
-        for base in inverse_logo_outputDict:
-            logodata = ""
-            for coord in sorted(inverse_logo_outputDict[base].keys()):
-                if (len(str(coord)) > coord_length):
-                    coord_length = len(str(coord))
-                logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
-                for aainfo in sorted(inverse_logo_outputDict[base][coord].items(), key = itemgetter(1)):
-                    if (aainfo[1] < 0.0001 or mt.isnan(aainfo[1])):
-                        continue
-                    logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
-                logodata += "grestore\nshift\n"
-            #output logodata to template
-            template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
-            logo_template = template_byte.decode('utf-8')
-            with open("inverse_{}_{}.eps".format(base, file_prefix), "w") as logo_output:
-                src = Template(logo_template)
-                if (len(base) == 2):
-                    logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 21 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
-                else:
-                    logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 15.68 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
-                logo_output.write(src.substitute(logodata_dict))
-
 
     def __len__(self):
         return len(self.sequences)
