@@ -16,6 +16,118 @@ import bplogofuntest.exact as exact
 import glob
 import re
 import statsmodels.stats.multitest as smm
+import pandas as pd
+
+
+class DistanceCalculator:
+    def __init__(self, distance):
+        self.distanceMetric = distance
+        self.featureSet = set()
+        self.functionSet = set()
+
+    def get_distance(self, ResultsDict):
+        for result in ResultsDict:
+            for coord in ResultsDict[result].basepairs:
+                if (coord in ResultsDict[result].info):
+                    for pairtype in ResultsDict[result].info[coord]:
+                        self.featureSet.add("{}{}".format("".join(str(i) for i in coord), pairtype))
+                        for function in ResultsDict[result].height[coord][pairtype]:
+                            self.functionSet.add(function)
+            
+            for coord in range(ResultsDict[result].pos):
+                if (coord in ResultsDict[result].info):
+                    for base in ResultsDict[result].info[coord]:
+                        self.featureSet.add("{}{}".format(coord, base))
+                        for function in ResultsDict[result].height[coord][base]:
+                            self.functionSet.add(function)
+
+        #add inverse info features
+            for coord in ResultsDict[result].basepairs:
+                if (coord in ResultsDict[result].inverseInfo):
+                    for pairtype in ResultsDict[result].inverseInfo[coord]:
+                        self.featureSet.add("i{}{}".format("".join(str(i) for i in coord), pairtype))
+        
+            for coord in range(ResultsDict[result].pos):
+                if (coord in ResultsDict[result].inverseInfo):
+                    for base in ResultsDict[result].inverseInfo[coord]:
+                        self.featureSet.add("i{}{}".format(coord, base))
+
+        #remove features that contain gaps
+        self.featureSet = {feature for feature in self.featureSet if not "-" in feature}
+
+        #prepare pandas dataframes for each result object
+        functionDict = {}
+        pandasDict = {}
+        for function in self.functionSet:
+            functionDict[function] = np.zeros(len(self.featureSet),)
+        functionDict["bits"] = np.zeros(len(self.featureSet),)
+        
+        for result in ResultsDict:
+            pandasDict[result] = pd.DataFrame(functionDict, index = self.featureSet)
+            for coord in ResultsDict[result].basepairs:
+                if (coord in ResultsDict[result].info):
+                    for pairtype in [pair for pair in ResultsDict[result].info[coord] if not "-" in pair]:
+                        row = "{}{}".format("".join(str(i) for i in coord), pairtype)
+                        pandasDict[result].loc[row, "bits"] = ResultsDict[result].info[coord][pairtype] 
+                        for function in ResultsDict[result].height[coord][pairtype]:
+                            pandasDict[result].loc[row, function] = ResultsDict[result].height[coord][pairtype][function]
+            
+            for coord in range(ResultsDict[result].pos):
+                if (coord in ResultsDict[result].info):
+                    for base in [nuc for nuc in ResultsDict[result].info[coord] if not nuc == "-"]:
+                        row = "{}{}".format(coord, base)
+                        pandasDict[result].loc[row, "bits"] = ResultsDict[result].info[coord][base]
+                        for function in ResultsDict[result].height[coord][base]:
+                            pandasDict[result].loc[row, function] = ResultsDict[result].height[coord][base][function]
+
+            for coord in ResultsDict[result].basepairs:
+                if (coord in ResultsDict[result].inverseInfo):
+                    for pairtype in [pair for pair in ResultsDict[result].inverseInfo[coord] if not "-" in pair]:
+                        row = "i{}{}".format("".join(str(i) for i in coord), pairtype)
+                        pandasDict[result].loc[row, "bits"] = ResultsDict[result].inverseInfo[coord][pairtype] 
+                        for function in ResultsDict[result].inverseHeight[coord][pairtype]:
+                            pandasDict[result].loc[row, function] = ResultsDict[result].inverseHeight[coord][pairtype][function]
+            
+            for coord in range(ResultsDict[result].pos):
+                if (coord in ResultsDict[result].inverseInfo):
+                    for base in [nuc for nuc in ResultsDict[result].inverseInfo[coord] if not nuc == "-"]:
+                        row = "i{}{}".format(coord, base)
+                        pandasDict[result].loc[row, "bits"] = ResultsDict[result].inverseInfo[coord][base]
+                        for function in ResultsDict[result].inverseHeight[coord][base]:
+                            pandasDict[result].loc[row, function] = ResultsDict[result].inverseHeight[coord][base][function]
+        
+        #normalize heights to equal one after possible removal of CIFs based on some criteria 
+        for frame in pandasDict:
+            pandasDict[frame].drop('bits', axis=1).div(pandasDict[frame].drop('bits', axis=1).sum(axis=1), axis=0)
+
+        if (self.distanceMetric == "jsd"):
+            self.rJSD(pandasDict)
+
+
+    def rJSD(self, pandasDict):
+        pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
+        jsdDistMatrix = pd.DataFrame(index=list(pandasDict.keys()), columns = list(pandasDict.keys()))
+        jsdDistMatrix = jsdDistMatrix.fillna(0)
+        for pair in pairwise_combinations:
+            distance = 0
+            for i, row in pandasDict[pair[0]].iterrows():
+                if (row['bits'] == 0 and pandasDict[pair[1]].loc[i, 'bits'] == 0):
+                    continue
+                else:
+                    distance += self.rJSD_distance(row.drop('bits').as_matrix(), 
+                                                pandasDict[pair[1]].loc[i,].drop('bits').as_matrix(),
+                                                row['bits'], pandasDict[pair[1]].loc[i, 'bits'])
+            
+            jsdDistMatrix.loc[pair[0], pair[1]] = distance
+        
+        print(jsdDistMatrix)
+
+    def entropy(self, dist):
+        return np.sum(-dist[dist!=0]*np.log2(dist[dist!=0]))
+
+    def rJSD_distance(self, dist1, dist2, pi1, pi2):
+        step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
+        return (pi1+pi2)*mt.sqrt(step if step >= 0 else 0)
 
 class ResultProcess:
     def __init__(self, name, basepairs, pos, sequences, pairs, singles, info = {}, height = {}, inverseInfo = {}, inverseHeight = {}, p = {},

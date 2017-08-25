@@ -20,6 +20,7 @@ def main():
     parser.add_argument("-B", help="Number of permutations. Default value is 100", type=int, default=0)
     parser.add_argument("-o", "--stdout", action="store_true", help="Print results to STDOUT")
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, holm, hommel, BH, BY, and hochberg-simes. Default is BH", default = "fdr_bh")
+    parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_preifx", help="File prefix", nargs='+')
     args = parser.parse_args()
 
@@ -27,13 +28,16 @@ def main():
 
     if (args.text):
         for prefix in args.file_preifx:
-            logo_dict[prefix] = seq.SeqStructure(args.text, "text")
+            prefix_name = prefix.split("/")[-1]
+            logo_dict[prefix_name] = seq.SeqStructure(args.text, "text")
     if (args.cove):
         for prefix in args.file_preifx:
-            logo_dict[prefix] = seq.SeqStructure(args.cove, "cove")
+            prefix_name = prefix.split("/")[-1]
+            logo_dict[prefix_name] = seq.SeqStructure(args.cove, "cove")
 
     for prefix in args.file_preifx:
-        logo_dict[prefix].parse_sequences(prefix)
+        prefix_name = prefix.split("/")[-1]
+        logo_dict[prefix_name].parse_sequences(prefix)
 
     if (args.max):
         for key in logo_dict:
@@ -91,9 +95,14 @@ def main():
         for key in results:
             results[key].text_output()
 
+
     if (args.logo):
         for key in results:
             results[key].logo_output()
+
+    if (args.jsd):
+        distance = seq.DistanceCalculator("jsd")
+        distance.get_distance(results)
 
 if __name__ == "__main__":
     main()
