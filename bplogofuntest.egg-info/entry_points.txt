@@ -1,3 +1,0 @@
-[console_scripts]
-bplogofuntest = bplogofuntest.bplogofuntest:main
-
