@@ -2,11 +2,11 @@
 import argparse
 import sys
 import os
-import tsfm.seq as seq
+import tsfm.MolecularInformation as MolecularInformation
 
 def main():
      #Setup parser
-    parser = argparse.ArgumentParser(description = "bpLogoFun")
+    parser = argparse.ArgumentParser(description = "tsfm")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-i", "--infernal", type=argparse.FileType("r"), help="Structure file is in infernal format")
     group.add_argument("-c", "--cove", type=argparse.FileType("r"), help="Structure file is in cove format")
@@ -21,21 +21,21 @@ def main():
     parser.add_argument("-o", "--stdout", action="store_true", help="Print results to STDOUT")
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, holm, hommel, BH, BY, and hochberg-simes. Default is BH", default = "fdr_bh")
     parser.add_argument("-j", "--jsd", action="store_true", help="")
-    parser.add_argument("file_preifx", help="File prefix", nargs='+')
+    parser.add_argument("file_prefix", help="File prefix", nargs='+')
     args = parser.parse_args()
 
     logo_dict = {}
 
     if (args.text):
-        for prefix in args.file_preifx:
+        for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = seq.SeqStructure(args.text, "text")
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text")
     if (args.cove):
-        for prefix in args.file_preifx:
+        for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = seq.SeqStructure(args.cove, "cove")
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove")
 
-    for prefix in args.file_preifx:
+    for prefix in args.file_prefix:
         prefix_name = prefix.split("/")[-1]
         logo_dict[prefix_name].parse_sequences(prefix)
 
@@ -62,7 +62,7 @@ def main():
 
     results = {}
     for key in logo_dict:
-        results[key] = seq.ResultProcess(key, logo_dict[key].basepairs, logo_dict[key].pos, logo_dict[key].sequences,
+        results[key] = MolecularInformation.FunctionLogoResults(key, logo_dict[key].basepairs, logo_dict[key].pos, logo_dict[key].sequences,
                                          logo_dict[key].pairs, logo_dict[key].singles)
     
     if (args.entropy == "NSB"):

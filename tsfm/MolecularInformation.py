@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from multiprocessing import Pool
 from operator import itemgetter
 from string import Template
+from ast import literal_eval as make_tuple
 import bisect
 import pkgutil
 import itertools
@@ -129,22 +130,119 @@ class DistanceCalculator:
         step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
         return (pi1+pi2)*mt.sqrt(step if step >= 0 else 0)
 
-class ResultProcess:
-    def __init__(self, name, basepairs, pos, sequences, pairs, singles, info = {}, height = {}, inverseInfo = {}, inverseHeight = {}, p = {},
-                 inverse_p = {}):
+class FunctionLogoResults:
+    def __init__(self, name, basepairs, pos, sequences, pairs, singles, info = {},
+                 height = {}, inverseInfo = {}, inverseHeight = {}, p = {}, inverse_p = {}):
+        #info = defaultdict(lambda : defaultdict(float))
+        #height_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
+        #P = defaultdict(lambda: defaultdict(float))
+        #P_corrected = defaultdict(lambda: defaultdict(float))
+        #p = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        #p_corrected = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        #return {'P': P, 'p': p, "P_corrected": P_corrected, "p_corrected": p_corrected} 
         self.name = name
-        self.info = info
-        self.height = height
-        self.inverseInfo = inverseInfo
-        self.inverseHeight = inverseHeight
-        self.p = p
-        self.inverse_p = inverse_p
+        if (not info):
+            self.info = defaultdict(lambda : defaultdict(float))
+            self.height = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
+        else:
+            self.info = info
+            self.height = height
+        
+        if (not inverseInfo):
+            self.inverseInfo = defaultdict(lambda : defaultdict(float))
+            self.inverseHeight = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
+        else:
+            self.inverseInfo = inverseInfo
+            self.inverseHeight = inverseHeight
+
+        if (not p):
+            self.p = {'P': defaultdict(lambda: defaultdict(float)), 
+                      'p': defaultdict(lambda: defaultdict(lambda: defaultdict(float))),
+                      'P_corrected': defaultdict(lambda: defaultdict(float)),
+                      'p_corrected': defaultdict(lambda: defaultdict(lambda: defaultdict(float)))} 
+        else:
+            self.p = p
+
+        if (not inverse_p):
+            self.inverse_p = {'P': defaultdict(lambda: defaultdict(float)), 
+                      'p': defaultdict(lambda: defaultdict(lambda: defaultdict(float))),
+                      'P_corrected': defaultdict(lambda: defaultdict(float)),
+                      'p_corrected': defaultdict(lambda: defaultdict(lambda: defaultdict(float)))} 
+        else:
+            self.inverse_p = inverse_p
+        
         self.correction = ""
         self.basepairs = basepairs
         self.pos = pos
         self.sequences = sequences
         self.pairs = pairs
         self.singles = singles
+
+    def from_file(self, file_handle):
+        pvalue = False
+        for line in file_handle:
+            if (line.startswith("#")):
+                if ("p-value" in line):
+                    pvalue = True
+            else:
+                line = line.strip()
+                spline = line.split("\t")
+                if (spline[0] == "bp:"):
+                    if (not make_tuple(spline[1]) in self.basepairs):
+                        self.basepairs.append(make_tuple(spline[1]))
+                    self.pairs.add(spline[2])
+                    self.info[make_tuple(spline[1])][spline[2]] = float(spline[4])
+                    if (pvalue):
+                        self.p['P'][make_tuple(spline[1])][spline[2]] = float(spline[5])
+                        self.p['P_corrected'][make_tuple(spline[1])][spline[2]] = float(spline[6])
+                    for function in spline[7].split():
+                        function_split = function.split(":")
+                        self.height[make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        if (pvalue):
+                            self.p['p'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[2]
+                            self.p['p_corrected'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[3]
+                elif (spline[0] == "ss"):
+                    if (self.pos < int(spline[1])):
+                        self.pos = int(spline[1])
+                    self.sinles.add(spline[2])
+                    self.info[int(spline[1])][spline[2]] = float(spline[4])
+                    if (pvalue):
+                        self.p['P'][int(spline[1])][spline[2]] = float(spline[5])
+                        self.p['P_corrected'][int(spline[1])][spline[2]] = float(spline[6])
+                    for function in spline[7].split():
+                        function_split = function.split(":")
+                        self.height[int(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        if (pvalue):
+                            self.p['p'][int(spline[1])][spline[2]][function_split[0]] = function_split[2]
+                            self.p['p_corrected'][int(spline[1])][spline[2]][function_split[0]] = function_split[3]
+                elif (spline[0] == "ibp"):
+                    if (not make_tuple(spline[1]) in self.basepairs):
+                        self.basepairs.append(make_tuple(spline[1]))
+                    self.pairs.add(spline[2])
+                    self.inverseInfo[make_tuple(spline[1])][spline[2]] = float(spline[4])
+                    if (pvalue):
+                        self.inverse_p['P'][make_tuple(spline[1])][spline[2]] = float(spline[5])
+                        self.inverse_p['P_corrected'][make_tuple(spline[1])][spline[2]] = float(spline[6])
+                    for function in spline[7].split():
+                        function_split = function.split(":")
+                        self.inverseHeight[make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        if (pvalue):
+                            self.inverse_p['p'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[2]
+                            self.inverse_p['p_corrected'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[3]
+                elif (spline[0] == "iss"):
+                    if (self.pos < int(spline[1])):
+                        self.pos = int(spline[1])
+                    self.sinles.add(spline[2])
+                    self.inverseInfo[int(spline[1])][spline[2]] = float(spline[4])
+                    if (pvalue):
+                        self.inverse_p['P'][int(spline[1])][spline[2]] = float(spline[5])
+                        self.inverse_p['P_corrected'][int(spline[1])][spline[2]] = float(spline[6])
+                    for function in spline[7].split():
+                        function_split = function.split(":")
+                        self.inverseHeight[int(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        if (pvalue):
+                            self.inverse_p['p'][int(spline[1])][spline[2]][function_split[0]] = function_split[2]
+                            self.inverse_p['p_corrected'][int(spline[1])][spline[2]][function_split[0]] = function_split[3]
 
     def add_information(self, info, height, inverse = False):
         if (inverse):
@@ -186,7 +284,7 @@ class ResultProcess:
             heading_dict['P'] = ""
             heading_dict['p'] = "\tclass:height"
 
-        print("#bp\tbp\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+        print("#bp\tcoord\tstate\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
         for coord in sorted(self.basepairs, key = itemgetter(0)):
             if (coord in self.info):
                 for pairtype in sorted(self.info[coord]):
@@ -198,15 +296,16 @@ class ResultProcess:
 
                     output_string += "\t"
                     for aainfo in sorted(self.height[coord][pairtype].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
                             output_string += ":{:08.6f}".format(self.p['p'][coord][pairtype][aainfo[0].upper()])
                             output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                        output_string += " "
 
                     print(output_string, file = file_handle)
 
         if (self.inverseInfo):
-            print("#ibp\tbp\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+            print("#ibp\tcoord\tstate\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
         for coord in sorted(self.basepairs, key = itemgetter(0)):
             if (coord in self.inverseInfo):
                 for pairtype in sorted(self.inverseInfo[coord]):
@@ -218,35 +317,37 @@ class ResultProcess:
 
                     output_string += "\t"
                     for aainfo in sorted(self.inverseHeight[coord][pairtype].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
                             output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][pairtype][aainfo[0].upper()])
                             output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                        output_string += " "
 
                     print(output_string, file = file_handle)
 
-        print("#ss\t\tcoord\tf\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+        print("#ss\tcoord\tstate\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
         for coord in range(self.pos):
             if (coord in self.info):
                 for base in sorted(self.info[coord]):
-                    output_string = "ss:\t\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
+                    output_string = "ss:\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
                                                                          sum(self.get([coord], base).values()),
                                                                          self.info[coord][base])
                     if (self.p):
                         output_string += "\t{:08.6f}".format(self.p['P'][coord][base])
-                        output_string += "\t{}".format(self.p['P_corrected'][coord][base])
+                        output_string += "\t{:08.6f}".format(self.p['P_corrected'][coord][base])
 
                     output_string += "\t"
                     for aainfo in sorted(self.height[coord][base].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
                             output_string += ":{:08.6f}".format(self.p['p'][coord][base][aainfo[0].upper()])
                             output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][base][aainfo[0].upper()])
+                        output_string += " "
 
                     print(output_string, file = file_handle)
 
         if (self.inverseInfo):
-            print("#iss\t\tcoord\tf\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
+            print("#iss\tcoord\tstate\tN\tinfo{P}{p}".format(**heading_dict), file = file_handle)
         for coord in range(self.pos):
             if (coord in self.inverseInfo):
                 for base in sorted(self.inverseInfo[coord]):
@@ -255,14 +356,15 @@ class ResultProcess:
                                                                          self.inverseInfo[coord][base])
                     if (self.p):
                         output_string += "\t{:08.6f}".format(self.inverse_p['P'][coord][base])
-                        output_string += "\t{}".format(self.inverse_p['P_corrected'][coord][base])
+                        output_string += "\t{:08.6f}".format(self.inverse_p['P_corrected'][coord][base])
 
                     output_string += "\t"
                     for aainfo in sorted(self.inverseHeight[coord][base].items(), key = itemgetter(1), reverse = True):
-                        output_string += " {}:{:05.3f}".format(aainfo[0], aainfo[1])
+                        output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
                             output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][base][aainfo[0].upper()])
                             output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][base][aainfo[0].upper()])
+                        output_string += " "
 
                     print(output_string, file = file_handle)
         file_handle.close()
@@ -353,7 +455,7 @@ class ResultProcess:
                     logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 15.68 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
                 logo_output.write(src.substitute(logodata_dict))
 
-class InfoResults:
+class FunctionLogoDist:
     def __init__(self):
 
         self.bpinfodist = defaultdict(int)
@@ -472,7 +574,7 @@ class Seq:
         return len(self.seq)
 
 
-class SeqStructure:
+class FunctionLogo:
     def __init__(self, struct_file, kind = None, exact = [], inverse = []):
         if (kind):
             self.parse_struct(struct_file, kind)
@@ -609,7 +711,7 @@ class SeqStructure:
         for p in range(numPerm):
             indices.append(self.permuted(aa_classes))
         for index in indices:
-            permStruct = SeqStructure(self.basepairs, exact = self.exact, inverse = self.inverse_exact)
+            permStruct = FunctionLogo(self.basepairs, exact = self.exact, inverse = self.inverse_exact)
             for i, seqs in enumerate(self.sequences):
                 permStruct.add_sequence(index[i], seqs.seq)
             permStructList.append(permStruct)
@@ -652,7 +754,7 @@ class SeqStructure:
             bp_height.extend(perm[2])
             single_height.extend(perm[3])
 
-        perm_dist = InfoResults()
+        perm_dist = FunctionLogoDist()
         perm_dist.weighted_dist((bp_info, bp_height), (single_info, single_height))
         return perm_dist
 
