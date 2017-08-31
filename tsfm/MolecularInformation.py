@@ -99,6 +99,7 @@ class DistanceCalculator:
         
         #normalize heights to equal one after possible removal of CIFs based on some criteria 
         for frame in pandasDict:
+            pandasDict[frame] = pandasDict[frame].round(3)
             pandasDict[frame].drop('bits', axis=1).div(pandasDict[frame].drop('bits', axis=1).sum(axis=1), axis=0)
 
         if (self.distanceMetric == "jsd"):
@@ -131,16 +132,9 @@ class DistanceCalculator:
         return (pi1+pi2)*mt.sqrt(step if step >= 0 else 0)
 
 class FunctionLogoResults:
-    def __init__(self, name, basepairs, pos, sequences, pairs, singles, info = {},
-                 height = {}, inverseInfo = {}, inverseHeight = {}, p = {}, inverse_p = {}):
-        #info = defaultdict(lambda : defaultdict(float))
-        #height_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
-        #P = defaultdict(lambda: defaultdict(float))
-        #P_corrected = defaultdict(lambda: defaultdict(float))
-        #p = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-        #p_corrected = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-        #return {'P': P, 'p': p, "P_corrected": P_corrected, "p_corrected": p_corrected} 
-        self.name = name
+    def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
+                 height = {}, inverseInfo = {}, inverseHeight = {}, p = {},
+                 inverse_p = {}, from_file = False):
         if (not info):
             self.info = defaultdict(lambda : defaultdict(float))
             self.height = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
@@ -178,8 +172,15 @@ class FunctionLogoResults:
         self.pairs = pairs
         self.singles = singles
 
-    def from_file(self, file_handle):
+        if (from_file):
+            self.name = name.split("/")[-1]
+            self.from_file(name)
+        else:
+            self.name = name
+
+    def from_file(self, file_name):
         pvalue = False
+        file_handle = open(file_name, "r")
         for line in file_handle:
             if (line.startswith("#")):
                 if ("p-value" in line):
@@ -197,25 +198,25 @@ class FunctionLogoResults:
                         self.p['P_corrected'][make_tuple(spline[1])][spline[2]] = float(spline[6])
                     for function in spline[7].split():
                         function_split = function.split(":")
-                        self.height[make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        self.height[make_tuple(spline[1])][spline[2]][function_split[0]] = float(function_split[1])
                         if (pvalue):
-                            self.p['p'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[2]
-                            self.p['p_corrected'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[3]
-                elif (spline[0] == "ss"):
+                            self.p['p'][make_tuple(spline[1])][spline[2]][function_split[0]] = float(function_split[2])
+                            self.p['p_corrected'][make_tuple(spline[1])][spline[2]][function_split[0]] = float(function_split[3])
+                elif (spline[0] == "ss:"):
                     if (self.pos < int(spline[1])):
                         self.pos = int(spline[1])
-                    self.sinles.add(spline[2])
+                    self.singles.add(spline[2])
                     self.info[int(spline[1])][spline[2]] = float(spline[4])
                     if (pvalue):
                         self.p['P'][int(spline[1])][spline[2]] = float(spline[5])
                         self.p['P_corrected'][int(spline[1])][spline[2]] = float(spline[6])
                     for function in spline[7].split():
                         function_split = function.split(":")
-                        self.height[int(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        self.height[int(spline[1])][spline[2]][function_split[0]] = float(function_split[1])
                         if (pvalue):
-                            self.p['p'][int(spline[1])][spline[2]][function_split[0]] = function_split[2]
-                            self.p['p_corrected'][int(spline[1])][spline[2]][function_split[0]] = function_split[3]
-                elif (spline[0] == "ibp"):
+                            self.p['p'][int(spline[1])][spline[2]][function_split[0]] = float(function_split[2])
+                            self.p['p_corrected'][int(spline[1])][spline[2]][function_split[0]] = float(function_split[3])
+                elif (spline[0] == "ibp:"):
                     if (not make_tuple(spline[1]) in self.basepairs):
                         self.basepairs.append(make_tuple(spline[1]))
                     self.pairs.add(spline[2])
@@ -225,24 +226,26 @@ class FunctionLogoResults:
                         self.inverse_p['P_corrected'][make_tuple(spline[1])][spline[2]] = float(spline[6])
                     for function in spline[7].split():
                         function_split = function.split(":")
-                        self.inverseHeight[make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        self.inverseHeight[make_tuple(spline[1])][spline[2]][function_split[0]] = float(function_split[1])
                         if (pvalue):
-                            self.inverse_p['p'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[2]
-                            self.inverse_p['p_corrected'][make_tuple(spline[1])][spline[2]][function_split[0]] = function_split[3]
-                elif (spline[0] == "iss"):
+                            self.inverse_p['p'][make_tuple(spline[1])][spline[2]][function_split[0]] = float(function_split[2])
+                            self.inverse_p['p_corrected'][make_tuple(spline[1])][spline[2]][function_split[0]] = float(function_split[3])
+                elif (spline[0] == "iss:"):
                     if (self.pos < int(spline[1])):
                         self.pos = int(spline[1])
-                    self.sinles.add(spline[2])
+                    self.singles.add(spline[2])
                     self.inverseInfo[int(spline[1])][spline[2]] = float(spline[4])
                     if (pvalue):
                         self.inverse_p['P'][int(spline[1])][spline[2]] = float(spline[5])
                         self.inverse_p['P_corrected'][int(spline[1])][spline[2]] = float(spline[6])
                     for function in spline[7].split():
                         function_split = function.split(":")
-                        self.inverseHeight[int(spline[1])][spline[2]][function_split[0]] = function_split[1]
+                        self.inverseHeight[int(spline[1])][spline[2]][function_split[0]] = float(function_split[1])
                         if (pvalue):
-                            self.inverse_p['p'][int(spline[1])][spline[2]][function_split[0]] = function_split[2]
-                            self.inverse_p['p_corrected'][int(spline[1])][spline[2]][function_split[0]] = function_split[3]
+                            self.inverse_p['p'][int(spline[1])][spline[2]][function_split[0]] = float(function_split[2])
+                            self.inverse_p['p_corrected'][int(spline[1])][spline[2]][function_split[0]] = float(function_split[3])
+        self.pos += 1 #fix off by one
+        file_handle.close()
 
     def add_information(self, info, height, inverse = False):
         if (inverse):
@@ -351,7 +354,7 @@ class FunctionLogoResults:
         for coord in range(self.pos):
             if (coord in self.inverseInfo):
                 for base in sorted(self.inverseInfo[coord]):
-                    output_string = "iss:\t\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
+                    output_string = "iss:\t{}\t{}\t{}\t{:05.3f}".format(coord, base,
                                                                          sum(self.get([coord], base).values()),
                                                                          self.inverseInfo[coord][base])
                     if (self.p):
