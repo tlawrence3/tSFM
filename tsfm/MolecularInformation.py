@@ -58,12 +58,17 @@ class DistanceCalculator:
 
     def get_distance(self, ResultsDict):
         """
-        Requires a dict[str, :class:`FunctionLogoResults`] and returns a pairwise distance matrix using the distance metric indicated during instantiation. 
+        Prints a pairwise distance matrix using the distance metric indicated during instantiation to `stdout`. 
+        
+        +--------+-------+-------+-------+-------+-------+-------+--------+
+        |Feature |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
+        +========+=======+=======+=======+=======+=======+=======+========+
+        |   1A   | 0.500 | 0.250 | 0.125 | 0.000 | 0.000 | 0.125 | 2.453  |
+        +--------+-------+-------+-------+-------+-------+-------+--------+
 
         Args:
             ResultsDict dict[str, :class:`FunctionLogoResults`]: 
-                `ResultsDict` is a dictionary of dataset labels as keys and 
-                :class:`FunctionLogoResults` as values. 
+                `ResultsDict` is a dictionary of dataset labels as keys and :class:`FunctionLogoResults` as values. 
 
         """
         for result in ResultsDict:
