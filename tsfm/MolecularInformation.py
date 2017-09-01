@@ -73,7 +73,6 @@ class DistanceCalculator:
         account for filtering of data and rounding errors. Below is an example
         of the :class:`pandas.dataframe`'s created:
         
-        
         +--------+-------+-------+-------+-------+-------+-------+--------+
         |        |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
         +========+=======+=======+=======+=======+=======+=======+========+
@@ -84,6 +83,7 @@ class DistanceCalculator:
 
         After the creation of the dict[`str`,`pandas.dataframe`] it is passed to distance
         method set in during the instantiation of the `DistanceCalculator` object.
+
 
         Args:
             ResultsDict dict[str, :class:`FunctionLogoResults`]: 
