@@ -31,14 +31,14 @@ class DistanceCalculator:
     divergence and will print the resulting distance matrix to stdout.
 
     Args:
-        distance (str): Indicates which distance metric to use for pairwise calculations.
+    distance (:class:`str`): Indicates which distance metric to use for pairwise calculations.
 
     Attributes:
         distanceMetric (:class:`str`): Indicates the distance metric to be used in 
             pairwise calculations.
-        featureSet (:class:`set(:class:str)`): A :obj:`set` of the structural 
+        featureSet (:class:`Set(str)`): A :obj:`set` of the structural 
             features contained in the function logos being compared (e.g. 1A, 173AU).
-        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional 
+        functionSet (:class:`Set(str)`): A :obj:`set` of the functional 
             classes contained in the function logos being compared.
 
     Example::
