@@ -1,0 +1,7 @@
+cython
+numpy
+statsmodels
+scipy
+pandas
+patsy
+mpmath
