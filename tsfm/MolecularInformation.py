@@ -58,7 +58,7 @@ class DistanceCalculator:
 
     def get_distance(self, ResultsDict):
         """
-        Requires a dict[str, :class:FunctionLogoResults] and returns a pairwise distance matrix using the distance metric indicated during instantiation. 
+        Requires a dict[str, :class:`FunctionLogoResults`] and returns a pairwise distance matrix using the distance metric indicated during instantiation. 
         """
         for result in ResultsDict:
             for coord in ResultsDict[result].basepairs:
