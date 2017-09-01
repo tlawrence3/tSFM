@@ -60,16 +60,30 @@ class DistanceCalculator:
         """
         Prints a pairwise distance matrix using the distance metric indicated during instantiation to `stdout`. 
         
-        Creates a `dict` of :obj:str keys and :class:pandas.dataframe values from a `dict` 
-        of :obj:str labels and :class:`FunctionLogoResults` values. The index of the resulting dataframes
-        are the union of the structural features contained in the :class:`FunctionLogoResults` objects provided.
-        The columns are the union of the functional classes found in the provided :class:`FunctionLogoResults` objects.
+        Creates a `dict` of :obj:str keys and :class:`pandas.dataframe` as values from a `dict` 
+        of `str` keys and :class:`FunctionLogoResults` as values. The index of 
+        the resulting dataframes are the union of the structural features 
+        contained in the :class:`FunctionLogoResults` objects provided. The 
+        columns labels are the union of the functional classes found in the 
+        provided :class:`FunctionLogoResults` objects and a column containing 
+        the information of the feature measured in bits. Each row contains the Gorodkin
+        fractional heights of each functional class associated with the
+        feature along with the functional information statistic of the feature 
+        measured in bits. The fractional heights of each row is normalized to
+        account for filtering of data and rounding errors. Below is an example
+        of the :class:`pandas.dataframe`'s created:
+        
         
         +--------+-------+-------+-------+-------+-------+-------+--------+
-        |Feature |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
+        |        |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
         +========+=======+=======+=======+=======+=======+=======+========+
         |   1A   | 0.500 | 0.250 | 0.125 | 0.000 | 0.000 | 0.125 | 2.453  |
         +--------+-------+-------+-------+-------+-------+-------+--------+
+        |   1U   | 0.000 | 0.250 | 0.125 | 0.500 | 0.125 | 0.000 | 2.453  |
+        +--------+-------+-------+-------+-------+-------+-------+--------+
+
+        After the creation of the dict[`str`,`pandas.dataframe`] it is passed to distance
+        method set in during the instantiation of the `DistanceCalculator` object.
 
         Args:
             ResultsDict dict[str, :class:`FunctionLogoResults`]: 
