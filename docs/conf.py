@@ -27,7 +27,8 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
             return MagicMock()
 
-MOCK_MODULES = ['tsfm.exact', 'statsmodels.stats.multitest', 'argparse', 'numpy', 'pandas']
+MOCK_MODULES = ['tsfm.exact', 'statsmodels', 'argparse', 'numpy', 'pandas', 'mpmath', 'patsy',
+                'scipy']
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
