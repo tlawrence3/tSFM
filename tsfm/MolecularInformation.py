@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""This module contains classes for calculating functional molecular information statistics.
+
+"""
 from collections import Counter, defaultdict
 from multiprocessing import Pool
 from operator import itemgetter
@@ -21,7 +24,34 @@ import pandas as pd
 
 
 class DistanceCalculator:
+
+    """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
+    
+    Currently, a `DistanceCalculator` object can calculate pairwise distance using the square-root of the Jensen-Shannon
+    divergence and will print the resulting distance matrix to stdout.
+
+    Args:
+        distance (str): Indicates which distance metric to use for pairwise calculations.
+
+    Attributes:
+        distanceMetric (str): Indicates the distance metric to be used in 
+            pairwise calculations.
+        featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural 
+            features contained in the function logos being compared (e.g. 1A, 173AU).
+        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional 
+            classes contained in the function logos being compared.
+
+    Example::
+        
+        x = tsfm.MolecularInformation.DistanceCalculator('jsd')
+        x.get_distance(function_logos)
+
+    """
+
     def __init__(self, distance):
+        """The initialization of a `DistanceCalculator` object requires a :str: indicating the distance metric to be used.
+
+        """
         self.distanceMetric = distance
         self.featureSet = set()
         self.functionSet = set()
