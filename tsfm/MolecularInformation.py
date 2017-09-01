@@ -34,7 +34,7 @@ class DistanceCalculator:
         distance (str): Indicates which distance metric to use for pairwise calculations.
 
     Attributes:
-        distanceMetric (str): Indicates the distance metric to be used in 
+    distanceMetric (:class:str): Indicates the distance metric to be used in 
             pairwise calculations.
         featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural 
             features contained in the function logos being compared (e.g. 1A, 173AU).
