@@ -31,7 +31,7 @@ class DistanceCalculator:
     divergence and will print the resulting distance matrix to stdout.
 
     Args:
-    distance (str): Indicates which distance metric to use for pairwise calculations.
+        distance (str): Indicates which distance metric to use for pairwise calculations.
 
     Attributes:
         distanceMetric (str): Indicates the distance metric to be used in 
