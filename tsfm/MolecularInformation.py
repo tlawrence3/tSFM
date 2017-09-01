@@ -59,6 +59,12 @@ class DistanceCalculator:
     def get_distance(self, ResultsDict):
         """
         Requires a dict[str, :class:`FunctionLogoResults`] and returns a pairwise distance matrix using the distance metric indicated during instantiation. 
+
+        Args:
+            ResultsDict dict[str, :class:`FunctionLogoResults`]: ``ResultsDict`` 
+                is a dictionary of dataset labels as keys and :class: 
+                `FunctionLogoResults` as values. 
+
         """
         for result in ResultsDict:
             for coord in ResultsDict[result].basepairs:
