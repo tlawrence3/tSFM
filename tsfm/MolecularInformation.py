@@ -60,6 +60,11 @@ class DistanceCalculator:
         """
         Prints a pairwise distance matrix using the distance metric indicated during instantiation to `stdout`. 
         
+        Creates a `dict` of :obj:str keys and :class:pandas.dataframe values from a `dict` 
+        of :obj:str labels and :class:`FunctionLogoResults` values. The index of the resulting dataframes
+        are the union of the structural features contained in the :class:`FunctionLogoResults` objects provided.
+        The columns are the union of the functional classes found in the provided :class:`FunctionLogoResults` objects.
+        
         +--------+-------+-------+-------+-------+-------+-------+--------+
         |Feature |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
         +========+=======+=======+=======+=======+=======+=======+========+
