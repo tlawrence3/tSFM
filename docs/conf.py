@@ -43,7 +43,8 @@ MOCK_MODULES = ['statsmodels', 'argparse', 'numpy', 'pandas', 'mpmath', 'patsy',
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages',
-              'sphinx.ext.napoleon']
+              'sphinx.ext.napoleon',
+              'sphinx.ext.intersphinx']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
