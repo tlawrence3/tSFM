@@ -70,7 +70,7 @@ class DistanceCalculator:
         class of each feature along with the functional information of the 
         feature measured in bits. The fractional heights of 
         each row is normalized to account for filtering of data and rounding 
-        errors. The :obj:`dict` of :obj:`str`: :obj:`pandas.DataFrame` is 
+        errors. The :obj:`dict` of :obj:`str`: :class:`pandas:pandas.DataFrame` is 
         passed to the distance method set when the :class:`DistanceCalculator` 
         was instantiated. Below is an example of the :class:`pandas.DataFrame`s 
         created\:
