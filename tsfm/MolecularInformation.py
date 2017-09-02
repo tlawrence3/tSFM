@@ -83,8 +83,9 @@ class DistanceCalculator:
         +--------+-------+-------+-------+-------+-------+-------+--------+
 
         Args:
-            ResultsDict dict[str, :class:`FunctionLogoResults`]: 
-                `ResultsDict` is a dictionary of dataset labels as keys and :class:`FunctionLogoResults` as values. 
+        ResultsDict (:obj:`dict` of :obj:`str`: :class:`FunctionLogoResults`): a 
+            dictionary of dataset labels as keys and :class:`FunctionLogoResults` 
+            as values. 
 
         """
         for result in ResultsDict:
