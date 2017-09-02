@@ -60,8 +60,7 @@ class DistanceCalculator:
         """
         Prints a pairwise distance matrix using the distance metric indicated during instantiation to `stdout`. 
         
-        Creates a `dict` of :obj:str keys and :class:`pandas.dataframe` as values from a `dict` 
-        of `str` keys and :class:`FunctionLogoResults` as values. The index of 
+        Creates a `dict[str, pandas.dataframe]` from a `dict[str, FunctionLogoResults]`. The index of 
         the resulting dataframes are the union of the structural features 
         contained in the :class:`FunctionLogoResults` objects provided. The 
         columns labels are the union of the functional classes found in the 
@@ -70,8 +69,10 @@ class DistanceCalculator:
         fractional heights of each functional class associated with the
         feature along with the functional information statistic of the feature 
         measured in bits. The fractional heights of each row is normalized to
-        account for filtering of data and rounding errors. Below is an example
-        of the :class:`pandas.dataframe`'s created:
+        account for filtering of data and rounding errors. 
+        After the creation of the dict[`str`,`pandas.dataframe`] it is passed to distance
+        method set in during the instantiation of the `DistanceCalculator` object.
+        Below is an example of the :class:`pandas.dataframe`'s created\:
         
         +--------+-------+-------+-------+-------+-------+-------+--------+
         |        |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
@@ -80,10 +81,6 @@ class DistanceCalculator:
         +--------+-------+-------+-------+-------+-------+-------+--------+
         |   1U   | 0.000 | 0.250 | 0.125 | 0.500 | 0.125 | 0.000 | 2.453  |
         +--------+-------+-------+-------+-------+-------+-------+--------+
-
-        After the creation of the dict[`str`,`pandas.dataframe`] it is passed to distance
-        method set in during the instantiation of the `DistanceCalculator` object.
-
 
         Args:
             ResultsDict dict[str, :class:`FunctionLogoResults`]: 
