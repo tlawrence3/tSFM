@@ -60,7 +60,7 @@ class DistanceCalculator:
         """
         Prints a pairwise distance matrix using the distance metric indicated during instantiation to `stdout`. 
         
-        Creates a :obj:`dict` of :obj:`str`: :class:`pandas.dataframe` from 
+        Creates a :obj:`dict` of :obj:`str`: :class:`pandas.DataFrame` from 
         :obj:`ResultsDict`. The index of the dataframes are the union 
         of the structural features contained in :obj:`ResultsDict`, 
         and columns labels are the union of the functional classes contained in 
@@ -70,9 +70,9 @@ class DistanceCalculator:
         class of each feature along with the functional information of the 
         feature measured in bits. The fractional heights of 
         each row is normalized to account for filtering of data and rounding 
-        errors. The :obj:`dict` of :obj:`str`: :class:``pandas.dataframe` is 
+        errors. The :obj:`dict` of :obj:`str`: :class:`pandas.DataFrame` is 
         passed to the distance method set when the :class:`DistanceCalculator` 
-        was instantiated. Below is an example of the :class:`pandas.dataframe`'s 
+        was instantiated. Below is an example of the :class:`pandas.DataFrame`s 
         created\:
         
         +--------+-------+-------+-------+-------+-------+-------+--------+
