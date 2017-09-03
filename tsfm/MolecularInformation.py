@@ -59,34 +59,36 @@ class DistanceCalculator:
     def get_distance(self, ResultsDict):
         """
         Prints a pairwise distance matrix using the distance metric indicated during instantiation to `stdout`. 
-        
-        Creates a :obj:`dict` of :obj:`str`: :class:`pandas.DataFrame` from 
-        :obj:`ResultsDict`. The index of the dataframes are the union 
-        of the structural features contained in :obj:`ResultsDict`, 
-        and columns labels are the union of the functional classes contained in 
-        :obj:`ResultsDict` including  a column containing 
-        the functional information of the feature measured in bits. 
-        Rows contain the Gorodkin fractional heights of each functional 
-        class of each feature along with the functional information of the 
-        feature measured in bits. The fractional heights of 
-        each row is normalized to account for filtering of data and rounding 
-        errors. The :obj:`dict` of :obj:`str`: :obj:`pandas.DataFrame` is 
-        passed to the distance method set when the :class:`DistanceCalculator` 
-        was instantiated. Below is an example of the :class:`pandas.DataFrame` 
-        created\:
-        
-        +--------+-------+-------+-------+-------+-------+-------+--------+
-        |        |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
-        +========+=======+=======+=======+=======+=======+=======+========+
-        |   1A   | 0.500 | 0.250 | 0.125 | 0.000 | 0.000 | 0.125 | 2.453  |
-        +--------+-------+-------+-------+-------+-------+-------+--------+
-        |   1U   | 0.000 | 0.250 | 0.125 | 0.500 | 0.125 | 0.000 | 2.453  |
-        +--------+-------+-------+-------+-------+-------+-------+--------+
 
         Args:
             ResultsDict (:obj:`dict` of :obj:`str`: :class:`FunctionLogoResults`):
                 The values of the :obj:`dict` are compared using the selected pairwise
                 distance metric.
+        
+        
+        Note:
+            Creates a :obj:`dict` of :obj:`str`: :class:`pandas.DataFrame` from 
+            :obj:`ResultsDict`. The index of the dataframes are the union 
+            of the structural features contained in :obj:`ResultsDict`, 
+            and columns labels are the union of the functional classes contained in 
+            :obj:`ResultsDict` including  a column containing 
+            the functional information of the feature measured in bits. 
+            Rows contain the Gorodkin fractional heights of each functional 
+            class of each feature along with the functional information of the 
+            feature measured in bits. The fractional heights of 
+            each row is normalized to account for filtering of data and rounding 
+            errors. The :obj:`dict` of :obj:`str`: :obj:`pandas.DataFrame` is 
+            passed to the distance method set when the :class:`DistanceCalculator` 
+            was instantiated. Below is an example of the :class:`pandas.DataFrame` 
+            created\:
+            
+            +--------+-------+-------+-------+-------+-------+-------+--------+
+            |        |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
+            +========+=======+=======+=======+=======+=======+=======+========+
+            |   1A   | 0.500 | 0.250 | 0.125 | 0.000 | 0.000 | 0.125 | 2.453  |
+            +--------+-------+-------+-------+-------+-------+-------+--------+
+            |   1U   | 0.000 | 0.250 | 0.125 | 0.500 | 0.125 | 0.000 | 2.453  |
+            +--------+-------+-------+-------+-------+-------+-------+--------+
 
         """
         for result in ResultsDict:
