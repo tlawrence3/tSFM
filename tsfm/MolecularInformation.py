@@ -196,6 +196,9 @@ class DistanceCalculator:
         return (pi1+pi2)*mt.sqrt(step if step >= 0 else 0)
 
 class FunctionLogoResults:
+    """
+    Stores results from functional information calculations.
+    """
     def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
                  height = {}, inverseInfo = {}, inverseHeight = {}, p = {},
                  inverse_p = {}, from_file = False):
