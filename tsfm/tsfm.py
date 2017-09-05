@@ -20,7 +20,7 @@ def main():
     parser.add_argument('--logo', help='Produce function logo ps files', action="store_true")
     parser.add_argument("-B", help="Number of permutations. Default value is 100", type=int, default=0)
     parser.add_argument("-o", "--output", action="store_true", help="Print results to file")
-    parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, holm, hommel, BH, BY, and hochberg-simes. Default is BH", default = "fdr_bh")
+    parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "fdr_bh")
     parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
     args = parser.parse_args()
@@ -54,6 +54,11 @@ def main():
                     logo_dict[key].calculate_exact(args.max, args.proc, inverse=True)
 
         if (args.B):
+            multitest_methods = {'bonferroni': 'b', 'sidak': 's', 'holm': 'h',
+                                 'holm-sidak': 'hs', 'simes-hochberg': 'sh',
+                                 'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
+                                 'TSHB': 'fdr_tsbh', 'TSBKY': 'fdr_tsbky',
+                                 'GBS': 'fdr_gbs'}
             perm_dict = {}
             for key in logo_dict:
                 print("Generating permuted alignment data for {}".format(key), file=sys.stderr)
@@ -94,9 +99,9 @@ def main():
         if (args.B):
             print("Calculating p-values")
             for key in results:
-                results[key].add_stats(perm_dict[key], args.M)
+                results[key].add_stats(perm_dict[key], multitest_methods[args.M])
                 if (args.inverse):
-                    results[key].add_stats(perm_inverse_dict[key], args.M, inverse = True)
+                    results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.M], inverse = True)
 
         if (args.stdout):
             for key in results:

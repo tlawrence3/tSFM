@@ -58,7 +58,7 @@ class DistanceCalculator:
 
     def get_distance(self, ResultsDict):
         """
-        Prints a pairwise distance matrix using the distance metric indicated during instantiation to `stdout`. 
+        Prints a pairwise distance matrix using the distance metric indicated during instantiation to file. 
 
         Args:
             ResultsDict (:obj:`dict` of :obj:`str`: :class:`FunctionLogoResults`):
@@ -186,7 +186,8 @@ class DistanceCalculator:
             
             jsdDistMatrix.loc[pair[0], pair[1]] = distance
         
-        print(jsdDistMatrix)
+        jsdDistMatrix = jsdDistMatrix.round(6)
+        jsdDistMatrix.to_csv("jsdDistance.matrix", sep = "\t")
 
     def entropy(self, dist):
         return np.sum(-dist[dist!=0]*np.log2(dist[dist!=0]))
@@ -197,7 +198,18 @@ class DistanceCalculator:
 
 class FunctionLogoResults:
     """
-    Stores results from functional information calculations.
+    Stores results from information calculations and provides methods for ouput.
+
+
+    Args:
+        name (:obj:`str`): Value is used as prefix for output files.
+        basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`,:obj:`int`)): basepair
+        pos (:obj:`int`): pos
+        sequences (:obj:`list` of :class:`Seq`): sequences
+        pairs (:obj:`set` of :obj:`str`): pairs
+        singles (:obj:`set`: of :obj:`str`): singles
+        info (:obj:`dict` of :obj:`str` or :obj:`tuple`: :obj:`dict` of `str`: :obj:`float`): info
+
     """
     def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
                  height = {}, inverseInfo = {}, inverseHeight = {}, p = {},
@@ -526,6 +538,16 @@ class FunctionLogoResults:
                 logo_output.write(src.substitute(logodata_dict))
 
 class FunctionLogoDist:
+    """
+    An object for discrete distributions of information values calculated by permutation.
+
+    Args:
+        bpinfodist (:obj:`dict` of :obj:`float`: :obj:`int`): bpinfodist
+        bpheightdist (:obj:`dict` of :obj:`float`: :obj:`int`): bpheighdist
+        singleinfodist (:obj:`dict` of :obj:`float`: :obj:`int`): singleinfodist
+        singleheightdist (:obj:`dict` of :obj:`float`: :obj:`int`): singleheightdist
+
+    """
     def __init__(self):
 
         self.bpinfodist = defaultdict(int)
