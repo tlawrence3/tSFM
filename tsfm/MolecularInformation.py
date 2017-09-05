@@ -208,7 +208,7 @@ class FunctionLogoResults:
         sequences (:obj:`list` of :class:`Seq`): sequences
         pairs (:obj:`set` of :obj:`str`): pairs
         singles (:obj:`set` of :obj:`str`): singles
-        info (:obj:`dict` of :obj:`str` or :obj:`tuple`: :obj:`dict` of `str`: :obj:`float`): info
+        info (:obj:`dict` of :obj:`str` or :obj:`tuple`: :obj:`dict` of :obj:`str`: :obj:`float`): info
 
     """
     def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
