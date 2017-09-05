@@ -203,11 +203,11 @@ class FunctionLogoResults:
 
     Args:
         name (:obj:`str`): Value is used as prefix for output files.
-        basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`,:obj:`int`)): basepair
+        basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`, :obj:`int`)): basepair
         pos (:obj:`int`): pos
         sequences (:obj:`list` of :class:`Seq`): sequences
         pairs (:obj:`set` of :obj:`str`): pairs
-        singles (:obj:`set`: of :obj:`str`): singles
+        singles (:obj:`set` of :obj:`str`): singles
         info (:obj:`dict` of :obj:`str` or :obj:`tuple`: :obj:`dict` of `str`: :obj:`float`): info
 
     """
