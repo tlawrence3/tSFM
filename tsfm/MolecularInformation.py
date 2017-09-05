@@ -61,7 +61,7 @@ class DistanceCalculator:
         Prints a pairwise distance matrix using the distance metric indicated during instantiation to file. 
 
         Args:
-            ResultsDict (:obj:`dict` of :obj:`str`: :class:`FunctionLogoResults`):
+            ResultsDict (:obj:`dict` of :obj:`str`\: :class:`FunctionLogoResults`):
                 The values of the :obj:`dict` are compared using the selected pairwise
                 distance metric.
         
