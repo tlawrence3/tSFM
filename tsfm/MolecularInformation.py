@@ -208,24 +208,67 @@ class FunctionLogoResults:
             
             Note:
                 This data structure is created as an attribute of 
-                :class:`FunctionLogo` during the instantiation and can be accessed
-                with :meth:`FunctionLogo.basepairs` or created during
+                :class:`FunctionLogo` during instantiation and can be accessed
+                with :attr:`FunctionLogo.basepairs` or created during
                 instantiation of this class when ``from_file = True``
-        pos (:obj:`int`): the length of the alignment
-        sequences (:obj:`list` of :class:`Seq`): a list of :class:`Seq` objects used for text output
-        pairs (:obj:`set` of :obj:`str`): unique basepair states
-        singles (:obj:`set` of :obj:`str`): unique states for single sites
+        pos (:obj:`int`): Stores length of the alignment.
+            
+            Note:
+                See note for :attr:`basepairs`. Accessed using :attr:`FunctionLogo.pos`.
+        sequences (:obj:`list` of :class:`Seq`): a list of :class:`Seq` objects 
+            used for text output and visualization.
+
+            Note:
+                See note for :attr:`basepairs`. Accessed using :attr:`FunctionLogo.seq`
+        pairs (:obj:`set` of :obj:`str`): unique basepair states found in the dataset.
+
+            Note: 
+                See note for :attr:`basepairs`.
+        singles (:obj:`set` of :obj:`str`): unique states for single sites.
+            
+            Note:
+                See note for :attr:`basepairs`.
+        
         info (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
-            mapping of structural features to information content 
+            mapping of structural features to information content. Add this data structure using :meth:`add_information`.
+
+            Note:
+                This data structure is output of 
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+                :meth:`FunctionLogo.calculate_entropy_MM()`.
         height (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
-            mapping of structural features and functional class to class height
+            mapping of structural features and functional class to class height. Add this data structure using :meth:`add_information`.
+
+            Note:
+                This data structure is output of 
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+                :meth:`FunctionLogo.calculate_entropy_MM()`.
         inverseInfo (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
-            mapping of structural features to information content for anti-determinants
+            mapping of structural features to information content for anti-determinants. Add this data structure using :meth:`add_information`.
+
+            Note:
+                This data structure is output of 
+                :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or 
+                :meth:`FunctionLogo.calculate_entropy_inverse_MM()`.
         inverseHeight (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
-            mapping of structural features and functional class to class height for anti-determinants
-        p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values
+            mapping of structural features and functional class to class height for anti-determinants. Add this data structure using :meth:`add_information`.
+
+            Note:
+                This data structure is output of 
+                :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or 
+                :meth:`FunctionLogo.calculate_entropy_inverse_MM()`.
+        p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values.
+            
+            Note:
+                This data structure is created using :meth:`add_stats()`
         inverse_p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values for anti-determinants
-        from_file (:obj:`boolean`): create :class:`FunctionLogoResults` object from file written with :meth:`FunctionLogResults.text_output` 
+            
+            Note:
+                This data structure is created using :meth:`add_stats()`
+            from_file (:obj:`boolean`): create :class:`FunctionLogoResults` 
+                object from file written with 
+                :meth:`FunctionLogResults.text_output`. :attr:`name` should
+                be a :obj:`str` containing the file path.
                 
     """
     def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
@@ -691,6 +734,9 @@ class Seq:
 
 
 class FunctionLogo:
+    """
+    Parses structural and sequence infomation and provides methods for Function Logo calculations
+    """
     def __init__(self, struct_file, kind = None, exact = [], inverse = []):
         if (kind):
             self.parse_struct(struct_file, kind)
