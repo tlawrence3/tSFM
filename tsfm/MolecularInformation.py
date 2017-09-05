@@ -207,7 +207,8 @@ class FunctionLogoResults:
         pos (:obj:`int`): pos
         sequences (:obj:`list` of :class:`Seq`): sequences
         pairs (:obj:`set` of :obj:`str`): pairs
-        singles (:obj:`set` of :obj:`str`): singles
+        singles (:obj:`set` of :obj:`str`):
+            singles
         info (:obj:`dict` of :obj:`int`: :obj:`dict` of :obj:`str`: :obj:`float`):
             test 
         height (:obj:`int`): test
