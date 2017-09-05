@@ -209,7 +209,7 @@ class FunctionLogoResults:
         pairs (:obj:`set` of :obj:`str`): pairs
         singles (:obj:`set` of :obj:`str`):
             singles
-        info (:obj:`dict` of :obj:`int`: :obj:`dict` of :obj:`str`: :obj:`float`):
+        info (:obj:`dict` of :obj:`int`\: :obj:`dict` of :obj:`str`\: :obj:`float`):
             test 
         height (:obj:`int`): test
 
@@ -548,13 +548,13 @@ class FunctionLogoDist:
     a longer description
 
     Args:
-        bpinfodist (:obj:`dict` of :obj:`float`: :obj:`int`):
+        bpinfodist (:obj:`dict` of :obj:`float`\: :obj:`int`):
             bpinfodist
-        bpheightdist (:obj:`dict` of :obj:`float`: :obj:`int`):
+        bpheightdist (:obj:`dict` of :obj:`float`\: :obj:`int`):
             bpheighdist
-        singleinfodist (:obj:`dict` of :obj:`float`: :obj:`int`):
+        singleinfodist (:obj:`dict` of :obj:`float`\: :obj:`int`):
             singleinfodist
-        singleheightdist (:obj:`dict` of :obj:`float`: :obj:`int`):
+        singleheightdist (:obj:`dict` of :obj:`float`\: :obj:`int`):
             singleheightdist
 
 
