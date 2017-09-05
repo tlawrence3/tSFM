@@ -200,7 +200,6 @@ class FunctionLogoResults:
     """
     Stores results from information calculations and provides methods for ouput.
 
-
     Args:
         name (:obj:`str`): Value is used as prefix for output files.
         basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`, :obj:`int`)): basepair
@@ -541,6 +540,8 @@ class FunctionLogoResults:
 class FunctionLogoDist:
     """
     An object for discrete distributions of information values calculated by permutation.
+
+    a longer description
 
     Args:
         bpinfodist (:obj:`dict` of :obj:`float`: :obj:`int`): bpinfodist
