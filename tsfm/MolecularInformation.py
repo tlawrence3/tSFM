@@ -198,22 +198,28 @@ class DistanceCalculator:
 
 class FunctionLogoResults:
     """
-    Stores results from information calculations and provides methods for ouput.
+    Stores results from information calculations and provides methods for text output and visualization.
 
     Args:
         name (:obj:`str`): Value is used as prefix for output files.
         basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`, :obj:`int`)):
-            basepair
-        pos (:obj:`int`): pos
-        sequences (:obj:`list` of :class:`Seq`): sequences
-        pairs (:obj:`set` of :obj:`str`): pairs
-        singles (:obj:`set` of :obj:`str`):
-            singles
-        info (:obj:`dict` of :obj:`int` mapping to  :obj:`dict` of :obj:`str` mapping to :obj:`float`):
-            test 
-        height (:obj:`int`): test
-
-
+            a list of basepair coordinates encoded as a :obj:`tuple` of two :obj:`int`\s
+        pos (:obj:`int`): the length of the alignment
+        sequences (:obj:`list` of :class:`Seq`): a list of :class:`Seq` objects used for text output
+        pairs (:obj:`set` of :obj:`str`): unique basepair states
+        singles (:obj:`set` of :obj:`str`): unique states for single sites
+        info (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
+            mapping of structural features to information content 
+        height (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
+            mapping of structural features and functional class to class height
+        inverseInfo (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
+            mapping of structural features to information content for anti-determinants
+        inverseHeight (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
+            mapping of structural features and functional class to class height for anti-determinants
+        p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values
+        inverse_p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values for anti-determinants
+        from_file (:obj:`boolean`): create :class:`FunctionLogoResults` object from file written with :meth:`FunctionLogResults.text_output` 
+                
     """
     def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
                  height = {}, inverseInfo = {}, inverseHeight = {}, p = {},
