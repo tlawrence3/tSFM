@@ -548,13 +548,13 @@ class FunctionLogoDist:
     a longer description
 
     Args:
-        bpinfodist (:obj:`dict` of :obj:`float`\: :obj:`int`):
+        bpinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             bpinfodist
-        bpheightdist (:obj:`dict` of :obj:`float`\: :obj:`int`):
+        bpheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             bpheighdist
-        singleinfodist (:obj:`dict` of :obj:`float`\: :obj:`int`):
+        singleinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             singleinfodist
-        singleheightdist (:obj:`dict` of :obj:`float`\: :obj:`int`):
+        singleheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             singleheightdist
 
 
