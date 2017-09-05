@@ -203,7 +203,14 @@ class FunctionLogoResults:
     Args:
         name (:obj:`str`): Value is used as prefix for output files.
         basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`, :obj:`int`)):
-            a list of basepair coordinates encoded as a :obj:`tuple` of two :obj:`int`\s
+            a list of basepair coordinates encoded as a :obj:`tuple` of two 
+            :obj:`int`. 
+            
+            Note:
+                This data structure is created as an attribute of 
+                :class:`FunctionLogo` during the instantiation and can be accessed
+                with :meth:`FunctionLogo.basepairs` or created during
+                instantiation of this class when ``from_file = True``
         pos (:obj:`int`): the length of the alignment
         sequences (:obj:`list` of :class:`Seq`): a list of :class:`Seq` objects used for text output
         pairs (:obj:`set` of :obj:`str`): unique basepair states
