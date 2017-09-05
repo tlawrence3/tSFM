@@ -49,6 +49,8 @@ extensions = ['sphinx.ext.autodoc',
 intersphinx_mapping = {'python': ('http://docs.python.org/3/', None),
  'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None)}
 # Add any paths that contain templates here, relative to this directory.
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
 templates_path = ['_templates']
 
 # The suffix(es) of source filenames.
