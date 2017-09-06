@@ -53,6 +53,7 @@ napoleon_google_docstring = True
 napoleon_numpy_docstring = False
 templates_path = ['_templates']
 
+mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.2/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
