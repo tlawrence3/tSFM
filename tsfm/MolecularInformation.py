@@ -171,6 +171,13 @@ class DistanceCalculator:
 
 
     def rJSD(self, pandasDict):
+        """
+        Produces pairwise comparisons using rJSD metric
+
+        This is method should not be directly called. Instead use the
+        :meth:`get_distance`. All pairwise comparsions of OTUs are produced
+        and :meth:`rJSD_distance` is called to do the calculations.
+        """
         pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
         jsdDistMatrix = pd.DataFrame(index=list(pandasDict.keys()), columns = list(pandasDict.keys()))
         jsdDistMatrix = jsdDistMatrix.fillna(0)
@@ -265,10 +272,10 @@ class FunctionLogoResults:
             
             Note:
                 This data structure is created using :meth:`add_stats()`
-            from_file (:obj:`boolean`): create :class:`FunctionLogoResults` 
-                object from file written with 
-                :meth:`FunctionLogResults.text_output`. :attr:`name` should
-                be a :obj:`str` containing the file path.
+        from_file (:obj:`bool`): create :class:`FunctionLogoResults` 
+            object from file written with 
+            :meth:`FunctionLogResults.text_output`. :attr:`name` should
+            be a :obj:`str` containing the file path.
                 
     """
     def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
@@ -318,6 +325,15 @@ class FunctionLogoResults:
             self.name = name
 
     def from_file(self, file_name):
+        """
+        Read previously calculated results from file.
+
+        Populates :class:`FunctionLogoResults` from previously calculated 
+        results written to a file using :meth:`text_output`. 
+
+        Args:
+            file_name(:obj:`str`): File path of previously caclulated results
+        """
         pvalue = False
         file_handle = open(file_name, "r")
         for line in file_handle:
@@ -387,6 +403,29 @@ class FunctionLogoResults:
         file_handle.close()
 
     def add_information(self, info, height, inverse = False):
+        """
+        Add data structures containing results from information calculations
+
+        This method is used to add results from 
+        :meth:`FunctionLogo.calculate_entropy_NSB()`, 
+        :meth:`FunctionLogo.calculate_entropy_MM()`,
+        :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or 
+        :meth:`FunctionLogo.calculate_entropy_inverse_MM()`. If reading previous
+        results from a file this method is unnecessary because these data structures
+        are populated from values in the file.
+
+        Args:
+            info (:obj:`dict`): mapping of structural features to information 
+                content. This data structure is output of 
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+                :meth:`FunctionLogo.calculate_entropy_MM()`.
+            height (:obj:`dict`): mapping of structural features and functional class to class height.
+                This data structure is output of 
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+                :meth:`FunctionLogo.calculate_entropy_MM()`.
+            inverse (:obj:`bool`): Defines if the data structures are for
+                anti-determinates.
+        """
         if (inverse):
             self.inverseInfo = info
             self.inverseHeight = height
