@@ -209,7 +209,7 @@ class DistanceCalculator:
 
         .. math::  
             
-            D(X,Y) \equiv \sum_{f \in F}
+            D(X,Y) \equiv \sum_{f \in F} (I_f^X + I_f^Y) \sqrt{H[]}
 
         """
         step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
