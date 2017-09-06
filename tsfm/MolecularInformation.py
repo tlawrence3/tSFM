@@ -180,7 +180,7 @@ class DistanceCalculator:
 
         Args:
             pandasDict (:obj:`dict` of `str` mapping to :class:`pandas.DataFrame`): 
-            See :meth:`get_distance` for the format of the Data Frames.
+                See :meth:`get_distance` for the format of the Data Frames.
         """
         pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
         jsdDistMatrix = pd.DataFrame(index=list(pandasDict.keys()), columns = list(pandasDict.keys()))
@@ -204,10 +204,10 @@ class DistanceCalculator:
         return np.sum(-dist[dist!=0]*np.log2(dist[dist!=0]))
 
     def rJSD_distance(self, dist1, dist2, pi1, pi2):
-        """
+        r"""
         Weighted square root of the generalized Jensen-Shannon divergence
 
-        .. math:: D(X,Y) \\equiv \\sum_{f \\in F}(I_f^X + I_f^Y) \\sqrt{H[\\pi_f^Xp_f^X + \\pi_f^Y p_f^Y] - (\\pi_f_X H[p_f^X] + \\pi_f^Y H[p_f^Y])}
+        .. math:: D(X,Y) \equiv \sum_{f \in F}(I_f^X + I_f^Y) \sqrt{H[\pi_f^Xp_f^X + \pi_f^Y p_f^Y] - (\pi_f_X H[p_f^X] + \pi_f^Y H[p_f^Y])}
 
         """
         step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
