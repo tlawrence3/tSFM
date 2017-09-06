@@ -208,8 +208,9 @@ class DistanceCalculator:
         Weighted square root of the generalized Jensen-Shannon divergence
 
         .. math:: 
-            D(X,Y) \equiv \sum_{f \in F}(I_f^X + I_f^Y)\sqrt{H[\pi_f^Xp_f^X + \pi_f^Yp_f^Y] - 
-            (\pi_f_XH[p_f^X] + \pi_f^YH[p_f^Y])}
+
+            D(X,Y) \\equiv \\sum_{f \in F}(I_f^X + I_f^Y)\\sqrt{H[\pi_f^Xp_f^X + \\pi_f^Yp_f^Y] - 
+            (\\pi_f_XH[p_f^X] + \\pi_f^YH[p_f^Y])}
 
         """
         step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
