@@ -177,6 +177,10 @@ class DistanceCalculator:
         This is method should not be directly called. Instead use the
         :meth:`get_distance`. All pairwise comparsions of OTUs are produced
         and :meth:`rJSD_distance` is called to do the calculations.
+
+        Args:
+            pandasDict (:obj:`dict` of `str` mapping to :class:`pandas.DataFrame`): 
+            See :meth:`get_distance` for the format of the Data Frames.
         """
         pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
         jsdDistMatrix = pd.DataFrame(index=list(pandasDict.keys()), columns = list(pandasDict.keys()))
@@ -200,6 +204,11 @@ class DistanceCalculator:
         return np.sum(-dist[dist!=0]*np.log2(dist[dist!=0]))
 
     def rJSD_distance(self, dist1, dist2, pi1, pi2):
+        """
+        .. math:: 
+            D(X,Y) \equiv \sum_{f \in F}(I_f^X + I_f^Y)\sqrt{H[\pi_f^Xp_f^X + \pi_f^Yp_f^Y] - 
+            (\pi_f_XH[p_f^X] + \pi_f^YH[p_f^Y])}
+        """
         step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
         return (pi1+pi2)*mt.sqrt(step if step >= 0 else 0)
 
@@ -274,8 +283,7 @@ class FunctionLogoResults:
                 This data structure is created using :meth:`add_stats()`
         from_file (:obj:`bool`): create :class:`FunctionLogoResults` 
             object from file written with 
-            :meth:`FunctionLogResults.text_output`. :attr:`name` should
-            be a :obj:`str` containing the file path.
+            :meth:`FunctionLogResults.text_output`
                 
     """
     def __init__(self, name, basepairs = [], pos = 0, sequences = [], pairs = set(), singles = set(), info = {},
