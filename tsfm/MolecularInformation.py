@@ -205,11 +205,13 @@ class DistanceCalculator:
 
     def rJSD_distance(self, dist1, dist2, pi1, pi2):
         r"""
-        Weighted square root of the generalized Jensen-Shannon divergence
+        Weighted square root of the generalized Jensen-Shannon divergence defined by Lin 1991
 
         .. math::  
             
             D(X,Y) \equiv \sum_{f \in F} (I_f^X + I_f^Y) \sqrt{H[\pi_f^X p_f^X + \pi_f^Y p_f^Y] - (\pi_f^X H[p_f^X] + \pi_f^Y H[p_f^Y])}
+
+        where :math:`\pi_f^X = \frac{I_f^X}{I_f^X + I_f^Y}` and :math:`\pi_f^Y = \frac{I_f^Y}{I_f^X + I_f^Y}`
 
         """
         step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
