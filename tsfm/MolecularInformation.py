@@ -201,6 +201,12 @@ class DistanceCalculator:
         jsdDistMatrix.to_csv("jsdDistance.matrix", sep = "\t")
 
     def entropy(self, dist):
+        r"""
+        .. math::  
+
+            H[F] = -\sum_{f \in F} p(f) \log_2 (p(f))
+
+        """
         return np.sum(-dist[dist!=0]*np.log2(dist[dist!=0]))
 
     def rJSD_distance(self, dist1, dist2, pi1, pi2):
