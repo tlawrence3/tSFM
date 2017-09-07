@@ -201,12 +201,6 @@ class DistanceCalculator:
         jsdDistMatrix.to_csv("jsdDistance.matrix", sep = "\t")
 
     def entropy(self, dist):
-        r"""
-        .. math::  
-
-            H[F] = -\sum_{f \in F} p(f) \log_2 (p(f))
-
-        """
         return np.sum(-dist[dist!=0]*np.log2(dist[dist!=0]))
 
     def rJSD_distance(self, dist1, dist2, pi1, pi2):
@@ -453,6 +447,17 @@ class FunctionLogoResults:
             self.height = height
     
     def add_stats(self, distribution, correction, inverse = False):
+        """
+        Perform statisical testing and multiple test correction
+
+        Args:
+            distribution (:class:`FunctionLogoDist`): discrete probability 
+                distributions of information content of structural 
+                features and functional class height.
+            correction (:obj:`str`): Multiple test correction method.
+            inverse (:obj:`bool`): Produce statistical tests for
+                anti-determinates.
+        """
         self.correction = correction
         if (inverse):
             self.inverse_p = distribution.stat_test(self.inverseInfo, self.inverseHeight,
@@ -474,6 +479,9 @@ class FunctionLogoResults:
         return ret_counter
 
     def text_output(self):
+        """
+        Write results to file named: :attr:`name`_results.txt
+        """
         #build output heading
         file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
         heading_dict = {}
@@ -570,6 +578,9 @@ class FunctionLogoResults:
         file_handle.close()
 
     def logo_output(self):
+        """
+        Produce function logo postscript files
+        """
         coord_length = 0 #used to determine eps height
         coord_length_addition = 0
 
@@ -657,19 +668,24 @@ class FunctionLogoResults:
 
 class FunctionLogoDist:
     """
-    An object for discrete distributions of information values calculated by permutation.
+    Discrete probability distributions of information values.
 
-    a longer description
+    Probabilty distributions are created using a permutation label shuffling
+    strategy. Permuted data is created using :meth:`FunctionLogo.permute` and
+    distribution are inferred from the permuted data using 
+    :meth:`FunctionLogo.permInfo`
 
     Args:
         bpinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
-            bpinfodist
+            Discrete probability distribution of basepair feature information
         bpheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
-            bpheighdist
+            Discrete probability distribution of functional class 
+            information of basepair features
         singleinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
-            singleinfodist
+            Discrete probability distribution of single base feature information
         singleheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
-            singleheightdist
+            Discrete probability distribution of functional class 
+            information of single base features
 
 
     """

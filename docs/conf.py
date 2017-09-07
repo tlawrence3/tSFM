@@ -47,7 +47,8 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.intersphinx', 'sphinx.ext.viewcode']
 
 intersphinx_mapping = {'python': ('http://docs.python.org/3/', None),
- 'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None)}
+ 'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
+                       'statsmodel': ('http://www.statsmodels.org/stable/', None)}
 # Add any paths that contain templates here, relative to this directory.
 napoleon_google_docstring = True
 napoleon_numpy_docstring = False
