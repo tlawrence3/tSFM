@@ -450,6 +450,12 @@ class FunctionLogoResults:
         """
         Perform statisical testing and multiple test correction
 
+        Calculates p-values and multiple testing corrected p-values for
+        structural features and functional class heights. Requires an
+        instance of :class:`FunctionLogoDist` and calls the 
+        :meth:`FunctionLogoDist.stat_test`. Methods for multiple test
+        correction are provided by :class:`statsmodels.stats.multitest`.
+
         Args:
             distribution (:class:`FunctionLogoDist`): discrete probability 
                 distributions of information content of structural 
@@ -480,7 +486,7 @@ class FunctionLogoResults:
 
     def text_output(self):
         """
-        Write results to file named: :attr:`name`_results.txt
+        Write results to file named\: :attr:`name`_results.txt
         """
         #build output heading
         file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
@@ -673,7 +679,7 @@ class FunctionLogoDist:
     Probabilty distributions are created using a permutation label shuffling
     strategy. Permuted data is created using :meth:`FunctionLogo.permute` and
     distribution are inferred from the permuted data using 
-    :meth:`FunctionLogo.permInfo`
+    :meth:`FunctionLogo.permInfo`.
 
     Args:
         bpinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
@@ -686,7 +692,6 @@ class FunctionLogoDist:
         singleheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             Discrete probability distribution of functional class 
             information of single base features
-
 
     """
     def __init__(self):
@@ -714,6 +719,23 @@ class FunctionLogoDist:
         self.ssheight_sorted_keys = sorted(self.singleheightdist.keys())
 
     def stat_test(self, info, height, correction):
+        """
+        Performs statistical tests and multiple test correction.
+
+        Calculates a p-value using a right tail probability test on the
+        instance's discrete probability distributions. Methods for multiple test
+        correction are provided by :class:`statsmodels.stats.multitest`. This
+        method is usually invoked using :meth:`FunctionLogoResults.add_stats`.
+
+        Args:
+            info (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
+                mapping of structural features to information content.
+            height (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
+                mapping of structural features and functional class to class height.
+            correction (:obj:`str`): Method for multiple test correction. Any 
+                method available in :class:`statsmodels.stats.multitest` is a
+                valid option
+        """
         P = defaultdict(lambda: defaultdict(float))
         P_corrected = defaultdict(lambda: defaultdict(float))
         p = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
@@ -799,6 +821,9 @@ class FunctionLogoDist:
             return 1.0
 
 class Seq:
+    """
+    Providing a data structure constisting of a molecular sequence labeled with a functional class.
+    """
     def __init__(self, function, seq):
         self.function = function
         self.seq = seq
@@ -810,7 +835,19 @@ class Seq:
 class FunctionLogo:
     """
     Parses structural and sequence infomation and provides methods for Function Logo calculations
+
+    This class provided data structures and methods for calculating 
+    functional information of basepair a single base features. Additionally,
+    methods for producing permuted data sets with function class labels
+    shuffled.
+    
+    Args:
+        struct_file (:obj:`str`): File name containing secondary structure
+            notation in cove, infernal, or text format.
+        kind (:obj:`str`): secondary structure notation format.
+
     """
+
     def __init__(self, struct_file, kind = None, exact = [], inverse = []):
         if (kind):
             self.parse_struct(struct_file, kind)
@@ -827,6 +864,14 @@ class FunctionLogo:
         self.functions = Counter()
 
     def parse_sequences(self, file_prefix):
+        """
+        Parse sequence alignment data in clustal format
+
+        Sequence alignment files are required to be in clustal format with
+        each functional class having its own file. Alignment files must
+        conform to the naming standard ``fileprefix_functionalclass.aln``.
+
+        """
         for fn in glob.glob("{}_?.aln".format(file_prefix)):
             match = re.search("_([A-Z])\.aln", fn)
             aa_class = match.group(1)
