@@ -19,7 +19,6 @@ def main():
     parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy.", type=int)
     parser.add_argument('--logo', help='Produce function logo ps files', action="store_true")
     parser.add_argument("-B", help="Number of permutations. Default value is 100", type=int, default=0)
-    parser.add_argument("-o", "--output", action="store_true", help="Print results to file")
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "fdr_bh")
     parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
@@ -103,9 +102,8 @@ def main():
                 if (args.inverse):
                     results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.M], inverse = True)
 
-        if (args.stdout):
-            for key in results:
-                results[key].text_output()
+        for key in results:
+            results[key].text_output()
 
 
         if (args.logo):
