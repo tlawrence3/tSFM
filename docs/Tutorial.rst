@@ -73,7 +73,7 @@ Tutorial
    each functional class having its own file for each prefix. Alignment files 
    must conform to the naming standard fileprefix_functionalclass.aln.
 
-   Example:
+   Example::
        To calculate functional information for the two datasets below 
        file_prefix would be ``DataSet1 DataSet2``:
 
