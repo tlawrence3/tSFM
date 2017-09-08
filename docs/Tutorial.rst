@@ -76,7 +76,7 @@ Tutorial
    Example::
 
        To calculate functional information for the two datasets below 
-       file_prefix would be ``DataSet1 DataSet2``:
+       file_prefix would be: DataSet1 DataSet2
 
        - DataSet1_A.aln
        - DataSet1_C.aln
