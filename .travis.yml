@@ -4,6 +4,7 @@ matrix:
       services:
         - docker
     - os: osx
+    - language: python
 
 script:
   - export CIBW_SKIP=cp27-*
