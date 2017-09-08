@@ -486,7 +486,7 @@ class FunctionLogoResults:
 
     def text_output(self):
         """
-        Write results to file named\: :attr:`name`_results.txt
+        Write results to file named\: :attr:`name`\_results.txt
         """
         #build output heading
         file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
@@ -678,10 +678,11 @@ class FunctionLogoDist:
 
     Probabilty distributions are created using a permutation label shuffling
     strategy. Permuted data is created using :meth:`FunctionLogo.permute` and
-    distribution are inferred from the permuted data using 
+    distribution are inferred from the permuted data and 
+    :class:`FunctionLogoDist` objects created using 
     :meth:`FunctionLogo.permInfo`.
 
-    Args:
+    Attributes:
         bpinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             Discrete probability distribution of basepair feature information
         bpheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
@@ -823,6 +824,10 @@ class FunctionLogoDist:
 class Seq:
     """
     Providing a data structure constisting of a molecular sequence labeled with a functional class.
+
+    Args:
+        function (:obj:`str`): Functional annotation of the sequence.
+        seq (:obj:`str`): Molecular sequence data.
     """
     def __init__(self, function, seq):
         self.function = function
@@ -902,6 +907,13 @@ class FunctionLogo:
         print("{} alignments parsed".format(len(self.functions.keys())), file=sys.stderr)
 
     def parse_struct(self, struct_file, kind):
+        """
+        Parse secondary structure file for basepair locations.
+
+        Args:
+            struct_file (`str`): File containing structural annotation
+            kind (`str`): Structural annotation format
+        """
         print("Parsing base-pair coordinates", file=sys.stderr)
         basepairs = []
         if (kind == "cove"):
@@ -975,6 +987,7 @@ class FunctionLogo:
         return j
 
     def permuted(self, items, pieces = 2):
+        random.seed()
         sublists = [[] for i in range(pieces)]
         for x in items:
             sublists[random.randint(0, pieces - 1)].append(x)
@@ -1310,11 +1323,12 @@ class FunctionLogo:
                     inverse_state_counts[aa_class] = sum(state_counts.values())/state_counts[aa_class]
 
                 nsb_array = np.array(list(inverse_state_counts.values()))
-                fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
                 if (sum(state_counts.values()) <= len(self.inverse_exact)):
                     expected_bg_entropy = self.inverse_exact[sum(state_counts.values()) -1]
+                    fg_entropy = -np.sum((nsb_array/nsb_array.sum()) * np.log2(nsb_array/nsb_array.sum()))
                 else:
                     expected_bg_entropy = bg_entropy
+                    fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
 
                 if (expected_bg_entropy-fg_entropy < 0):
                     info_inverse[pairs][state] = 0
@@ -1341,11 +1355,12 @@ class FunctionLogo:
                     inverse_state_counts[aa_class] = sum(state_counts.values())/state_counts[aa_class]
 
                 nsb_array = np.array(list(inverse_state_counts.values()))
-                fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
                 if (sum(state_counts.values()) <= len(self.inverse_exact)):
                     expected_bg_entropy = self.inverse_exact[sum(state_counts.values()) - 1]
+                    fg_entropy = -np.sum((nsb_array/nsb_array.sum()) * np.log2(nsb_array/nsb_array.sum()))
                 else:
                     expected_bg_entropy = bg_entropy
+                    fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
 
                 if (expected_bg_entropy-fg_entropy < 0):
                     info_inverse[singles][state] = 0
@@ -1372,11 +1387,12 @@ class FunctionLogo:
                 if (sum(state_counts.values()) == 0):
                     continue
                 nsb_array = np.array(list(state_counts.values()) + [0]*(len(self.functions) - len(state_counts)))
-                fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
                 if (sum(state_counts.values()) <= len(self.exact)):
                     expected_bg_entropy = self.exact[sum(state_counts.values()) - 1]
+                    fg_entropy = -np.sum((nsb_array/nsb_array.sum()) * np.log2(nsb_array/nsb_array.sum()))
                 else:
                     expected_bg_entropy = bg_entropy
+                    fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
 
                 if (expected_bg_entropy-fg_entropy < 0):
                     info[pairs][state] = 0
@@ -1395,11 +1411,12 @@ class FunctionLogo:
                 if (sum(state_counts.values()) == 0):
                     continue
                 nsb_array = np.array(list(state_counts.values()) + [0]*(len(self.functions) - len(state_counts)))
-                fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
                 if (sum(state_counts.values()) <= len(self.exact)):
                     expected_bg_entropy = self.exact[sum(state_counts.values()) - 1]
+                    fg_entropy = -np.sum((nsb_array/nsb_array.sum()) * np.log2(nsb_array/nsb_array.sum()))
                 else:
                     expected_bg_entropy = bg_entropy
+                    fg_entropy = nb.S(nb.make_nxkx(nsb_array,nsb_array.size), nsb_array.sum(), nsb_array.size)
 
                 if (expected_bg_entropy-fg_entropy < 0):
                     info[singles][state] = 0
