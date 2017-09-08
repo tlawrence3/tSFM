@@ -12,6 +12,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(name = "tsfm",
       setup_requires=['cython'],
       install_requires=['statsmodels', 'numpy', 'scipy', 'pandas', 'patsy', 'mpmath'],
+      python_requires='~=3.3',
       packages = ["tsfm"],
       package_data={'tsfm': ['eps/Template.eps', 'eps/inverse_template.eps']},
       entry_points = {
