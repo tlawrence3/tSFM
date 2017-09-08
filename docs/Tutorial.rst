@@ -74,6 +74,7 @@ Tutorial
    must conform to the naming standard fileprefix_functionalclass.aln.
 
    Example::
+
        To calculate functional information for the two datasets below 
        file_prefix would be ``DataSet1 DataSet2``:
 
