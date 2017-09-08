@@ -4,9 +4,10 @@ matrix:
       services:
         - docker
     - os: osx
-    - language: python
+
+language: python
 
 script:
   - export CIBW_SKIP=cp27-*
-  - pip3 install cibuildwheel==0.5.0
+  - pip install cibuildwheel==0.5.0
   - cibuildwheel --output-dir wheelhouse
