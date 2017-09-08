@@ -1012,6 +1012,13 @@ class FunctionLogo:
         return permStructList
 
     def permute(self, permute_num, proc):
+        """
+        Creates permuted datasets by shuffling functional annotation labels of sequences.
+
+        Args:
+            permute_num (:obj:`int`): Number of permutations to perform
+            proc (:obj:`int`): Number of concurrent processes to run
+        """
         with Pool(processes = proc) as pool:
             perm_jobs = []
             for x in range(proc):
@@ -1026,6 +1033,17 @@ class FunctionLogo:
                 self.permutationList += x
 
     def permInfo(self, method, proc, inverse = False):
+        """
+        Calculate functional information statistics of permuted datasets.
+
+        Args:
+            method (:obj:`str`): Entropy estimation method. Either NSB or Miller-Maddow.
+            proc (:obj:`int`): Number of concurrent processes to run.
+
+        Return:
+        perm_dist (:class:`FunctionLogoDist`): Discrete distribution of 
+            functional information estimated from permuted datasets.
+        """
         bp_info = []
         bp_height = []
         single_info = []
@@ -1144,6 +1162,23 @@ class FunctionLogo:
         return (total_info_bp, total_info_ss, height_info_bp, height_info_ss)
 
     def calculate_exact(self, n, proc, inverse = False):
+        """
+        Exact method of small sample size correction.
+
+        Calculate the exact method of sample size correction for up to N samples.
+        Computational intensive portion of the calculation is implemented as a C
+        extension. This method is fully described in Schneider et al 1986. 
+        This calculation is polynomial in sample size. It becomes prohibitively 
+        expensive to calculate beyond a sample size of 16. The correction 
+        factor of each sample size will be calculated in parallel up to 
+        :obj:`proc` at a time.
+
+        Args:
+            n (:obj:`int`): Calculate correction up to this sample size.
+            proc (:obj:`int`): Number of concurrent processes to run
+            inverse (:obj:`bool`): If true calculate sample size correction
+                for anti-determinates.
+        """
         exact_list = []
         if (inverse):
             inverse_functions = Counter()
@@ -1173,6 +1208,9 @@ class FunctionLogo:
                 self.exact.append(x[1])
 
     def calculate_entropy_MM(self):
+        """
+        Calculate functional information using Miller-Maddow estimator.
+        """
         info = defaultdict(lambda : defaultdict(float))
         height_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
 
@@ -1227,6 +1265,9 @@ class FunctionLogo:
         return (info, height_dict)
 
     def calculate_entropy_inverse_MM(self):
+        """
+        Calculate functional information for anit-determinates using Miller-Maddow estimator.
+        """
         info_inverse = defaultdict(lambda : defaultdict(float))
         height_dict_inverse = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
         inverse_functions = Counter()
@@ -1301,6 +1342,9 @@ class FunctionLogo:
         return (info_inverse, height_dict_inverse)
 
     def calculate_entropy_inverse_NSB(self):
+        """
+        Calculate functional information for anit-determinates using NSB estimator.
+        """
         info_inverse = defaultdict(lambda : defaultdict(float))
         height_dict_inverse = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
         inverse_functions = Counter()
@@ -1376,6 +1420,9 @@ class FunctionLogo:
         return (info_inverse, height_dict_inverse)
 
     def calculate_entropy_NSB(self):
+        """
+        Calculate functional information using NSB estimator.
+        """
         info = defaultdict(lambda : defaultdict(float))
         height_dict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
 

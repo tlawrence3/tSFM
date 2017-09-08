@@ -38,12 +38,12 @@ Tutorial
     Method of entropy estimation. NSB <NSB> and Miller-Maddow <Miller> 
     entropy esitmators are implemented. Default is NSB.
 
-.. option:: -x <max>, --max <max>
+.. option:: -x <N>, --max <N>
 
-    Maximum sample size to calculate the exact method of sample size correction. 
-    This method is fully described in Schneider et al 1986. This calculate is
-    polynomial in sample size. It becomes enormously expensive to calculate beyond
-    a sample size of ~15. The correction factor of each sample size will be calculated
+    Calculate the exact method of small sample size correction for up to N samples. 
+    This method is fully described in Schneider et al 1986. This calculation is
+    polynomial in sample size. It becomes prohibitively expensive to calculate beyond
+    a sample size of 16. The correction factor of each sample size will be calculated
     in parallel up to :option:`--proc` at a time. Default: 10.
  
 .. option:: --logo
