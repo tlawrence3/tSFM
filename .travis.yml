@@ -9,7 +9,9 @@ language: python
 
 env:
   global:
-    - CIBW_SKIP="cp27-* cp33-* *-manylinux1_i686 *-manylinux1_i386"
+    - CIBW_SKIP="cp27-* cp33-*"
 script:
+  - pip3 install numpy
+  - pip3 install statsmodels
   - pip install cibuildwheel==0.5.0
   - cibuildwheel --output-dir wheelhouse
