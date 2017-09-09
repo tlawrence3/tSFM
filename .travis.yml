@@ -7,7 +7,9 @@ matrix:
 
 language: python
 
+env:
+  global:
+    - CIBW_SKIP=cp27-* cp33-*
 script:
-  - export CIBW_SKIP=cp27-*
   - pip install cibuildwheel==0.5.0
   - cibuildwheel --output-dir wheelhouse

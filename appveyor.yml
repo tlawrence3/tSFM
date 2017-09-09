@@ -1,3 +1,6 @@
+environment:
+  global:
+    CIBW_SKIP: "cp27-* cp34-*"
 build_script:
   - export CIBW_SKIP=cp27-*
   - pip install cibuildwheel==0.5.0
