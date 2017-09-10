@@ -1,15 +1,24 @@
 matrix:
   include:
     - sudo: required
+      language: python
       services:
         - docker
     - os: osx
+      osx_image: xcode8.3
 
-language: python
 
 env:
   global:
     - CIBW_SKIP="cp27-* cp33-* *-manylinux1_i686"
+
+
+install:
+# Python 3 is needed to run cibuildwheel.
+  - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then
+      brew install python3;
+    fi
+# Install cibuildwheel using pip3 to make sure Python 3 is used.
+- pip3 install cibuildwheel==0.5.0
 script:
-  - pip install cibuildwheel==0.5.0
   - cibuildwheel --output-dir wheelhouse
