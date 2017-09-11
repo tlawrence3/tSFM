@@ -1,3 +1,5 @@
+[![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]()
+
 # Example command
 ```shell
 tsfm -vc struct_file.txt ferns/FERN Gnetidae/GNET -j
