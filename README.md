@@ -1,4 +1,4 @@
-https://travis-ci.org/tlawrence3/tsfm.svg?branch=master
+[](https://travis-ci.org/tlawrence3/tsfm.svg?branch=master)
 
 # Example command
 ```shell
