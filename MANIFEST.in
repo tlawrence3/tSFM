@@ -1,0 +1,5 @@
+include *.rst *.txt *.md LICENSE .travis.yml docs/Makefile
+recursive-include docs *.rst
+recursive-include docs *.py
+prune docs/_build
+
