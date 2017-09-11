@@ -583,7 +583,13 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 
 
 /* Module declarations from 'libc.math' */
-
+/* Windows uses C90 which does not define log2*/
+#ifdef _WIN32
+static inline double log2( double value )
+{    
+  return log(value)/log(2);
+}
+#endif
 /* Module declarations from 'libc.string' */
 
 /* Module declarations from 'libc.stdlib' */
