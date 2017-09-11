@@ -1,4 +1,4 @@
-![build status](https://travis-ci.org/tlawrence3/tsfm.svg?branch=master)
+[![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]()
 
 # Example command
 ```shell
