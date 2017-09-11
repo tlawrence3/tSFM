@@ -1,3 +1,5 @@
+(https://travis-ci.org/tlawrence3/tsfm.svg?branch=master)
+
 # Example command
 ```shell
 tsfm -vc struct_file.txt ferns/FERN Gnetidae/GNET -j
