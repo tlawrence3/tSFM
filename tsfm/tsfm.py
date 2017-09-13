@@ -3,20 +3,23 @@ import argparse
 import sys
 import os
 import tsfm.MolecularInformation as MolecularInformation
+from tsfm._version import __version__
 
 def main():
      #Setup parser
     parser = argparse.ArgumentParser(description = "tsfm")
+    parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-i", "--infernal", type=argparse.FileType("r"), help="Structure file is in infernal format")
     group.add_argument("-c", "--cove", type=argparse.FileType("r"), help="Structure file is in cove format")
     group.add_argument("-t", "--text", type=argparse.FileType("r"), help="Structure file is in text format")
     group.add_argument("-f", "--file", action="store_true", help="use to read in previous results from file")
+    group.add_argument("-s", "--single", action="store_true", help="Calculate functional information for single sites only")
     parser.add_argument("-p", "--proc", type = int, default = os.cpu_count(), help="Maximum number of concurrent processes. Default is number of cores reported by the OS")
     parser.add_argument("-v","--inverse", action="store_true", help="calculate anti-determinates")
     parser.add_argument("-a", "--alpha", type=float, default=0.05, help="Current not implemented. Default = 0.05")
     parser.add_argument("-e", "--entropy", type=str, default = "NSB", help= "Method of entropy estimation. Either NSB or Miller. Default = NSB")
-    parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy.", type=int)
+    parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy correction. Default = 10", type=int, default = 10)
     parser.add_argument('--logo', help='Produce function logo ps files', action="store_true")
     parser.add_argument("-B", help="Number of permutations. Default value is 100", type=int, default=0)
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "fdr_bh")
@@ -36,17 +39,21 @@ def main():
             for prefix in args.file_prefix:
                 prefix_name = prefix.split("/")[-1]
                 logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text")
-        if (args.cove):
+        elif (args.cove):
             for prefix in args.file_prefix:
                 prefix_name = prefix.split("/")[-1]
                 logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove")
+        elif (args.single):
+            for prefix in args.file_prefix:
+                prefix_name = prefix.split("/")[-1]
+                logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "s")
 
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
             logo_dict[prefix_name].parse_sequences(prefix)
-
         if (args.max):
             for key in logo_dict:
+                print(key)
                 logo_dict[key].calculate_exact(args.max, args.proc)
             if (args.inverse):
                 for key in logo_dict:
