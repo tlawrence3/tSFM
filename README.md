@@ -1,4 +1,4 @@
-[![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]()
+[![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/format/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/pyversions/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/l/tsfm.svg)]()
 
 # Example command
 ```shell
