@@ -51,12 +51,13 @@ def main():
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
             logo_dict[prefix_name].parse_sequences(prefix)
+
         if (args.max):
             for key in logo_dict:
-                print(key)
+                print("Calculating Sample Size Correction for {}".format(key))
                 logo_dict[key].calculate_exact(args.max, args.proc)
-            if (args.inverse):
-                for key in logo_dict:
+                if (args.inverse):
+                    print("Calculating Sample Size Correction for Inverse {}".format(key))
                     logo_dict[key].calculate_exact(args.max, args.proc, inverse=True)
 
         if (args.B):
@@ -80,8 +81,12 @@ def main():
 
         results = {}
         for key in logo_dict:
-            results[key] = MolecularInformation.FunctionLogoResults(key, logo_dict[key].basepairs, logo_dict[key].pos, logo_dict[key].sequences,
-                                             logo_dict[key].pairs, logo_dict[key].singles)
+            results[key] = MolecularInformation.FunctionLogoResults(key,
+                                                                    logo_dict[key].basepairs,
+                                                                    logo_dict[key].pos,
+                                                                    logo_dict[key].sequences,
+                                                                    logo_dict[key].pairs,
+                                                                    logo_dict[key].singles)
         
         if (args.entropy == "NSB"):
             for key in logo_dict:
@@ -110,11 +115,13 @@ def main():
                     results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.M], inverse = True)
 
         for key in results:
+            print("Writing text output for {}".format(key))
             results[key].text_output()
 
 
         if (args.logo):
             for key in results:
+                print("Writing function logo postscript files for {}".format(key))
                 results[key].logo_output()
 
     if (args.jsd):

@@ -329,12 +329,22 @@ class FunctionLogoResults:
         
         if (not basepairs):
             self.basepairs = []
+        else:
+            self.basepairs = basepairs
         if (not sequences):
             self.sequences = []
+        else:
+            self.sequences = sequences
+        
         if (not pairs):
             self.pairs = set()
+        else:
+            self.pairs = pairs
+
         if (not singles):
             self.singles = set()
+        else:
+            self.singles = singles
 
         if (from_file):
             self.name = name.split("/")[-1]
@@ -1237,7 +1247,6 @@ class FunctionLogo:
             for i in range(1,n+1):
                 exact_list.append((i, p, len(self.functions.values())))
 
-            print("Calculating Sample Size Correction for Inverse", file = sys.stderr)
             with Pool(processes=proc) as pool:
                 exact_results = pool.starmap(self.exact_run, exact_list)
 
@@ -1248,12 +1257,12 @@ class FunctionLogo:
             for i in range(1,n+1):
                 exact_list.append((i, p, len(self.functions.values())))
 
-            print("Calculating Sample Size Correction", file = sys.stderr)
             with Pool(processes=proc) as pool:
                 exact_results = pool.starmap(self.exact_run, exact_list)
 
             for x in exact_results:
                 self.exact.append(x[1])
+
     def calculate_entropy_MM(self):
         """
         Calculate functional information using Miller-Maddow estimator.
