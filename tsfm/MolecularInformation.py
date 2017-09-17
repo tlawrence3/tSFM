@@ -1278,7 +1278,8 @@ class FunctionLogo:
                 if (sum(state_counts.values()) == 0):
                     continue
 
-                fg_entropy = -np.sum((state_counts[state_counts!=0]/state_counts[state_counts!=0].sum()) * np.log2(state_counts[state_counts!=0]/state_counts[state_counts!=0].sum()))
+                nsb_array = np.array(list(state_counts.values()) + [0]*(len(self.functions) - len(state_counts)))
+                fg_entropy = -np.sum((nsb_array[nsb_array!=0]/nsb_array[nsb_array!=0].sum()) * np.log2(nsb_array[nsb_array!=0]/nsb_array[nsb_array!=0].sum()))
                 if (sum(state_counts.values()) <= len(self.exact)):
                     expected_bg_entropy = self.exact[sum(state_counts.values()) - 1]
                 else:
@@ -1301,7 +1302,8 @@ class FunctionLogo:
                 if (state_counts.sum() == 0):
                     continue
 
-                fg_entropy = -np.sum((state_counts[state_counts!=0]/state_counts[state_counts!=0].sum()) * np.log2(state_counts[state_counts!=0]/state_counts[state_counts!=0].sum()))
+                nsb_array = np.array(list(state_counts.values()) + [0]*(len(self.functions) - len(state_counts)))
+                fg_entropy = -np.sum((nsb_array[nsb_array!=0]/nsb_array[nsb_array!=0].sum()) * np.log2(nsb_array[nsb_array!=0]/nsb_array[nsb_array!=0].sum()))
                 if (sum(state_counts.values()) <= len(self.exact)):
                     expected_bg_entropy = self.exact[sum(state_counts.values()) - 1]
                 else:
