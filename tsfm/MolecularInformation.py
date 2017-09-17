@@ -1298,8 +1298,8 @@ class FunctionLogo:
 
         for singles in range(self.pos):
             for state in self.singles:
-                state_counts = np.array(list(self.get([singles], state).values()))
-                if (state_counts.sum() == 0):
+                state_counts = self.get([singles], state)
+                if (sum(state_counts.values()) == 0):
                     continue
 
                 nsb_array = np.array(list(state_counts.values()) + [0]*(len(self.functions) - len(state_counts)))
