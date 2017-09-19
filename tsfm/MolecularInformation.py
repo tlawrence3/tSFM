@@ -1380,10 +1380,10 @@ class FunctionLogo:
 
                 nsb_array = np.array(list(inverse_state_counts.values()))
                 fg_entropy = -np.sum((nsb_array[nsb_array!=0]/nsb_array[nsb_array!=0].sum()) * np.log2(nsb_array[nsb_array!=0]/nsb_array[nsb_array!=0].sum()))
-                if (state_counts.sum() <= len(self.inverse_exact)):
-                    expected_bg_entropy = self.inverse_exact[state_counts.sum() -1]
+                if (sum(state_counts.values()) <= len(self.inverse_exact)):
+                    expected_bg_entropy = self.inverse_exact[sum(state_counts.values()) - 1]
                 else:
-                    expected_bg_entropy = self.approx_expect(bg_entropy, len(self.functions), state_counts.sum())
+                    expected_bg_entropy = self.approx_expect(bg_entropy, len(self.functions), sum(state_counts.values()))
 
                 if (expected_bg_entropy-fg_entropy < 0):
                     info_inverse[singles][state] = 0
