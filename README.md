@@ -1,5 +1,5 @@
 [![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/format/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/pyversions/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/l/tsfm.svg)]()
-
+[![Coverage Status](https://coveralls.io/repos/github/tlawrence3/tsfm/badge.svg?branch=master)](https://coveralls.io/github/tlawrence3/tsfm?branch=master)
 # Example command
 ```shell
 tsfm -vc struct_file.txt ferns/FERN Gnetidae/GNET -j
