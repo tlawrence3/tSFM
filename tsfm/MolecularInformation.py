@@ -1026,12 +1026,10 @@ class FunctionLogo:
 
         if (kind == "text"):
             for line in struct_file:
-                line = line.split(";")[1]
-                coords = line.split(",")
-                for coord in coords:
-                    pos = coord.split(":")
-                    pos = [int(x) for x in pos]
-                    basepairs.append((pos[0], pos[1]))
+                coords = "".join(line.split(":")[1])
+                coords = coords.split(",") 
+                for coord1, coord2 in zip(coords[0::2], coords[1::2]):
+                    basepairs.append((int(coord1), int(coord2)))
 
         self.basepairs = basepairs
 
@@ -1062,7 +1060,7 @@ class FunctionLogo:
         for p in range(numPerm):
             indices.append(self.permuted(aa_classes))
         for index in indices:
-            permStruct = FunctionLogo(self.basepairs, exact = self.exact, inverse = self.inverse_exact)
+            permStruct = FunctionLogo(self.basepairs, exact_init = self.exact, inverse_init = self.inverse_exact)
             for i, seqs in enumerate(self.sequences):
                 permStruct.add_sequence(index[i], seqs.seq)
             permStructList.append(permStruct)

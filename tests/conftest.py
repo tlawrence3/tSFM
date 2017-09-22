@@ -3,7 +3,12 @@ import os
 
 @pytest.fixture(scope="module")
 def cove_files(tmpdir_factory):
-    struct_string = "#=CS	>>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....\n#=CS	...<<<<<<<<<<<<.\n"
+    struct_string_cove = "#=CS	>>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....\n#=CS	...<<<<<<<<<<<<.\n"
+    struct_string_text ="""A:0,72,1,71,2,70,3,69,4,68,5,67,6,66
+D:9,25,10,24,11,23,12,22
+C:27,43,28,42,29,41,30,40,31,39
+T:49,65,50,64,51,63,52,62,53,61
+"""
     H_class = """CLUSTAL W (1.81) multiple sequence alignment
 
 
@@ -63,13 +68,16 @@ Kttt_gi|966203074|ref|NC_028734.1||5248|7641|38|2359|ARA|+||GNET|  AATCCCGGGCAAC
                                                                    ****************
 
 """
-    cove = tmpdir_factory.mktemp("data").join("struct.txt")
+    cove = tmpdir_factory.mktemp("data").join("struct_cove.txt")
+    cove.write(struct_string_cove)
+    cove_file = open(cove, "r")
+    text = tmpdir_factory.mktemp("data").join("struct_text.txt")
+    text.write(struct_string_text)
+    text_file = open(text, "r")
     H_file = tmpdir_factory.mktemp("data").join("GNET_H.aln")
     H_file.write(H_class)
     K_file = open(str(H_file)[:-10] + "GNET_K.aln", "w")
     K_file.write(K_class)
     K_file.close()
-    cove.write(struct_string)
-    cove_file = open(cove, "r")
-    return ({'cove': cove_file, 'prefix': str(H_file)[:-6], 'tmp': str(H_file)[:-10]})
+    return ({'cove': cove_file, 'prefix': str(H_file)[:-6], 'tmp': str(H_file)[:-10], 'text': text_file})
 

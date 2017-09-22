@@ -1,6 +1,14 @@
 import tsfm.MolecularInformation
 from pytest import approx
 
+def test_functionlogo_text_setup(cove_files):
+    basepair_list =[(0, 72), (1, 71), (2, 70), (3, 69), (4, 68), (5, 67),
+                    (6, 66), (9, 25), (10, 24), (11, 23), (12, 22), (27, 43),
+                    (28, 42), (29, 41), (30, 40), (31, 39), (49, 65), (50, 64),
+                    (51, 63), (52, 62), (53, 61)]
+    text_logo = tsfm.MolecularInformation.FunctionLogo(cove_files['text'], "text")
+    assert sorted(basepair_list) == sorted(text_logo.basepairs) 
+
 def test_functionlogo_cove_setup(cove_files):
     basepair_list = [(12, 24), (11, 25), (10, 26), (9, 27), (33, 41), (32, 42), (31, 43),
                     (30, 44), (29, 45), (55, 63), (54, 64), (53, 65), (52, 66), (51, 67),
@@ -86,3 +94,13 @@ def test_functionlogo_cove_NSB(cove_files):
     assert sorted(['CG', 'GC']) == sorted(list(inverse_height[(6, 68)].keys()))
     assert approx(sorted({'K': 1.0})) == sorted(height[(6, 68)]['CG'])
     assert approx(sorted({'K': 0.05882352941176471, 'H': 0.9411764705882354})) == sorted(inverse_height[(6, 68)]['CG'])
+
+def test_functionlogo_cove_perm1(cove_files):
+    cove_logo = tsfm.MolecularInformation.FunctionLogo(cove_files['cove'], "cove")
+    cove_logo.parse_sequences(cove_files['prefix'])
+    cove_logo.permute(50, 1)
+
+def test_functionlogo_cove_perm2(cove_files):
+    cove_logo = tsfm.MolecularInformation.FunctionLogo(cove_files['cove'], "cove")
+    cove_logo.parse_sequences(cove_files['prefix'])
+    cove_logo.permute(5, 8)
