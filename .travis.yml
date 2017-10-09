@@ -16,6 +16,8 @@ matrix:
 install:
 # Python 3 is needed to run cibuildwheel.
   - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then
+      rvm install 2.3.4;
+      rvm use 2.3.4;
       brew install python3;
       pip3 install cibuildwheel==0.5.0;
     fi
