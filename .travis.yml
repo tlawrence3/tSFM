@@ -13,10 +13,14 @@ matrix:
         - PYTHON=python
         - PIP=pip
     - os: osx
+      osx_image: xcode9.3
+      language: generic
       env:
         - PYTHON=python3
         - PIP=pip3
       before_install:
+              - rvm install ruby-2.3.3
+              - rvm --default use 2.3.3
               - brew update
               - brew outdated python || brew upgrade python
 
