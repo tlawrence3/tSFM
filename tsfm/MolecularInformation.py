@@ -870,12 +870,12 @@ class FunctionLogo:
 
     def __init__(self, struct_file, kind = None, exact_init = None, inverse_init = None):
         if (exact_init):
-            self.exact = exact_int
+            self.exact = exact_init
         else:
             self.exact = []
 
         if (inverse_init):    
-            self.inverse_exact = inverse_int
+            self.inverse_exact = inverse_init
         else:
             self.inverse_exact = []
 
