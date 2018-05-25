@@ -5,20 +5,23 @@ env:
 
 matrix:
   include:
-    - dist: trusty
-      sudo: required
+    - sudo: required
       language: python
-      env: PYTHON=python3
-      services:
-        - docker
+      python: 3.4
+      services: docker
+      env:
+        - PYTHON=python
+        - PIP=pip
     - os: osx
-      env: PYTHON=python3
+      env:
+        - PYTHON=python3
+        - PIP=pip3
       before_install:
               - brew update
               - brew outdated python || brew upgrade python
 
 script:
-  - pip install cibuildwheel==0.8.0
+  - $PIP install cibuildwheel==0.8.0
   - cibuildwheel --output-dir wheelhouse
   - |
     if [[ $TRAVIS_TAG ]]; then
