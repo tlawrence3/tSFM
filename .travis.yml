@@ -5,29 +5,28 @@ env:
 
 matrix:
   include:
-    - sudo: required
+    - dist: trusty
+      sudo: required
       language: python
-      python: 3.4
-      services: docker
-      env:
-        - PYTHON=python
+      python: "3.6"
+      services: 
+        - docker
     - os: osx
-      osx_image: xcode9.3
-      language: generic
-      env:
-        - PYTHON=python
-      before_install:
-              - rvm install ruby-2.3.3
-              - rvm --default use 2.3.3
-              - brew update
-              - brew uninstall --ignore-dependencies python
-              - brew install python
+      osx_image: xcode8.3
+
+install:
+  - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then
+      rvm install ruby-2.3.3;
+      rvm --default use 2.3.3;
+      brew update;
+      brew upgrade python;
+    fi
+  - pip3 install --upgrade cibuildwheel
+  - touch .cibuildwheel
 
 script:
-  - pip install cibuildwheel==0.8.0
   - cibuildwheel --output-dir wheelhouse
-  - |
-    if [[ $TRAVIS_TAG ]]; then
-      $PYTHON -m pip install twine &&
-      $PYTHON -m twine upload wheelhouse/*.whl;
+  - if [ "${TRAVIS_TAG:-}" != "" ]; then
+      pip3 install twine;
+      python3 -m twine upload --skip-existing wheelhouse/*;
     fi
