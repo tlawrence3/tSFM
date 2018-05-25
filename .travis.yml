@@ -20,7 +20,7 @@ matrix:
               - rvm install ruby-2.3.3
               - rvm --default use 2.3.3
               - brew update
-              - brew uninstall python
+              - brew uninstall --ignore-dependencies python
               - brew install python
 
 script:
