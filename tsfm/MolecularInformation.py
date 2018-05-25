@@ -869,10 +869,16 @@ class FunctionLogo:
     """
 
     def __init__(self, struct_file, kind = None, exact_init = None, inverse_init = None):
-        if (not exact_init):
+        if (exact_init):
+            self.exact = exact_int
+        else:
             self.exact = []
+
         if (not inverse_init):    
+            self.inverse_exact = inverse_int
+        else:
             self.inverse_exact = []
+
         if (kind):
             if (kind == "s"):
                 self.basepairs = []
@@ -1104,16 +1110,21 @@ class FunctionLogo:
         single_info = []
         single_height = []
         with Pool(processes = proc) as pool:
+            if (len(self.permutationList) < proc):
+                chunk = 1
+            else:
+                chunk = len(self.permutationList)//proc
+
             if (not inverse):
                 if (method == "NSB"):
-                    perm_info_results = pool.map(self.perm_info_calc_NSB, self.permutationList, len(self.permutationList)//proc)
+                    perm_info_results = pool.map(self.perm_info_calc_NSB, self.permutationList, chunk)
                 else:
-                    perm_info_results = pool.map(self.perm_info_calc_MM, self.permutationList, len(self.permutationList)//proc)
+                    perm_info_results = pool.map(self.perm_info_calc_MM, self.permutationList, chunk)
             else:
                 if (method == "NSB"):
-                    perm_info_results = pool.map(self.perm_info_calc_inverse_NSB, self.permutationList, len(self.permutationList)//proc)
+                    perm_info_results = pool.map(self.perm_info_calc_inverse_NSB, self.permutationList, chunk)
                 else:
-                    perm_info_results = pool.map(self.perm_info_calc_inverse_MM, self.permutationList, len(self.permutationList)//proc)
+                    perm_info_results = pool.map(self.perm_info_calc_inverse_MM, self.permutationList, chunk)
 
         for perm in perm_info_results:
             bp_info.extend(perm[0])

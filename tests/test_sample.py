@@ -98,9 +98,60 @@ def test_functionlogo_cove_NSB(cove_files):
 def test_functionlogo_cove_perm1(cove_files):
     cove_logo = tsfm.MolecularInformation.FunctionLogo(cove_files['cove'], "cove")
     cove_logo.parse_sequences(cove_files['prefix'])
-    cove_logo.permute(50, 1)
+    cove_logo.permute(4, 1)
+    perm_info_miller = cove_logo.permInfo("Miller", 1)
+    perm_info_nsb = cove_logo.permInfo("NSB", 1)
+    perm_inverse_miller = cove_logo.permInfo("Miller", 1, inverse = True)
+    perm_inverse_nsb = cove_logo.permInfo("NSB", 1, inverse = True)
 
 def test_functionlogo_cove_perm2(cove_files):
     cove_logo = tsfm.MolecularInformation.FunctionLogo(cove_files['cove'], "cove")
     cove_logo.parse_sequences(cove_files['prefix'])
-    cove_logo.permute(5, 8)
+    cove_logo.permute(4, 8)
+    perm_info_miller = cove_logo.permInfo("Miller", 8)
+    perm_info_nsb = cove_logo.permInfo("NSB", 8)
+    perm_inverse_miller = cove_logo.permInfo("Miller", 8, inverse = True)
+    perm_inverse_nsb = cove_logo.permInfo("NSB", 8, inverse = True)
+
+def test_FunctionLogoResult(cove_files):
+    cove_logo = tsfm.MolecularInformation.FunctionLogo(cove_files['cove'], "cove")
+    cove_logo.parse_sequences(cove_files['prefix'])
+    result = tsfm.MolecularInformation.FunctionLogoResults(cove_files['prefix'],
+                                                      cove_logo.basepairs,
+                                                      cove_logo.pos,
+                                                      cove_logo.sequences,
+                                                      cove_logo.pairs,
+                                                      cove_logo.singles)
+def test_statTest(cove_files):
+    cove_logo = tsfm.MolecularInformation.FunctionLogo(cove_files['cove'], "cove")
+    cove_logo.parse_sequences(cove_files['prefix'])
+    cove_logo.permute(4, 8)
+    perm_info_miller = cove_logo.permInfo("Miller", 8)
+    perm_info_nsb = cove_logo.permInfo("NSB", 8)
+    perm_inverse_miller = cove_logo.permInfo("Miller", 8, inverse = True)
+    perm_inverse_nsb = cove_logo.permInfo("NSB", 8, inverse = True)
+    result_miller = tsfm.MolecularInformation.FunctionLogoResults(cove_files['prefix'],
+                                                      cove_logo.basepairs,
+                                                      cove_logo.pos,
+                                                      cove_logo.sequences,
+                                                      cove_logo.pairs,
+                                                      cove_logo.singles)
+    result_nsb = tsfm.MolecularInformation.FunctionLogoResults(cove_files['prefix'],
+                                                      cove_logo.basepairs,
+                                                      cove_logo.pos,
+                                                      cove_logo.sequences,
+                                                      cove_logo.pairs,
+                                                      cove_logo.singles)
+    info_nsb, height_nsb = cove_logo.calculate_entropy_NSB()
+    inverse_info_nsb, inverse_height_nsb = cove_logo.calculate_entropy_inverse_NSB()
+    info_miller, height_miller = cove_logo.calculate_entropy_MM()
+    inverse_info_miller, inverse_height_miller = cove_logo.calculate_entropy_inverse_MM()
+
+    result_miller.add_information(info = info_miller, height = height_miller)
+    result_miller.add_information(info = inverse_info_miller, height = inverse_height_miller, inverse = True)
+    result_nsb.add_information(info = info_nsb, height = height_nsb)
+    result_nsb.add_information(info = inverse_info_nsb, height = inverse_height_nsb, inverse = True)
+    result_miller.add_stats(perm_info_miller,'fdr_bh')
+    result_miller.add_stats(perm_inverse_miller, 'fdr_bh', inverse = True)
+    result_nsb.add_stats(perm_info_nsb,'fdr_bh')
+    result_nsb.add_stats(perm_inverse_nsb, 'fdr_bh', inverse = True)
