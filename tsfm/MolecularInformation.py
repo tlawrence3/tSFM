@@ -874,7 +874,7 @@ class FunctionLogo:
         else:
             self.exact = []
 
-        if (not inverse_init):    
+        if (inverse_init):    
             self.inverse_exact = inverse_int
         else:
             self.inverse_exact = []
