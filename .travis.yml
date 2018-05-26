@@ -16,14 +16,15 @@ matrix:
 
 install:
   - if [ "${TRAVIS_OS_NAME:-}" == "osx" ]; then
-      curl -fsSLo /tmp/patch.tar.gz https://github.com/mayeut/patch-macos-python-openssl/releases/download/v0.1.0/patch-macos-python-$PYVER-openssl-v0.1.0.tar.gz;
-      sudo tar -C /Library/Frameworks/Python.framework/Versions/$PYVER/ -xmf /tmp/patch.tar.gz;
+      brew install openssl;
+      brew link openssl --force;
       rvm install ruby-2.3.3;
       rvm --default use 2.3.3;
       brew update;
-      brew upgrade python;
+      brew python --with-brewed-openssl;
     fi
   - pip3 install --upgrade cibuildwheel
+  - pip3 install --upgrade numpy
   - touch .cibuildwheel
 
 script:
