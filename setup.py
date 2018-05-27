@@ -21,7 +21,7 @@ setup(name = "tsfm",
       setup_requires=['cython','pytest-runner'],
       tests_require=['pytest'],
       install_requires=['cython', 'scipy', 'pandas', 'patsy', 'mpmath','statsmodels', 'numpy'],
-      python_requires='~=3.4',
+      python_requires='~=3.5',
       packages = ["tsfm"],
       package_data={'tsfm': ['eps/Template.eps', 'eps/inverse_template.eps']},
       entry_points = {
