@@ -1,0 +1,10 @@
+cython
+pytest-runner
+pytest
+numpy
+scipy
+pandas
+patsy
+mpmath
+statsmodels
+

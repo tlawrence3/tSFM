@@ -18,7 +18,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 #bpexact_ext = Extension('bplogofun.exact', ['src/exact.c'])
 
 setup(name = "tsfm",
-      setup_requires=['cython'],
+      setup_requires=['cython','pytest-runner'],
       tests_require=['pytest'],
       install_requires=['cython', 'scipy', 'pandas', 'patsy', 'mpmath','statsmodels', 'numpy'],
       python_requires='~=3.4',
