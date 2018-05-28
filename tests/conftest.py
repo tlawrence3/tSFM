@@ -70,10 +70,10 @@ Kttt_gi|966203074|ref|NC_028734.1||5248|7641|38|2359|ARA|+||GNET|  AATCCCGGGCAAC
 """
     cove = tmpdir_factory.mktemp("data").join("struct_cove.txt")
     cove.write(struct_string_cove)
-    cove_file = open(cove, "r")
+    cove_file = open(str(cove), "r")
     text = tmpdir_factory.mktemp("data").join("struct_text.txt")
     text.write(struct_string_text)
-    text_file = open(text, "r")
+    text_file = open(str(text), "r")
     H_file = tmpdir_factory.mktemp("data").join("GNET_H.aln")
     H_file.write(H_class)
     K_file = open(str(H_file)[:-10] + "GNET_K.aln", "w")
