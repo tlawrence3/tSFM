@@ -119,10 +119,14 @@ def main():
             results[key].text_output()
 
 
-        if (args.logo):
+        if (args.logo and not args.inverse):
             for key in results:
                 print("Writing function logo postscript files for {}".format(key))
                 results[key].logo_output()
+        else:
+            for key in results:
+                print("Writing function logo postscript files for {}".format(key))
+                results[key].logo_output(inverse=True)
 
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")

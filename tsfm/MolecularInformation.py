@@ -598,7 +598,7 @@ class FunctionLogoResults:
                     print(output_string, file = file_handle)
         file_handle.close()
 
-    def logo_output(self):
+    def logo_output(self, inverse = False):
         """
         Produce function logo postscript files
         """
@@ -606,7 +606,6 @@ class FunctionLogoResults:
         coord_length_addition = 0
 
         logo_outputDict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
-        inverse_logo_outputDict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
 
         #logo output dict construction
         for coord in sorted(self.basepairs, key = itemgetter(0)):
@@ -624,23 +623,6 @@ class FunctionLogoResults:
                         logo_outputDict[base][coord][aainfo[0]] = self.info[coord][base] * aainfo[1]
                 else:
                     logo_outputDict[base][coord] = {}
-
-        #inverse logo output dict construction
-        for coord in sorted(self.basepairs, key = itemgetter(0)):
-            for pairtype in sorted(self.pairs):
-                if (pairtype in self.inverseInfo[coord]):
-                    for aainfo in sorted(self.inverseHeight[coord][pairtype].items(), key = itemgetter(1), reverse = True):
-                        inverse_logo_outputDict[pairtype][coord][aainfo[0]] = self.inverseInfo[coord][pairtype] * aainfo[1]
-                else:
-                    inverse_logo_outputDict[pairtype][coord] = {}
-
-        for coord in range(self.pos):
-            for base in sorted(self.singles):
-                if (base in self.inverseInfo[coord]):
-                    for aainfo in sorted(self.inverseHeight[coord][base].items(), key = itemgetter(1), reverse = True):
-                        inverse_logo_outputDict[base][coord][aainfo[0]] = self.inverseInfo[coord][base] * aainfo[1]
-                else:
-                    inverse_logo_outputDict[base][coord] = {}
 
         #output logos
         for base in logo_outputDict:
@@ -665,27 +647,46 @@ class FunctionLogoResults:
                     logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()), 'high': max(logo_outputDict[base].keys()), 'length': 15.68 * len(logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
                 logo_output.write(src.substitute(logodata_dict))
 
-        for base in inverse_logo_outputDict:
-            logodata = ""
-            for coord in sorted(inverse_logo_outputDict[base].keys()):
-                if (len(str(coord)) > coord_length):
-                    coord_length = len(str(coord))
-                logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
-                for aainfo in sorted(inverse_logo_outputDict[base][coord].items(), key = itemgetter(1)):
-                    if (aainfo[1] < 0.0001 or mt.isnan(aainfo[1])):
-                        continue
-                    logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
-                logodata += "grestore\nshift\n"
-            #output logodata to template
-            template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
-            logo_template = template_byte.decode('utf-8')
-            with open("inverse_{}_{}.eps".format(base, self.name.split("/")[-1]), "w") as logo_output:
-                src = Template(logo_template)
-                if (len(base) == 2):
-                    logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 21 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
-                else:
-                    logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 15.68 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
-                logo_output.write(src.substitute(logodata_dict))
+        if (inverse):
+            inverse_logo_outputDict = defaultdict(lambda : defaultdict(lambda : defaultdict(float)))
+            #inverse logo output dict construction
+            for coord in sorted(self.basepairs, key = itemgetter(0)):
+                for pairtype in sorted(self.pairs):
+                    if (pairtype in self.inverseInfo[coord]):
+                        for aainfo in sorted(self.inverseHeight[coord][pairtype].items(), key = itemgetter(1), reverse = True):
+                            inverse_logo_outputDict[pairtype][coord][aainfo[0]] = self.inverseInfo[coord][pairtype] * aainfo[1]
+                    else:
+                        inverse_logo_outputDict[pairtype][coord] = {}
+
+            for coord in range(self.pos):
+                for base in sorted(self.singles):
+                    if (base in self.inverseInfo[coord]):
+                        for aainfo in sorted(self.inverseHeight[coord][base].items(), key = itemgetter(1), reverse = True):
+                            inverse_logo_outputDict[base][coord][aainfo[0]] = self.inverseInfo[coord][base] * aainfo[1]
+                    else:
+                        inverse_logo_outputDict[base][coord] = {}
+
+            for base in inverse_logo_outputDict:
+                logodata = ""
+                for coord in sorted(inverse_logo_outputDict[base].keys()):
+                    if (len(str(coord)) > coord_length):
+                        coord_length = len(str(coord))
+                    logodata += "numbering {{({}) makenumber}} if\ngsave\n".format(coord)
+                    for aainfo in sorted(inverse_logo_outputDict[base][coord].items(), key = itemgetter(1)):
+                        if (aainfo[1] < 0.0001 or mt.isnan(aainfo[1])):
+                            continue
+                        logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
+                    logodata += "grestore\nshift\n"
+                #output logodata to template
+                template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
+                logo_template = template_byte.decode('utf-8')
+                with open("inverse_{}_{}.eps".format(base, self.name.split("/")[-1]), "w") as logo_output:
+                    src = Template(logo_template)
+                    if (len(base) == 2):
+                        logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 21 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
+                    else:
+                        logodata_dict = {'logo_data': logodata, 'low': min(inverse_logo_outputDict[base].keys()), 'high': max(inverse_logo_outputDict[base].keys()), 'length': 15.68 * len(inverse_logo_outputDict[base].keys()), 'height': 735-(5*(coord_length + coord_length_addition))}
+                    logo_output.write(src.substitute(logodata_dict))
 
 class FunctionLogoDist:
     """
