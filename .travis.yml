@@ -20,7 +20,7 @@ install:
 script:
 - coverage run --source=tsfm setup.py test
 deploy:
-  provide: pypi
+  provider: pypi
   user: tlawrence3
   password:
     secure: "QjTQRCcymho4irKj2RSQU7eBOTa2v0TWpKzZr4qzDZqMSflRpHihNzKrDT7oHSEfK0F2Ut9+AqJZ1I/GltJVuXLBSTbv40SNOizGWZ95dEm5FYHIWd8k6SuQSQKKW3SPG+5HjMOxGt9JYTZZl0e/nhq7iIMoMqcgrErJ14/qEgmbYIx846peBSUNlXh/ZmG13Q2Bo5vSkaU4Jg5A1ZTQG5SXxUmIXw1OaseVUxdl+9kunTnOYyzFikMBx6uiaBPIdt7i0Q6WBjqCUhq3LTK2jxmJmNCeHLIWEGW0u8iHYkw9XXJJjtWzyJ/f5ei3xgSel1Vk8qjys2qJnVdmVowQ4hKWQ8xyNIzjaba5W0+MVVZfwyE8zmijhhHiFMqm4s8KTN+I+rz6Vhhvg2BAy8gLMNOcPHFkAmbBJB0yzYWvunIjyYo9fZUwf092Faif6t72euOfb7igXuSIdoOSihFkXK7IQgy3E/whsjEq5KlVG+g8rNSmuto21ipMfJlZNgEUxG7NAgKWOP6gCkl1agZc8cbY9bH/zmAgL1EvOUiCuMX+gh62FiPW+n24dymNjGEuQ73vxbHy2ol5t0OgC+rzB+2rZzhkZso7H/fobDe//hbjpe12k7QKWnhbpIPZ0QhbPnW5o1PlGEAJ6+CNmcdENZgpQvjLj4AZ39mZ/e/dX24="
