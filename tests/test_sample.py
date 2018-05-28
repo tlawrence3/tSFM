@@ -58,13 +58,13 @@ def test_functionlogo_cove_MM(cove_files):
     cove_logo.calculate_exact(5,1,inverse=True)
     info, height = cove_logo.calculate_entropy_MM()
     inverse_info, inverse_height = cove_logo.calculate_entropy_inverse_MM()
-    assert info_key1 == list(info.keys())
+    assert sorted(info_key1) == sorted(list(info.keys()))
     assert approx(sorted({'U': 0.8152461882767065, 'C': 0.866771011165598})) == sorted(info[27])
     assert info_key1 == list(height.keys())
     assert sorted(['UA', 'GU']) == sorted(list(height[(3, 71)].keys()))
     assert approx({'K': 1.0}) == height[(3, 71)]['UA']
-    assert info_key1 == list(inverse_info.keys())
-    assert info_key1 == list(inverse_height.keys())
+    assert sorted(info_key1) == sorted(list(inverse_info.keys()))
+    assert sorted(info_key1) == sorted(list(inverse_height.keys()))
     assert approx(sorted({'UA': 0.33488777478501253, 'CG': 0.53592154740969555})) == sorted(inverse_info[(11, 25)])
     assert approx(sorted({'H': 0.11764705882352941, 'K': 0.8823529411764706})) == sorted(inverse_height[(11, 25)]['CG'])
 
