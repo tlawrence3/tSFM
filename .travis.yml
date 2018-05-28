@@ -20,7 +20,6 @@ install:
 script:
 - coverage run --source=tsfm setup.py test
 deploy:
-  matrix:
   - provide: pypi
   - user: tlawrence3
   - password:
