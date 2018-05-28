@@ -16,7 +16,7 @@ matrix:
     - '3.6'
 install:
 - pip install coverage coveralls
-- pip install -r requirments.txt
+- pip install -r requirements.txt
 script:
 - coverage run --source=tsfm setup.py test
 deploy:
