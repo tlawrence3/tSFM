@@ -6,7 +6,7 @@ sudo: required
 before_install:
   - sudo apt-get install gcc
 install:
-  - pip install coverage coveralls
+  - pip install coverage coveralls pytest
   - pip install pytest-cov
   - pip install -r requirements.txt
 script:
