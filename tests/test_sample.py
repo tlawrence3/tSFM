@@ -60,7 +60,7 @@ def test_functionlogo_cove_MM(cove_files):
     inverse_info, inverse_height = cove_logo.calculate_entropy_inverse_MM()
     assert sorted(info_key1, key=lambda x: str(x)) == sorted(list(info.keys()), key=lambda x: str(x))
     assert approx(sorted({'U': 0.8152461882767065, 'C': 0.866771011165598})) == sorted(info[27])
-    assert info_key1 == list(height.keys())
+    assert sorted(info_key1, key=lambda x: str(x)) == sorted(list(height.keys()), key=lambda x: str(x))
     assert sorted(['UA', 'GU']) == sorted(list(height[(3, 71)].keys()))
     assert approx({'K': 1.0}) == height[(3, 71)]['UA']
     assert sorted(info_key1, key=lambda x: str(x)) == sorted(list(inverse_info.keys()), key=lambda x: str(x))
@@ -84,10 +84,10 @@ def test_functionlogo_cove_NSB(cove_files):
     cove_logo.calculate_exact(5,1,inverse=True)
     info, height = cove_logo.calculate_entropy_NSB()
     inverse_info, inverse_height = cove_logo.calculate_entropy_inverse_NSB()
-    assert info_key1 == list(info.keys())
-    assert info_key1 == list(height.keys())
-    assert info_key1 == list(inverse_info.keys())
-    assert info_key1 == list(inverse_height.keys())
+    assert sorted(info_key1, key=lambda x: str(x)) == sorted(list(info.keys()), key=lambda x: str(x))
+    assert sorted(info_key1, key=lambda x: str(x)) == sorted(list(height.keys()), key=lambda x: str(x))
+    assert sorted(info_key1, key=lambda x: str(x)) == sorted(list(inverse_info.keys()), key=lambda x: str(x))
+    assert sorted(info_key1, key=lambda x: str(x)) == sorted(list(inverse_height.keys()), key=lambda x: str(x))
     assert approx({'A': 0.0054504094063251296}) == info[60]
     assert approx({'G': 0.046427861927731184}) == inverse_info[32]
     assert sorted(['CG', 'GC']) == sorted(list(height[(6, 68)].keys()))
