@@ -123,7 +123,7 @@ def main():
             for key in results:
                 print("Writing function logo postscript files for {}".format(key))
                 results[key].logo_output()
-        else:
+        elif (args.logo and args.inverse):
             for key in results:
                 print("Writing function logo postscript files for {}".format(key))
                 results[key].logo_output(inverse=True)

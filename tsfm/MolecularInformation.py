@@ -637,7 +637,7 @@ class FunctionLogoResults:
                     logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
                 logodata += "grestore\nshift\n"
             #output logodata to template
-            template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
+            template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
             logo_template = template_byte.decode('utf-8')
             with open("{}_{}.eps".format(base, self.name.split("/")[-1]), "w") as logo_output:
                 src = Template(logo_template)
@@ -678,7 +678,7 @@ class FunctionLogoResults:
                         logodata += "{:07.5f} ({}) numchar\n".format(aainfo[1], aainfo[0].upper())
                     logodata += "grestore\nshift\n"
                 #output logodata to template
-                template_byte = pkgutil.get_data('bplogofuntest', 'eps/Template.eps')
+                template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
                 logo_template = template_byte.decode('utf-8')
                 with open("inverse_{}_{}.eps".format(base, self.name.split("/")[-1]), "w") as logo_output:
                     src = Template(logo_template)
@@ -691,7 +691,6 @@ class FunctionLogoResults:
 class FunctionLogoDist:
     """
     Discrete probability distributions of information values.
-
     Probabilty distributions are created using a permutation label shuffling
     strategy. Permuted data is created using :meth:`FunctionLogo.permute` and
     distribution are inferred from the permuted data and 
