@@ -1578,3 +1578,241 @@ class FunctionLogo:
 
     def __len__(self):
         return len(self.sequences)
+
+
+    def calculate_logoID_infos(self, info_1, info_2, pos, singles, pairs, basepairs):
+        """
+        Calculate information for id-logo (information difference of foreground and background).
+        In id_info12, 2 is the background, 1 is foreground (ID_logo_info12 = info_1 - info_2)
+        """
+
+        id_info12 = defaultdict(lambda: defaultdict(float))
+        id_info21 = defaultdict(lambda: defaultdict(float))
+        for k in range(pos):
+
+            logo_1 = info_1[k]
+            logo_2 = info_2[k]
+
+            for c in singles:
+                id_info21[k][c] = logo_2[c] - logo_1[c]
+                if id_info21[k][c] < 0:
+                    id_info21[k][c] = 0
+
+                id_info12[k][c] = logo_1[c] - logo_2[c]
+                if id_info12[k][c] < 0:
+                    id_info12[k][c] = 0
+
+        for k in basepairs:
+
+            logo_1 = info_1[k]
+            logo_2 = info_2[k]
+            for c in pairs:
+
+                id_info21[k][c] = logo_2[c] - logo_1[c]
+                if id_info21[k][c] < 0:
+                    id_info21[k][c] = 0
+
+                id_info12[k][c] = logo_1[c] - logo_2[c]
+                if id_info12[k][c] < 0:
+                    id_info12[k][c] = 0
+
+        return id_info12, id_info21
+
+    def calculate_logoID_heights(self, height_b, height_f, info, pos, singles, pairs, basepairs, type):
+        """
+        Calculate height of each symbol within a stack for id-logo.
+        """
+
+        id_height = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        # adding zero to all the functions that do not exist within a stack
+
+        for single in range(pos):
+            for state in singles:
+                for p in height_f[single][state]:
+                    if p in height_b[single][state] and height_b[single][state][p] != 0:
+                        id_height[single][state][p] = (height_f[single][state][p] /
+                                                       height_b[single][state][p])
+                    else:
+                        id_height[single][state][p] = height_f[single][state][p]
+                summ = sum(id_height[single][state].values())
+                for p in id_height[single][state]:
+                    if summ != 0:
+                        id_height[single][state][p] = id_height[single][state][p] * info[single][state] / summ
+
+        for pair in basepairs:
+            for state in pairs:
+                for p in height_f[pair][state]:
+                    if p in height_b[pair][state] and height_b[pair][state][p] != 0:
+                        id_height[pair][state][p] = (height_f[pair][state][p] /
+                                                     height_b[pair][state][p])
+                    else:
+                        id_height[pair][state][p] = height_f[pair][state][p]
+                summ = sum(id_height[pair][state].values())
+                for p in id_height[pair][state]:
+                    if summ != 0:
+                        id_height[pair][state][p] = id_height[pair][state][p] * info[pair][state] / summ
+
+        for single in range(pos):
+            for state in singles:
+                mysum = sum(id_height[single][state].values())
+                for p in id_height[single][state]:
+                    if mysum != 0:
+                        id_height[single][state][p] = id_height[single][state][p] / mysum
+
+        for pair in basepairs:
+            for state in pairs:
+                mysum = sum(id_height[pair][state].values())
+                for p in id_height[pair][state]:
+                    if mysum != 0:
+                        id_height[pair][state][p] = id_height[pair][state][p] / mysum
+
+        # adding zero to all the functions that do not exist within a stack
+        for single in basepairs:
+            for state in pairs:
+                for t in type:
+                    if t not in id_height[single][state]:
+                        id_height[single][state][t] = 0
+
+        for single in range(pos):
+            for state in singles:
+                for t in type:
+                    if t not in id_height[single][state]:
+                        id_height[single][state][t] = 0
+
+        return id_height
+
+    # _______________________ KLD Difference logo Calculations ___________________________________________________
+
+    def calculate_prob_dist(self, types, pairs, basepairs):
+        """
+        Calculate prior probability, p(y), for every function and posterior probability p(y|x) of each symbol within
+        a stack for KLD-logo.
+        This function will be called two times for the background and foreground
+        """
+
+        kld_post_dist = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        kld_prior_dist = defaultdict(float)
+        functions_array = np.array(list(self.functions.values()))
+
+        # adding one to the frequency of every function within a stack to avoid devide by zero!
+        for p in types:
+            if p not in self.functions:
+                kld_prior_dist[p] = 1 / (functions_array[functions_array != 0].sum() + len(types))
+            else:
+                kld_prior_dist[p] = (self.functions[p] + 1) / (functions_array[functions_array != 0].sum() + len(types))
+
+        for singles in range(self.pos):
+            for state in self.singles:
+                state_counts = self.get([singles], state)
+                for t in types:
+                    if t not in state_counts:
+                        state_counts[t] = 1
+                    else:
+                        state_counts[t] += 1
+                for p in state_counts:
+                    kld_post_dist[singles][state][p] = state_counts[p] / sum(state_counts.values())
+
+        for pair in basepairs:
+            for state in pairs:
+                state_counts = self.get(pair, state)
+                for t in types:
+                    if t not in state_counts:
+                        state_counts[t] = 1
+                    else:
+                        state_counts[t] += 1
+
+                for p in state_counts:
+                    kld_post_dist[pair][state][p] = state_counts[p] / sum(state_counts.values())
+
+        return kld_prior_dist, kld_post_dist
+
+    def calculate_kld(self, back_prior, fore_prior, back_post, fore_post, pairs, basepairs):
+        """
+        Calculate height of each symbol within a stack for kld-logo.
+        """
+
+        # The height of the individual letters in a stack will be proportional to this ratio
+        # ratio: a dictionary for keeping the ratios for each stack
+        ratios = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+
+        kld_prior = 0
+
+        # kld_dic: a dictionary for keeping the height of each stack in kld logo
+        kld_dic = defaultdict(lambda: defaultdict(float))
+
+        for p in back_prior:
+            kld_prior += fore_prior[p] * np.log2(fore_prior[p] / back_prior[p])
+
+        for singles in range(self.pos):
+            for state in self.singles:
+                for p in back_post[singles][state]:
+                    kld_dic[singles][state] += fore_post[singles][state][p] * np.log2(
+                        fore_post[singles][state][p] / back_post[singles][state][p])
+
+                    ratios[singles][state][p] = (fore_post[singles][state][p] / fore_prior[p]) / (
+                            back_post[singles][state][p] / back_prior[p])
+
+                # state_counts = self.get([singles], state)
+                # if sum(state_counts.values()) == 0:
+                #     continue
+                # if sum(state_counts.values()) <= len(self.exact):
+                #     print(sum(state_counts.values()),"sum(state_counts.values())")
+                #     print(kld_prior,"kld_prior")
+                #     print(self.exact[sum(state_counts.values()) - 1],"self.exact[sum(state_counts.values()) - 1]")
+                #     kld_dic[singles][state] -= kld_prior
+                #     kld_dic[singles][state] += self.exact[sum(state_counts.values()) - 1]
+                # if kld_dic[singles][state] < 0:
+                #     print("less than zero in singles")
+
+        for pair in basepairs:
+            for state in pairs:
+                for p in back_post[pair][state]:
+                    kld_dic[pair][state] += fore_post[pair][state][p] * np.log2(
+                        fore_post[pair][state][p] / back_post[pair][state][p])
+
+                    ratios[pair][state][p] = (fore_post[pair][state][p] / fore_prior[p]) / (
+                            back_post[pair][state][p] / back_prior[p])
+                state_counts = self.get(pair, state)
+                if sum(state_counts.values()) == 0:
+                    continue
+                # if sum(state_counts.values()) <= len(self.exact):
+                #     print("pairs")
+                #     print(sum(state_counts.values()), "sum(state_counts.values())")
+                #     print(kld_prior, "kld_prior")
+                #     print(self.exact[sum(state_counts.values()) - 1], "self.exact[sum(state_counts.values()) - 1]")
+                #     kld_dic[pair][state] -= kld_prior
+                #     kld_dic[pair][state] += self.exact[sum(state_counts.values()) - 1]
+
+                if kld_dic[pair][state] < 0:
+                    print("less than zero in pairs")
+        # kld_heights: a dictionary for the height of each symbol within a stack for kld-logo.
+        kld_heights = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+
+        for single in range(self.pos):
+            for state in self.singles:
+                for p in back_post[single][state]:
+                    kld_heights[single][state][p] = kld_dic[single][state] * ratios[single][state][p] / sum(
+                        ratios[single][state].values())
+
+        for pair in basepairs:
+            for state in pairs:
+                for p in back_post[pair][state]:
+                    kld_heights[pair][state][p] = kld_dic[pair][state] * ratios[pair][state][p] / sum(
+                        ratios[pair][state].values())
+
+        for single in range(self.pos):
+            for state in self.singles:
+                mysum = sum(kld_heights[single][state].values())
+                for p in kld_heights[single][state]:
+                    if mysum != 0:
+                        kld_heights[single][state][p] = kld_heights[single][state][p] / mysum
+
+        for pair in basepairs:
+            for state in pairs:
+                mysum = sum(kld_heights[pair][state].values())
+                for p in kld_heights[pair][state]:
+                    if mysum != 0:
+                        kld_heights[pair][state][p] = kld_heights[pair][state][p] / mysum
+
+        return kld_dic, kld_heights
+

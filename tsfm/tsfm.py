@@ -25,6 +25,8 @@ def main():
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "BH")
     parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
+    parser.add_argument("--IDlogo", help='id logo', action="store_true")
+    parser.add_argument("--KLDlogo", help='KLD logo', action="store_true")
     args = parser.parse_args()
 
     logo_dict = {}
@@ -131,6 +133,102 @@ def main():
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
+
+        # {________________________________ ID Logo _______________________________________________________________
+
+    logo_dict[key].pairs
+    functionA = {}
+    info_height_dic = {}
+    for key in results:
+        info_height_dic[key] = {"info": results[key].info, "height": results[key].height}
+
+    key_1 = list(logo_dict.keys())[0]
+    key_2 = list(logo_dict.keys())[1]
+
+    single = list(set(logo_dict[key_2].singles) & set(logo_dict[key_1].singles))
+    pos = results[key_1].pos
+    pairs = list(set(logo_dict[key_2].pairs) & set(logo_dict[key_1].pairs))
+    basepair = results[key_1].basepairs
+
+    for key in logo_dict:
+        functionA[key] = logo_dict[key].functions
+    types = set()
+    for k in functionA[key_1]:
+        types.add(k)
+    for k in functionA[key_2]:
+        types.add(k)
+
+    if args.IDlogo:
+        id_info12, id_info21 = logo_dict[key_1].calculate_logoID_infos(info_1=info_height_dic[key_1]['info'],
+                                                                       info_2=info_height_dic[key_2]['info'],
+                                                                       pos=pos,
+                                                                       singles=single, pairs=pairs,
+                                                                       basepairs=basepair)
+
+        # 1 is foreground
+        id_height12 = logo_dict[key_1].calculate_logoID_heights(height_b=info_height_dic[key_2]['height'],
+                                                                height_f=info_height_dic[key_1]['height'],
+                                                                info=id_info12,
+                                                                pos=pos,
+                                                                singles=single, pairs=pairs,
+                                                                basepairs=basepair, type=types)
+
+        # 2 is foreground
+        id_height21 = logo_dict[key_1].calculate_logoID_heights(height_b=info_height_dic[key_1]['height'],
+                                                                height_f=info_height_dic[key_2]['height'],
+                                                                info=id_info21,
+                                                                singles=single,
+                                                                pos=pos, pairs=pairs,
+                                                                basepairs=basepair,
+                                                                type=types)  # logo_dict[key_b].singles, pos=pos)
+
+        # The idLogos for when key_1 is foreground and key_2 background are named with <state>_<key_1>.eps
+        results[key_1].add_information(info=id_info12, height=id_height12)
+        results[key_1].logo_output()
+
+        results[key_2].add_information(info=id_info21, height=id_height21)
+        results[key_2].logo_output()
+
+        # {________________________________ KLD Logo _______________________________________________________________
+
+    if args.KLDlogo:
+        resultsKLD = {}
+        prior, post = logo_dict[key_1].calculate_prob_dist(types, pairs=pairs, basepairs=basepair)
+        resultsKLD[key_1] = {}
+        resultsKLD[key_1]['post'] = post
+        resultsKLD[key_1]['prior'] = prior
+
+        prior, post = logo_dict[key_2].calculate_prob_dist(types, pairs=pairs, basepairs=basepair)
+        resultsKLD[key_2] = {}
+        resultsKLD[key_2]['post'] = post
+        resultsKLD[key_2]['prior'] = prior
+
+        # key_2 is foreground so base correction should be applied on key_1
+        # The KLDLogos for when key_1 is background and key_2 is foreground are named with <state>_<key_1>.eps
+        # exact is calculated for foreground in KLD So, we need to call calculate_kld with foreground object
+        # so that we have that information for calculating exact
+        print(key_1,"key1")
+
+        kld_info, kld_height = logo_dict[key_2].calculate_kld(back_prior=resultsKLD[key_1]['prior'],
+                                                              fore_prior=resultsKLD[key_2]['prior'],
+                                                              back_post=resultsKLD[key_1]['post'],
+                                                              fore_post=resultsKLD[key_2]['post'], pairs=pairs,
+                                                              basepairs=basepair)
+
+        results[key_1].add_information(info=kld_info, height=kld_height)
+        results[key_1].logo_output()
+
+        print(key_1, "key1")
+        kld_info, kld_height = logo_dict[key_1].calculate_kld(back_prior=resultsKLD[key_2]['prior'],
+                                                              fore_prior=resultsKLD[key_1]['prior'],
+                                                              back_post=resultsKLD[key_2]['post'],
+                                                              fore_post=resultsKLD[key_1]['post'], pairs=pairs,
+                                                              basepairs=basepair)
+
+        results[key_2].add_information(info=kld_info, height=kld_height)
+        results[key_2].logo_output()
+
+        #  ________________________________________________________________________________________________________}
 
 if __name__ == "__main__":
     main()
