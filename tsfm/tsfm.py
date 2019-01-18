@@ -136,7 +136,7 @@ def main():
 
         # {________________________________ ID Logo _______________________________________________________________
 
-    logo_dict[key].pairs
+    #logo_dict[key].pairs
     functionA = {}
     info_height_dic = {}
     for key in results:
