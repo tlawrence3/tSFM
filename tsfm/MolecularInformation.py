@@ -12,16 +12,16 @@ import copy
 import pkgutil
 import itertools
 import sys
-import numpy as np
-import tsfm.nsb_entropy as nb
 import random
 import time
-import math as mt
-import tsfm.exact as exact
 import glob
+import math as mt
 import re
+import numpy as np
 import statsmodels.stats.multitest as smm
 import pandas as pd
+import tsfm.nsb_entropy as nb
+import tsfm.exact as exact
 
 
 class DistanceCalculator:
@@ -905,7 +905,7 @@ class FunctionLogo:
 
         """
         for fn in glob.glob("{}_?.aln".format(file_prefix)):
-            match = re.search("_([A-Z])\.aln", fn)
+            match = re.search(r"_([A-Z])\.aln", fn)
             aa_class = match.group(1)
             with open(fn, "r") as ALN:
                 good = False
@@ -913,13 +913,13 @@ class FunctionLogo:
                 interleaved = False
                 seq = {}
                 for line in ALN:
-                    match = re.search("^(\S+)\s+(\S+)", line)
-                    if (re.search("^CLUSTAL", line)):
+                    match = re.search(r"^(\S+)\s+(\S+)", line)
+                    if (re.search(r"^CLUSTAL", line)):
                         good = True
                         continue
-                    elif (re.search("^[\s\*\.\:]+$", line) and not interleaved and begin_seq):
+                    elif (re.search(r"^[\s\*\.\:]+$", line) and not interleaved and begin_seq):
                         interleaved = True
-                    elif (re.search("^[\s\*\.\:]+$", line) and interleaved and begin_seq):
+                    elif (re.search(r"^[\s\*\.\:]+$", line) and interleaved and begin_seq):
                         continue
                     elif (match and not interleaved):
                         begin_seq = True
