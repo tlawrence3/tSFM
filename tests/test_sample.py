@@ -163,7 +163,7 @@ def test_statTest(cove_files):
 
     result_miller.add_information(info=info_miller, height=height_miller)
     result_miller.add_information(info=inverse_info_miller, height=inverse_height_miller, inverse=True)
-    result_nsb.add_information(info=info_nsb, fheight=height_nsb)
+    result_nsb.add_information(info=info_nsb, height=height_nsb)
     result_nsb.add_information(info=inverse_info_nsb, height=inverse_height_nsb, inverse=True)
     result_miller.add_stats(perm_info_miller, 'fdr_bh')
     result_miller.add_stats(perm_inverse_miller, 'fdr_bh', inverse=True)
