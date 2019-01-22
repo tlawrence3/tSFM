@@ -153,10 +153,11 @@ def main():
     for key in logo_dict:
         functionA[key] = logo_dict[key].functions
     types = set()
+
     for k in functionA[key_1]:
-        types.add(k)
-    for k in functionA[key_2]:
-        types.add(k)
+        if k in functionA[key_2]:
+            types.add(k)
+
 
     if args.IDlogo:
         id_info12, id_info21 = logo_dict[key_1].calculate_logoID_infos(info_1=info_height_dic[key_1]['info'],
