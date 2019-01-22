@@ -1,0 +1,1809 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%bounding box x2 15.28 per position TL 20150310
+%%BoundingBox: 91 695 1160.32 885
+%%Title: makelogo 9.34
+%%Creator: Tom Schneider, toms@ncifcrf.gov
+%%Pages: (atend)
+%%DocumentFonts:
+%%EndComments
+/llx  56.7 def
+/lly 510.2 def
+/urx 907.1 def
+/ury 1190.6 def
+% * position, samples, information, variance 
+%
+% logo from 0 to 74
+
+/cmfactor 72 2.54 div def % defines points -> cm conversion
+/cm {cmfactor mul} bind def % defines centimeters
+
+% user defined parameters
+/boxcolor [0 0 0] def %0 0 0 boxcolor astore
+/lowest 0 def
+/highest 73 def
+/bar 0 def
+/xcorner  4.00000 cm def
+/ycorner 26.00000 cm def
+/rotation  0.00000 def % degrees
+/charwidth  0.36000 cm def
+/charwidth2m charwidth 2 mul def
+/barheight  4.25000 cm def
+/barwidth  0.10000 cm def
+/barbits -4.25000 def % bits
+/Ibeamfraction  1.00000 def
+/barends (b) def
+/subticsBig 2 def % sub-tic interval size (1/bits)
+/subticsSmall 10 def % sub-tic interval size (1/bits)
+/showingbox (n) def
+/outline true def
+/caps true def
+/stacksperline 75 def %doesn't seem to matter
+/linesperpage 1 def
+/linemove  3.00000 def
+/numbering true def
+/shrinking false def
+/edgecontrol (n) def
+/edgeleft  2.00000 def
+/edgeright  1.00000 def
+/edgelow  8.00000 def
+/edgehigh  1.00000 def
+/shrink  1.00000 def
+/ShowEnds (-) def % d: DNA, p: PROTEIN, -: none
+/HalfWhiteIbeam false def
+
+/knirhs 1 shrink sub 2 div def
+/charwidth4 charwidth 4 div def
+/charwidth2 charwidth 2 div def
+
+/outlinewidth {charwidth 3 div} def
+/setthelinewidth {% set the linewidth
+  outline
+    {outlinewidth setlinewidth}
+    {1 setlinewidth}
+  ifelse
+} def
+/toggleoutline { % switch the state of outlineing
+pop pop pop pop
+/outline outline not def
+setthelinewidth
+} def
+
+% define fonts
+/ffss {findfont fontsize scalefont setfont} def
+/FontForStringRegular {/Times-Bold       ffss} def
+/FontForStringItalic  {/Times-BoldItalic ffss} def
+/FontForLogo          {/Helvetica-Bold   ffss} def
+/FontForPrime         {/Symbol           ffss} def
+/FontForSymbol        {/Symbol           ffss} def
+
+% Set up the font size for the graphics
+/fontsize charwidth def
+
+% movements to place 5' and 3' symbols
+/fivemovex {0} def
+/fivemovey {(0) charparams lx ux sub 3 mul} def
+/threemovex {(0) stringwidth pop 0.5 mul} def
+/threemovey {fivemovey} def
+/prime {FontForPrime (\242) show FontForStringRegular} def
+
+% make italics possible in titles
+/IT {% TRstring ITstring IT -
+  exch show
+  FontForStringItalic
+  show
+  FontForStringRegular
+} def
+
+
+% make symbols possible in titles
+/SY {% TRstring SYstring SY -
+  exch show
+  FontForSymbol
+  show
+  FontForStringRegular
+} def
+
+%(*[[ This special comment allows deletion of the repeated
+% procedures when several logos are concatenated together
+% See the censor program.
+
+/charparams { % char charparams => uy ux ly lx
+% takes a single character and returns the coordinates that
+% defines the outer bounds of where the ink goes
+  gsave
+    newpath
+    0 0 moveto
+    % take the character off the stack and use it here:
+    true charpath 
+    flattenpath 
+    pathbbox % compute bounding box of 1 pt. char => lx ly ux uy
+    % the path is here, but toss it away ...
+  grestore
+  /uy exch def
+  /ux exch def
+  /ly exch def
+  /lx exch def
+} bind def
+
+/dashbox { % xsize ysize dashbox -
+% draw a dashed box of xsize by ysize (in points)
+  /ysize exch def % the y size of the box
+  /xsize exch def % the x size of the box
+  1 setlinewidth
+  gsave
+    % Define the width of the dashed lines for boxes:
+    newpath
+    0 0 moveto
+    xsize 0 lineto
+    xsize ysize lineto
+    0 ysize lineto
+    0 0 lineto
+    [3] 0 setdash
+    stroke
+  grestore
+  setthelinewidth
+} bind def
+
+/boxshow { % xsize ysize char boxshow
+% show the character with a box around it, sizes in points
+gsave
+  /tc exch def % define the character
+  /ysize exch def % the y size of the character
+  /xsize exch def % the x size of the character
+  /xmulfactor 1 def /ymulfactor 1 def
+
+  % if ysize is negative, make everything upside down!
+  ysize 0 lt {
+    % put ysize normal in this orientation
+    /ysize ysize abs def
+    xsize ysize translate
+    180 rotate
+  } if
+
+  shrinking {
+    xsize knirhs mul ysize knirhs mul translate
+    shrink shrink scale
+  } if
+
+  2 {
+    gsave
+    xmulfactor ymulfactor scale
+    tc charparams
+    grestore
+
+    ysize % desired size of character in points
+    uy ly sub % height of character in points
+    dup 0.0 ne {
+      div % factor by which to scale up the character
+      /ymulfactor exch def
+    } % end if
+    {pop pop}
+    ifelse
+
+    xsize % desired size of character in points
+    ux lx sub % width of character in points
+    dup 0.0 ne {
+      div % factor by which to scale up the character
+      /xmulfactor exch def
+    } % end if
+    {pop pop}
+    ifelse
+  } repeat
+
+  % Adjust horizontal position if the symbol is an I
+  tc (I) eq {charwidth 2 div % half of requested character width
+             ux lx sub 1 div % half of the actual character
+                sub      0 translate} if
+  % Avoid x scaling for I
+  tc (I) eq {/xmulfactor 2 def} if
+
+  /xmove xmulfactor lx mul neg def
+  /ymove ymulfactor ly mul neg def
+
+  newpath
+  xmove ymove moveto
+  xmulfactor ymulfactor scale
+
+  outline {  % outline characters:
+setthelinewidth
+    tc true charpath
+    gsave 1 setgray fill grestore
+    clip stroke
+}
+  { % regular characters
+    tc show
+  }
+  ifelse
+grestore
+} def
+
+/numchar{ % charheight character numchar
+% Make a character of given height in cm,
+% then move vertically by that amount
+  gsave
+    /char exch def
+    /charheight exch cm def
+    /visible true def % most characters are visible
+    char (K) eq {0 0 1 setrgbcolor} if
+    char (R) eq {0 0 1 setrgbcolor} if
+    char (H) eq {0 0 1 setrgbcolor} if
+    char (k) eq {0 0 1 setrgbcolor} if
+    char (r) eq {0 0 1 setrgbcolor} if
+    char (h) eq {0 0 1 setrgbcolor} if
+    char (D) eq {1 0 0 setrgbcolor} if
+    char (E) eq {1 0 0 setrgbcolor} if
+    char (d) eq {1 0 0 setrgbcolor} if
+    char (e) eq {1 0 0 setrgbcolor} if
+    char (N) eq {  0.6000 0   0.8500 setrgbcolor} if
+    char (Q) eq {  0.6000 0   0.8500 setrgbcolor} if
+    char (n) eq {  0.6000 0   0.8500 setrgbcolor} if
+    char (q) eq {  0.6000 0   0.8500 setrgbcolor} if
+    char (F) eq {1 0 1 setrgbcolor} if
+    char (Y) eq {1 0 1 setrgbcolor} if
+    char (W) eq {1 0 1 setrgbcolor} if
+    char (f) eq {1 0 1 setrgbcolor} if
+    char (y) eq {1 0 1 setrgbcolor} if
+    char (w) eq {1 0 1 setrgbcolor} if
+    char (G) eq {0   0.7000 0 setrgbcolor} if
+    char (A) eq {0   0.7000 0 setrgbcolor} if
+    char (S) eq {0   0.7000 0 setrgbcolor} if
+    char (T) eq {0   0.7000 0 setrgbcolor} if
+    char (g) eq {0   0.7000 0 setrgbcolor} if
+    char (a) eq {0   0.7000 0 setrgbcolor} if
+    char (s) eq {0   0.7000 0 setrgbcolor} if
+    char (t) eq {0   0.7000 0 setrgbcolor} if
+    char (C) eq {1   0.8500 0 setrgbcolor} if
+    char (c) eq {1   0.8500 0 setrgbcolor} if
+    char (P) eq {0 1 1 setrgbcolor} if
+    char (p) eq {0 1 1 setrgbcolor} if
+    char (X) eq {0 0 0 setrgbcolor} if
+    char (M) eq {0 0 0 setrgbcolor} if
+    char (I) eq {0 0 0 setrgbcolor} if
+    char (L) eq {0 0 0 setrgbcolor} if
+    char (V) eq {0 0 0 setrgbcolor} if
+    char (x) eq {0 0 0 setrgbcolor} if
+    char (m) eq {0 0 0 setrgbcolor} if
+    char (i) eq {0 0 0 setrgbcolor} if
+    char (l) eq {0 0 0 setrgbcolor} if
+    char (v) eq {0 0 0 setrgbcolor} if
+     visible {
+       % implement boxes, fill and characters:
+       showingbox (s) eq
+       showingbox (f) eq
+       or
+       {gsave
+           shift2
+           ly lx
+           ly charwidth add
+           lx charheight add
+           boxsymbol
+           clip
+           showingbox (f) eq
+           {fill}  
+           {gsave boxcolor aload pop setrgbcolor 2 setlinewidth stroke grestore  %changed TL
+            charwidth charheight char boxshow
+           }
+           ifelse
+       grestore
+       }
+       {shift2 charwidth charheight char boxshow}
+       ifelse
+     } if % visibility control
+  grestore
+  0 charheight abs translate
+} bind def
+
+/Ibar{
+% make a horizontal bar
+gsave
+  newpath
+    charwidth4 neg 0 moveto
+    charwidth4 0 lineto
+  stroke
+grestore
+} bind def
+
+/Ibeam{ % height Ibeam
+% Make an Ibeam of twice the given height, in cm
+  /height exch cm def
+  /heightDRAW height Ibeamfraction mul def
+  1 setlinewidth
+     HalfWhiteIbeam outline not and
+     {0.75 setgray} % grey on bottom
+     {0 setgray} % black on bottom
+  ifelse
+  gsave
+    charwidth2 height neg translate
+    Ibar
+    newpath
+      0 0 moveto
+      0 heightDRAW rlineto
+    stroke
+    0 setgray % black on top
+    newpath
+      0 height moveto
+      0 height rmoveto
+      currentpoint translate
+    Ibar
+    newpath
+      0 0 moveto
+      0 heightDRAW neg rlineto
+      currentpoint translate
+    stroke
+  grestore
+  setthelinewidth
+} bind def
+
+/makenumber { % number makenumber
+% make the number
+gsave
+  shift % shift to the other side of the stack
+  90 rotate % rotate so the number fits
+  dup stringwidth pop % find the length of the number
+  neg % prepare for move
+  charwidth (0) charparams uy ly sub % height of numbers
+  sub 2 div %
+  moveto % move back to provide space
+  show
+grestore
+} bind def
+
+/shift{ % move to the next horizontal position
+charwidth 3.5 add 0 translate
+} bind def
+
+/bar2 barwidth 2 div def
+/bar2n bar2 neg def
+/makebar { % make a vertical bar at the current location
+gsave
+   bar2n 0 moveto
+   barwidth 0 rlineto
+   0 barheight rlineto
+   barwidth neg 0 rlineto
+   closepath
+   fill
+grestore
+} def
+
+% definitions for maketic
+/str 10 string def % string to hold number
+% points of movement between tic marks:
+% (abs protects against barbits being negative)
+/ticmovement barheight barbits abs div def
+
+/maketic { % make tic marks and numbers
+% define tic mark to be the width of the number 4:
+(4) stringwidth pop
+/ticwidth exch def % width of tic (as a dash) to show
+gsave
+  % initial increment limit proc for
+  0 1 barbits abs cvi
+  {/loopnumber exch def
+
+    % convert the number coming from the loop to a string
+    % and find its width
+    loopnumber 10 str cvrs
+    /stringnumber exch def % string representing the number
+
+    stringnumber stringwidth pop
+    /numberwidth exch def % width of number to show
+
+    /halfnumberheight
+      stringnumber charparams % capture sizes
+      uy ly sub 2 div
+    def
+
+
+    numberwidth % move back width of number
+    neg loopnumber ticmovement mul % shift on y axis
+    halfnumberheight sub % down half the digit
+
+    moveto % move back the width of the string
+
+    ticwidth neg 0 rmoveto % move back the width of the tic
+
+    stringnumber show
+
+    % now show the tic mark
+    0 halfnumberheight rmoveto % shift up again
+    ticwidth 0 rlineto
+    stroke
+  } for
+grestore
+
+% do additional BIG tic marks.  subtics is user defined
+  % initial increment limit proc for
+gsave
+  0 1 barbits subticsBig mul abs cvi
+  {/bitnumber exch subticsBig div subticsBig div def
+    0
+    neg bitnumber ticmovement mul subticsBig mul % shift on y axis
+    moveto
+    ticwidth neg 0 rlineto
+    stroke
+  } for
+/subticsBig 2 def % sub-tic interval size (1/bits)
+% do additional SMALL tic marks.  subticsSmall is user defined
+/ticwidth ticwidth 2 div def % halve the ticwidth
+  % initial increment limit proc for
+gsave
+  0 1 barbits subticsSmall mul abs cvi
+  {/bitnumber exch subticsSmall div subticsSmall div def
+    0
+    neg bitnumber ticmovement mul subticsSmall mul % shift on y axis
+    moveto
+    ticwidth neg 0 rlineto
+    stroke
+  } for
+grestore
+gsave
+  /labelstring (bits) def
+  numberwidth neg 2.5 mul
+  barheight
+  labelstring stringwidth pop
+  sub 2 div
+  translate
+  90 rotate
+  0 0 moveto
+  labelstring show
+grestore
+} def
+
+/degpercycle 360 def
+ 
+/sqrt3 3 sqrt def
+/trianglesymbol { % x y radius trianglesymbol - (path)
+/r exch def
+/sqrt3r sqrt3 r mul def
+translate
+120 rotate
+0 r translate
+-120 rotate
+newpath
+0 0 moveto
+sqrt3r 0 lineto
+-300 rotate
+sqrt3r 0 lineto
+closepath} bind def
+
+/squaresymbol { % x y side squaresymbol - (path)
+/side exch def
+translate
+side 2 div neg dup translate
+newpath
+0 0 moveto
+0 side lineto
+side side lineto
+side 0 lineto
+closepath} bind def
+
+/linesymbol { % x1 y1 x2 y2 linesymbol - (path)
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+newpath
+x1 y1 moveto
+x2 y2 lineto
+} bind def
+
+/boxsymbol { % x1 y1 x2 y2 boxsymbol - (path)
+/y2 exch .5 add def
+/x2 exch 2 add def
+/y1 exch 1.3 sub def
+/x1 exch 2 sub def
+newpath
+x1 y1 moveto
+x2 y1 lineto
+x2 y2 lineto
+x1 y2 lineto
+closepath
+} bind def
+
+% The following special comment allows deletion of the repeated
+% procedures when several logos are concatenated together
+% See the censor program.
+%]]%*)
+
+/startpage { % start a page
+  save % [ startpage
+  % set the font used in the title strings
+  FontForStringRegular
+  gsave % [ startpage
+  xcorner ycorner translate
+  rotation rotate
+  % create the user defined strings
+  gsave
+    /stringscale  2.00000 def
+     0.00000 cm -1.00000 cm moveto
+    stringscale stringscale scale
+    ()
+    show
+  grestore
+  gsave
+    % string number 1
+    % center the string
+    /stringscale  2.00000 def
+    ()
+    stringwidth pop
+    stringscale mul neg
+    stacksperline charwidth mul
+    add 2 div
+    -1.00000 cm moveto
+    stringscale stringscale scale
+    ()
+    show
+  grestore
+  % now move up to the top of the top line:
+  0 linesperpage linemove barheight mul mul translate
+
+  % set the font used in the logos
+  FontForLogo
+} def
+
+%(*[[ This special comment allows deletion of the repeated
+% procedures when several logos are concatenated together
+% See the censor program.
+
+/endpage { % end a page
+  grestore % ] endpage
+ % showpage % REMOVE FOR PACKAGING INTO ANOTHER FIGURE
+  restore % ] endpage
+} def
+
+/showleftend {
+gsave
+ charwidth neg 0 translate
+ fivemovex fivemovey moveto ShowEnds (d) eq {(5) show prime} if
+ ShowEnds (p) eq {(N) show} if
+grestore
+} def
+
+/showrightend {
+gsave
+ threemovex threemovey moveto ShowEnds (d) eq {(3) show prime} if
+ ShowEnds (p) eq {(C) show} if
+grestore
+} def
+
+/startline{ % start a line
+% move down to the bottom of the line:
+  0 linemove barheight mul neg translate
+  gsave % [ startline
+  % put a bar on the left side:
+  barends (b) eq barends (l) eq or {
+    maketic % maketic.startline
+    gsave
+      bar2n 0 translate % makebar.startline
+      makebar % makebar.startline
+    grestore
+  } if
+  showleftend
+} def
+
+/endline{ % end a line
+  showrightend
+  % put a bar on the right side:
+  barends (b) eq barends (r) eq or {
+    gsave
+      bar2 0 translate % makebar.endline
+      makebar % makebar.endline
+    grestore
+  } if
+  grestore % ] startline
+} def
+/shift2 {
+ charwidth 6.5 sub 0 translate
+} bind def
+
+% @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+% @@@@@@@@@@@@@@@@@@@@ End of procedures @@@@@@@@@@@@@@@@@@@
+% @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+% The following special comment allows deletion of the repeated
+% procedures when several logos are concatenated together
+% See the censor program.
+%]]%*)
+
+%%EndProlog
+
+%%Page: 1 1
+startpage % [
+startline % line number 1
+% before coordinate 0: make the bar
+makebar
+numbering {(0) makenumber} if
+gsave
+grestore
+shift
+numbering {(1) makenumber} if
+gsave
+grestore
+shift
+numbering {(2) makenumber} if
+gsave
+grestore
+shift
+numbering {(3) makenumber} if
+gsave
+grestore
+shift
+numbering {(4) makenumber} if
+gsave
+0.00046 (R) numchar
+0.00048 (T) numchar
+0.00051 (M) numchar
+0.00055 (K) numchar
+0.00064 (L) numchar
+0.00065 (X) numchar
+0.00066 (S) numchar
+0.00066 (P) numchar
+0.00068 (H) numchar
+0.00072 (V) numchar
+0.00072 (G) numchar
+0.00078 (F) numchar
+0.00082 (I) numchar
+0.00086 (W) numchar
+0.00091 (D) numchar
+0.00101 (A) numchar
+0.00104 (Y) numchar
+0.00126 (E) numchar
+0.00134 (N) numchar
+0.00154 (Q) numchar
+0.00232 (C) numchar
+grestore
+shift
+numbering {(5) makenumber} if
+gsave
+0.00022 (Z) numchar
+0.00157 (E) numchar
+0.00172 (R) numchar
+0.00180 (T) numchar
+0.00192 (M) numchar
+0.00205 (K) numchar
+0.00239 (L) numchar
+0.00245 (X) numchar
+0.00247 (S) numchar
+0.00247 (P) numchar
+0.00254 (H) numchar
+0.00269 (V) numchar
+0.00270 (G) numchar
+0.00294 (F) numchar
+0.00309 (I) numchar
+0.00323 (W) numchar
+0.00343 (D) numchar
+0.00380 (A) numchar
+0.00391 (Y) numchar
+0.00503 (N) numchar
+0.00579 (Q) numchar
+0.00870 (C) numchar
+grestore
+shift
+numbering {(6) makenumber} if
+gsave
+0.00062 (Z) numchar
+0.00220 (E) numchar
+0.00481 (R) numchar
+0.00504 (T) numchar
+0.00538 (M) numchar
+0.00573 (K) numchar
+0.00669 (L) numchar
+0.00685 (X) numchar
+0.00691 (S) numchar
+0.00692 (P) numchar
+0.00710 (H) numchar
+0.00753 (V) numchar
+0.00754 (G) numchar
+0.00822 (F) numchar
+0.00864 (I) numchar
+0.00905 (W) numchar
+0.00959 (D) numchar
+0.01063 (A) numchar
+0.01093 (Y) numchar
+0.01408 (N) numchar
+0.01618 (Q) numchar
+0.02434 (C) numchar
+grestore
+shift
+numbering {(7) makenumber} if
+gsave
+0.00016 (Z) numchar
+0.00089 (S) numchar
+0.00116 (W) numchar
+0.00124 (R) numchar
+0.00129 (T) numchar
+0.00138 (M) numchar
+0.00169 (E) numchar
+0.00172 (L) numchar
+0.00176 (X) numchar
+0.00178 (P) numchar
+0.00182 (H) numchar
+0.00193 (V) numchar
+0.00194 (G) numchar
+0.00211 (F) numchar
+0.00222 (I) numchar
+0.00246 (D) numchar
+0.00273 (A) numchar
+0.00281 (Y) numchar
+0.00294 (K) numchar
+0.00362 (N) numchar
+0.00416 (Q) numchar
+0.00625 (C) numchar
+grestore
+shift
+numbering {(8) makenumber} if
+gsave
+0.00032 (Z) numchar
+0.00119 (S) numchar
+0.00226 (E) numchar
+0.00248 (R) numchar
+0.00259 (T) numchar
+0.00277 (M) numchar
+0.00344 (L) numchar
+0.00353 (X) numchar
+0.00356 (P) numchar
+0.00366 (H) numchar
+0.00388 (V) numchar
+0.00388 (G) numchar
+0.00423 (F) numchar
+0.00445 (I) numchar
+0.00466 (W) numchar
+0.00494 (D) numchar
+0.00547 (A) numchar
+0.00562 (Y) numchar
+0.00590 (K) numchar
+0.00725 (N) numchar
+0.00833 (Q) numchar
+0.01253 (C) numchar
+grestore
+shift
+numbering {(9) makenumber} if
+gsave
+0.00030 (L) numchar
+0.00043 (R) numchar
+0.00046 (T) numchar
+0.00049 (M) numchar
+0.00062 (X) numchar
+0.00062 (S) numchar
+0.00063 (P) numchar
+0.00064 (H) numchar
+0.00068 (V) numchar
+0.00068 (G) numchar
+0.00074 (F) numchar
+0.00078 (I) numchar
+0.00082 (W) numchar
+0.00087 (D) numchar
+0.00096 (A) numchar
+0.00099 (Y) numchar
+0.00104 (K) numchar
+0.00119 (E) numchar
+0.00127 (N) numchar
+0.00146 (Q) numchar
+0.00220 (C) numchar
+grestore
+shift
+numbering {(10) makenumber} if
+gsave
+0.00031 (L) numchar
+0.00045 (R) numchar
+0.00047 (T) numchar
+0.00051 (M) numchar
+0.00064 (X) numchar
+0.00065 (S) numchar
+0.00065 (P) numchar
+0.00067 (H) numchar
+0.00071 (V) numchar
+0.00071 (G) numchar
+0.00077 (F) numchar
+0.00081 (I) numchar
+0.00085 (W) numchar
+0.00090 (D) numchar
+0.00100 (A) numchar
+0.00103 (Y) numchar
+0.00108 (K) numchar
+0.00124 (E) numchar
+0.00133 (N) numchar
+0.00152 (Q) numchar
+0.00229 (C) numchar
+grestore
+shift
+numbering {(11) makenumber} if
+gsave
+0.00016 (Z) numchar
+0.00085 (L) numchar
+0.00088 (S) numchar
+0.00122 (R) numchar
+0.00128 (T) numchar
+0.00135 (A) numchar
+0.00136 (M) numchar
+0.00174 (X) numchar
+0.00175 (P) numchar
+0.00180 (H) numchar
+0.00191 (V) numchar
+0.00191 (G) numchar
+0.00208 (F) numchar
+0.00219 (I) numchar
+0.00229 (W) numchar
+0.00243 (D) numchar
+0.00277 (Y) numchar
+0.00291 (K) numchar
+0.00334 (E) numchar
+0.00357 (N) numchar
+0.00410 (Q) numchar
+0.00617 (C) numchar
+grestore
+shift
+numbering {(12) makenumber} if
+gsave
+0.00016 (Z) numchar
+0.00085 (L) numchar
+0.00088 (S) numchar
+0.00122 (R) numchar
+0.00128 (T) numchar
+0.00135 (A) numchar
+0.00136 (M) numchar
+0.00174 (X) numchar
+0.00175 (P) numchar
+0.00180 (H) numchar
+0.00191 (V) numchar
+0.00191 (G) numchar
+0.00208 (F) numchar
+0.00219 (I) numchar
+0.00229 (W) numchar
+0.00243 (D) numchar
+0.00277 (Y) numchar
+0.00291 (K) numchar
+0.00334 (E) numchar
+0.00357 (N) numchar
+0.00410 (Q) numchar
+0.00617 (C) numchar
+grestore
+shift
+numbering {(13) makenumber} if
+gsave
+0.00016 (Z) numchar
+0.00085 (L) numchar
+0.00088 (S) numchar
+0.00122 (R) numchar
+0.00128 (T) numchar
+0.00135 (A) numchar
+0.00136 (M) numchar
+0.00174 (X) numchar
+0.00175 (P) numchar
+0.00180 (H) numchar
+0.00191 (V) numchar
+0.00191 (G) numchar
+0.00208 (F) numchar
+0.00219 (I) numchar
+0.00229 (W) numchar
+0.00243 (D) numchar
+0.00277 (Y) numchar
+0.00291 (K) numchar
+0.00334 (E) numchar
+0.00357 (N) numchar
+0.00410 (Q) numchar
+0.00617 (C) numchar
+grestore
+shift
+numbering {(14) makenumber} if
+gsave
+grestore
+shift
+numbering {(15) makenumber} if
+gsave
+0.00039 (Z) numchar
+0.00144 (P) numchar
+0.00301 (R) numchar
+0.00315 (T) numchar
+0.00332 (A) numchar
+0.00336 (M) numchar
+0.00341 (Y) numchar
+0.00418 (L) numchar
+0.00428 (X) numchar
+0.00432 (S) numchar
+0.00444 (H) numchar
+0.00471 (V) numchar
+0.00471 (G) numchar
+0.00514 (F) numchar
+0.00540 (I) numchar
+0.00565 (W) numchar
+0.00599 (D) numchar
+0.00717 (K) numchar
+0.00761 (C) numchar
+0.00824 (E) numchar
+0.00880 (N) numchar
+0.02022 (Q) numchar
+grestore
+shift
+numbering {(16) makenumber} if
+gsave
+0.00019 (I) numchar
+0.00026 (N) numchar
+0.00041 (Y) numchar
+0.00042 (Z) numchar
+0.00066 (M) numchar
+0.00186 (F) numchar
+0.00353 (K) numchar
+0.02023 (A) numchar
+0.02121 (V) numchar
+0.02757 (L) numchar
+0.03208 (H) numchar
+0.03216 (P) numchar
+0.03234 (G) numchar
+0.03239 (R) numchar
+0.03249 (D) numchar
+0.03249 (Q) numchar
+0.03249 (E) numchar
+0.03249 (W) numchar
+0.03249 (X) numchar
+0.03249 (C) numchar
+0.03249 (S) numchar
+0.03249 (T) numchar
+grestore
+shift
+numbering {(17) makenumber} if
+gsave
+0.00081 (Z) numchar
+0.00434 (L) numchar
+0.00624 (R) numchar
+0.00653 (T) numchar
+0.00698 (M) numchar
+0.00888 (X) numchar
+0.00896 (S) numchar
+0.00897 (P) numchar
+0.00921 (H) numchar
+0.00978 (G) numchar
+0.01066 (F) numchar
+0.01121 (I) numchar
+0.01173 (W) numchar
+0.01244 (D) numchar
+0.01379 (A) numchar
+0.01417 (Y) numchar
+0.01487 (K) numchar
+0.01710 (E) numchar
+0.01826 (N) numchar
+0.02098 (Q) numchar
+0.03157 (C) numchar
+0.05859 (V) numchar
+grestore
+shift
+numbering {(18) makenumber} if
+gsave
+grestore
+shift
+numbering {(19) makenumber} if
+gsave
+0.00150 (F) numchar
+0.00182 (Z) numchar
+0.01408 (R) numchar
+0.01475 (T) numchar
+0.01576 (M) numchar
+0.01959 (L) numchar
+0.02006 (X) numchar
+0.02024 (S) numchar
+0.02026 (P) numchar
+0.02081 (H) numchar
+0.02205 (V) numchar
+0.02208 (G) numchar
+0.02531 (I) numchar
+0.02650 (W) numchar
+0.02809 (D) numchar
+0.03114 (A) numchar
+0.03200 (Y) numchar
+0.03359 (K) numchar
+0.03862 (E) numchar
+0.04124 (N) numchar
+0.04739 (Q) numchar
+0.07130 (C) numchar
+grestore
+shift
+numbering {(20) makenumber} if
+gsave
+0.00594 (Z) numchar
+0.00594 (X) numchar
+0.00594 (W) numchar
+0.00620 (A) numchar
+0.00653 (C) numchar
+0.00653 (K) numchar
+0.00668 (Y) numchar
+0.00668 (F) numchar
+0.00689 (P) numchar
+0.00891 (G) numchar
+0.00933 (M) numchar
+0.01814 (Q) numchar
+0.03414 (T) numchar
+0.03464 (R) numchar
+0.04651 (L) numchar
+0.05524 (V) numchar
+0.06532 (S) numchar
+0.07126 (H) numchar
+0.12470 (D) numchar
+0.13063 (E) numchar
+0.18408 (I) numchar
+0.21970 (N) numchar
+grestore
+shift
+numbering {(21) makenumber} if
+gsave
+0.00063 (Z) numchar
+0.00162 (R) numchar
+0.00339 (L) numchar
+0.00350 (S) numchar
+0.00351 (P) numchar
+0.00387 (K) numchar
+0.00510 (T) numchar
+0.00545 (M) numchar
+0.00547 (Q) numchar
+0.00694 (X) numchar
+0.00720 (H) numchar
+0.00763 (V) numchar
+0.00764 (G) numchar
+0.00876 (I) numchar
+0.00917 (W) numchar
+0.00972 (D) numchar
+0.01077 (A) numchar
+0.01107 (Y) numchar
+0.01336 (E) numchar
+0.01427 (N) numchar
+0.01666 (F) numchar
+0.02467 (C) numchar
+grestore
+shift
+numbering {(22) makenumber} if
+gsave
+grestore
+shift
+numbering {(23) makenumber} if
+gsave
+0.00011 (Z) numchar
+0.00063 (S) numchar
+0.00088 (R) numchar
+0.00092 (T) numchar
+0.00098 (M) numchar
+0.00122 (L) numchar
+0.00125 (X) numchar
+0.00126 (P) numchar
+0.00129 (H) numchar
+0.00137 (V) numchar
+0.00137 (G) numchar
+0.00147 (Q) numchar
+0.00150 (F) numchar
+0.00157 (I) numchar
+0.00165 (W) numchar
+0.00175 (D) numchar
+0.00194 (A) numchar
+0.00199 (Y) numchar
+0.00209 (K) numchar
+0.00240 (E) numchar
+0.00256 (N) numchar
+0.00443 (C) numchar
+grestore
+shift
+numbering {(24) makenumber} if
+gsave
+grestore
+shift
+numbering {(25) makenumber} if
+gsave
+0.00033 (S) numchar
+0.00045 (R) numchar
+0.00047 (T) numchar
+0.00051 (M) numchar
+0.00063 (L) numchar
+0.00065 (X) numchar
+0.00065 (P) numchar
+0.00067 (H) numchar
+0.00071 (V) numchar
+0.00071 (G) numchar
+0.00077 (F) numchar
+0.00081 (I) numchar
+0.00085 (W) numchar
+0.00090 (D) numchar
+0.00100 (A) numchar
+0.00103 (Y) numchar
+0.00108 (K) numchar
+0.00124 (E) numchar
+0.00133 (N) numchar
+0.00152 (Q) numchar
+0.00229 (C) numchar
+grestore
+shift
+numbering {(26) makenumber} if
+gsave
+0.05274 (R) numchar
+0.05523 (T) numchar
+0.05903 (M) numchar
+0.07334 (L) numchar
+0.07513 (X) numchar
+0.07578 (S) numchar
+0.07587 (P) numchar
+0.07791 (H) numchar
+0.08258 (V) numchar
+0.08267 (G) numchar
+0.09015 (F) numchar
+0.09478 (I) numchar
+0.09922 (W) numchar
+0.10518 (D) numchar
+0.11659 (A) numchar
+0.11982 (Y) numchar
+0.12575 (K) numchar
+0.14462 (E) numchar
+0.15443 (N) numchar
+0.17745 (Q) numchar
+0.26699 (C) numchar
+0.49174 (Z) numchar
+grestore
+shift
+numbering {(27) makenumber} if
+gsave
+0.00040 (Z) numchar
+0.00156 (R) numchar
+0.00164 (T) numchar
+0.00173 (A) numchar
+0.00175 (M) numchar
+0.00217 (L) numchar
+0.00223 (X) numchar
+0.00225 (S) numchar
+0.00225 (P) numchar
+0.00231 (H) numchar
+0.00245 (V) numchar
+0.00245 (G) numchar
+0.00263 (Q) numchar
+0.00267 (F) numchar
+0.00281 (I) numchar
+0.00294 (W) numchar
+0.00312 (D) numchar
+0.00355 (Y) numchar
+0.00373 (K) numchar
+0.00429 (E) numchar
+0.00458 (N) numchar
+0.00791 (C) numchar
+grestore
+shift
+numbering {(28) makenumber} if
+gsave
+0.00016 (Z) numchar
+0.00090 (P) numchar
+0.00125 (R) numchar
+0.00131 (T) numchar
+0.00140 (M) numchar
+0.00142 (Y) numchar
+0.00174 (L) numchar
+0.00178 (X) numchar
+0.00180 (S) numchar
+0.00185 (H) numchar
+0.00196 (V) numchar
+0.00196 (G) numchar
+0.00211 (Q) numchar
+0.00214 (F) numchar
+0.00225 (I) numchar
+0.00235 (W) numchar
+0.00250 (D) numchar
+0.00277 (A) numchar
+0.00298 (K) numchar
+0.00343 (E) numchar
+0.00366 (N) numchar
+0.00634 (C) numchar
+grestore
+shift
+numbering {(29) makenumber} if
+gsave
+0.00046 (R) numchar
+0.00049 (T) numchar
+0.00052 (M) numchar
+0.00065 (L) numchar
+0.00066 (X) numchar
+0.00067 (S) numchar
+0.00067 (P) numchar
+0.00069 (H) numchar
+0.00073 (V) numchar
+0.00073 (G) numchar
+0.00078 (Q) numchar
+0.00079 (F) numchar
+0.00083 (I) numchar
+0.00087 (W) numchar
+0.00093 (D) numchar
+0.00103 (A) numchar
+0.00105 (Y) numchar
+0.00111 (K) numchar
+0.00127 (E) numchar
+0.00136 (N) numchar
+0.00235 (C) numchar
+grestore
+shift
+numbering {(30) makenumber} if
+gsave
+0.00046 (R) numchar
+0.00049 (T) numchar
+0.00052 (M) numchar
+0.00065 (L) numchar
+0.00066 (X) numchar
+0.00067 (S) numchar
+0.00067 (P) numchar
+0.00069 (H) numchar
+0.00073 (V) numchar
+0.00073 (G) numchar
+0.00078 (Q) numchar
+0.00079 (F) numchar
+0.00083 (I) numchar
+0.00087 (W) numchar
+0.00093 (D) numchar
+0.00103 (A) numchar
+0.00105 (Y) numchar
+0.00111 (K) numchar
+0.00127 (E) numchar
+0.00136 (N) numchar
+0.00235 (C) numchar
+grestore
+shift
+numbering {(31) makenumber} if
+gsave
+grestore
+shift
+numbering {(32) makenumber} if
+gsave
+grestore
+shift
+numbering {(33) makenumber} if
+gsave
+grestore
+shift
+numbering {(34) makenumber} if
+gsave
+grestore
+shift
+numbering {(35) makenumber} if
+gsave
+grestore
+shift
+numbering {(36) makenumber} if
+gsave
+grestore
+shift
+numbering {(37) makenumber} if
+gsave
+grestore
+shift
+numbering {(38) makenumber} if
+gsave
+grestore
+shift
+numbering {(39) makenumber} if
+gsave
+grestore
+shift
+numbering {(40) makenumber} if
+gsave
+grestore
+shift
+numbering {(41) makenumber} if
+gsave
+0.00046 (R) numchar
+0.00048 (T) numchar
+0.00051 (M) numchar
+0.00052 (Y) numchar
+0.00064 (L) numchar
+0.00065 (X) numchar
+0.00066 (S) numchar
+0.00066 (P) numchar
+0.00068 (H) numchar
+0.00072 (V) numchar
+0.00072 (G) numchar
+0.00078 (F) numchar
+0.00082 (I) numchar
+0.00086 (W) numchar
+0.00091 (D) numchar
+0.00101 (A) numchar
+0.00109 (K) numchar
+0.00125 (E) numchar
+0.00134 (N) numchar
+0.00154 (Q) numchar
+0.00232 (C) numchar
+grestore
+shift
+numbering {(42) makenumber} if
+gsave
+0.00011 (Z) numchar
+0.00062 (P) numchar
+0.00086 (R) numchar
+0.00090 (T) numchar
+0.00097 (M) numchar
+0.00098 (Y) numchar
+0.00120 (L) numchar
+0.00123 (X) numchar
+0.00124 (S) numchar
+0.00128 (H) numchar
+0.00135 (V) numchar
+0.00135 (G) numchar
+0.00148 (F) numchar
+0.00155 (I) numchar
+0.00162 (W) numchar
+0.00172 (D) numchar
+0.00191 (A) numchar
+0.00206 (K) numchar
+0.00237 (E) numchar
+0.00253 (N) numchar
+0.00291 (Q) numchar
+0.00437 (C) numchar
+grestore
+shift
+numbering {(43) makenumber} if
+gsave
+0.00027 (Z) numchar
+0.00101 (P) numchar
+0.00210 (D) numchar
+0.00211 (R) numchar
+0.00221 (T) numchar
+0.00236 (M) numchar
+0.00293 (L) numchar
+0.00300 (X) numchar
+0.00303 (S) numchar
+0.00311 (H) numchar
+0.00330 (V) numchar
+0.00330 (G) numchar
+0.00360 (F) numchar
+0.00378 (I) numchar
+0.00396 (W) numchar
+0.00465 (A) numchar
+0.00478 (Y) numchar
+0.00502 (K) numchar
+0.00577 (E) numchar
+0.00617 (N) numchar
+0.00708 (Q) numchar
+0.02132 (C) numchar
+grestore
+shift
+numbering {(44) makenumber} if
+gsave
+0.00016 (Z) numchar
+0.00106 (F) numchar
+0.00123 (D) numchar
+0.00124 (R) numchar
+0.00129 (T) numchar
+0.00138 (M) numchar
+0.00147 (K) numchar
+0.00172 (L) numchar
+0.00176 (X) numchar
+0.00178 (S) numchar
+0.00178 (P) numchar
+0.00183 (H) numchar
+0.00193 (V) numchar
+0.00194 (G) numchar
+0.00222 (I) numchar
+0.00232 (W) numchar
+0.00273 (A) numchar
+0.00281 (Y) numchar
+0.00339 (E) numchar
+0.00362 (N) numchar
+0.00416 (Q) numchar
+0.00625 (C) numchar
+grestore
+shift
+numbering {(45) makenumber} if
+gsave
+0.00137 (Z) numchar
+0.00212 (R) numchar
+0.00381 (P) numchar
+0.00704 (D) numchar
+0.00713 (Q) numchar
+0.00842 (K) numchar
+0.00905 (F) numchar
+0.00968 (E) numchar
+0.01185 (M) numchar
+0.01508 (X) numchar
+0.01564 (H) numchar
+0.01658 (V) numchar
+0.01660 (G) numchar
+0.01663 (T) numchar
+0.01903 (I) numchar
+0.01992 (W) numchar
+0.02341 (A) numchar
+0.02406 (Y) numchar
+0.02680 (C) numchar
+0.03100 (N) numchar
+0.08667 (L) numchar
+0.12335 (S) numchar
+grestore
+shift
+numbering {(46) makenumber} if
+gsave
+0.00346 (Z) numchar
+0.00534 (R) numchar
+0.02124 (K) numchar
+0.02284 (F) numchar
+0.02442 (E) numchar
+0.02664 (D) numchar
+0.02798 (T) numchar
+0.02953 (A) numchar
+0.02990 (M) numchar
+0.03806 (X) numchar
+0.03839 (S) numchar
+0.03844 (P) numchar
+0.03947 (H) numchar
+0.04183 (V) numchar
+0.04188 (G) numchar
+0.04802 (I) numchar
+0.05027 (W) numchar
+0.06070 (Y) numchar
+0.07823 (N) numchar
+0.08989 (Q) numchar
+0.13526 (C) numchar
+1.85779 (L) numchar
+grestore
+shift
+numbering {(47) makenumber} if
+gsave
+0.00518 (Z) numchar
+0.00518 (G) numchar
+0.00518 (H) numchar
+0.00518 (D) numchar
+0.00548 (L) numchar
+0.00556 (E) numchar
+0.00559 (Q) numchar
+0.00611 (S) numchar
+0.02592 (W) numchar
+0.03006 (P) numchar
+0.03023 (R) numchar
+0.03110 (F) numchar
+0.03110 (Y) numchar
+0.05701 (M) numchar
+0.05701 (X) numchar
+0.07602 (K) numchar
+0.08120 (A) numchar
+0.09848 (V) numchar
+0.11867 (T) numchar
+0.16068 (I) numchar
+0.17104 (C) numchar
+0.19177 (N) numchar
+grestore
+shift
+numbering {(48) makenumber} if
+gsave
+0.04412 (D) numchar
+0.05202 (G) numchar
+0.06067 (E) numchar
+0.06637 (R) numchar
+0.06950 (T) numchar
+0.07428 (M) numchar
+0.09230 (L) numchar
+0.09454 (X) numchar
+0.09537 (S) numchar
+0.09548 (P) numchar
+0.09805 (H) numchar
+0.10392 (V) numchar
+0.11165 (Q) numchar
+0.11345 (F) numchar
+0.11928 (I) numchar
+0.12487 (W) numchar
+0.14672 (A) numchar
+0.15079 (Y) numchar
+0.15826 (K) numchar
+0.19434 (N) numchar
+0.33599 (C) numchar
+0.66181 (Z) numchar
+grestore
+shift
+numbering {(49) makenumber} if
+gsave
+0.05464 (E) numchar
+0.05961 (D) numchar
+0.05978 (R) numchar
+0.06260 (T) numchar
+0.06690 (M) numchar
+0.08313 (L) numchar
+0.08515 (X) numchar
+0.08589 (S) numchar
+0.08600 (P) numchar
+0.08830 (H) numchar
+0.09360 (V) numchar
+0.09370 (G) numchar
+0.10218 (F) numchar
+0.10743 (I) numchar
+0.11246 (W) numchar
+0.13214 (A) numchar
+0.13581 (Y) numchar
+0.14253 (K) numchar
+0.17503 (N) numchar
+0.20112 (Q) numchar
+0.30261 (C) numchar
+0.59605 (Z) numchar
+grestore
+shift
+numbering {(50) makenumber} if
+gsave
+0.00046 (R) numchar
+0.00049 (T) numchar
+0.00052 (M) numchar
+0.00065 (L) numchar
+0.00066 (X) numchar
+0.00067 (S) numchar
+0.00067 (P) numchar
+0.00069 (H) numchar
+0.00073 (V) numchar
+0.00073 (G) numchar
+0.00078 (Q) numchar
+0.00079 (F) numchar
+0.00083 (I) numchar
+0.00087 (W) numchar
+0.00093 (D) numchar
+0.00103 (A) numchar
+0.00105 (Y) numchar
+0.00111 (K) numchar
+0.00127 (E) numchar
+0.00136 (N) numchar
+0.00235 (C) numchar
+grestore
+shift
+numbering {(51) makenumber} if
+gsave
+0.00013 (Z) numchar
+0.00073 (P) numchar
+0.00102 (R) numchar
+0.00106 (T) numchar
+0.00114 (M) numchar
+0.00141 (L) numchar
+0.00145 (X) numchar
+0.00146 (S) numchar
+0.00150 (H) numchar
+0.00159 (G) numchar
+0.00174 (F) numchar
+0.00183 (I) numchar
+0.00191 (W) numchar
+0.00203 (D) numchar
+0.00225 (A) numchar
+0.00231 (Y) numchar
+0.00242 (K) numchar
+0.00279 (E) numchar
+0.00298 (N) numchar
+0.00318 (V) numchar
+0.00342 (Q) numchar
+0.00514 (C) numchar
+grestore
+shift
+numbering {(52) makenumber} if
+gsave
+grestore
+shift
+numbering {(53) makenumber} if
+gsave
+grestore
+shift
+numbering {(54) makenumber} if
+gsave
+0.00011 (Z) numchar
+0.00087 (D) numchar
+0.00087 (R) numchar
+0.00091 (T) numchar
+0.00096 (A) numchar
+0.00097 (M) numchar
+0.00121 (L) numchar
+0.00124 (X) numchar
+0.00125 (S) numchar
+0.00125 (P) numchar
+0.00128 (H) numchar
+0.00136 (V) numchar
+0.00136 (G) numchar
+0.00149 (F) numchar
+0.00156 (I) numchar
+0.00163 (W) numchar
+0.00197 (Y) numchar
+0.00207 (K) numchar
+0.00238 (E) numchar
+0.00254 (N) numchar
+0.00292 (Q) numchar
+0.00440 (C) numchar
+grestore
+shift
+numbering {(55) makenumber} if
+gsave
+grestore
+shift
+numbering {(56) makenumber} if
+gsave
+0.00017 (Z) numchar
+0.00122 (E) numchar
+0.00133 (R) numchar
+0.00140 (T) numchar
+0.00149 (M) numchar
+0.00185 (L) numchar
+0.00190 (X) numchar
+0.00192 (S) numchar
+0.00192 (P) numchar
+0.00197 (H) numchar
+0.00209 (V) numchar
+0.00209 (G) numchar
+0.00228 (F) numchar
+0.00240 (I) numchar
+0.00251 (W) numchar
+0.00266 (D) numchar
+0.00295 (A) numchar
+0.00303 (Y) numchar
+0.00318 (K) numchar
+0.00390 (N) numchar
+0.00449 (Q) numchar
+0.00675 (C) numchar
+grestore
+shift
+numbering {(57) makenumber} if
+gsave
+grestore
+shift
+numbering {(58) makenumber} if
+gsave
+grestore
+shift
+numbering {(59) makenumber} if
+gsave
+grestore
+shift
+numbering {(60) makenumber} if
+gsave
+0.00015 (Z) numchar
+0.00118 (R) numchar
+0.00132 (M) numchar
+0.00164 (L) numchar
+0.00168 (X) numchar
+0.00169 (S) numchar
+0.00169 (P) numchar
+0.00174 (H) numchar
+0.00184 (V) numchar
+0.00185 (G) numchar
+0.00201 (F) numchar
+0.00222 (W) numchar
+0.00235 (D) numchar
+0.00247 (T) numchar
+0.00260 (A) numchar
+0.00268 (Y) numchar
+0.00323 (E) numchar
+0.00345 (N) numchar
+0.00396 (Q) numchar
+0.00423 (I) numchar
+0.00562 (K) numchar
+0.00596 (C) numchar
+grestore
+shift
+numbering {(61) makenumber} if
+gsave
+0.00016 (Z) numchar
+0.00064 (T) numchar
+0.00086 (L) numchar
+0.00123 (R) numchar
+0.00138 (M) numchar
+0.00175 (X) numchar
+0.00177 (S) numchar
+0.00177 (P) numchar
+0.00182 (H) numchar
+0.00193 (V) numchar
+0.00193 (G) numchar
+0.00207 (Q) numchar
+0.00210 (F) numchar
+0.00221 (I) numchar
+0.00232 (W) numchar
+0.00245 (D) numchar
+0.00272 (A) numchar
+0.00280 (Y) numchar
+0.00294 (K) numchar
+0.00338 (E) numchar
+0.00360 (N) numchar
+0.00623 (C) numchar
+grestore
+shift
+numbering {(62) makenumber} if
+gsave
+grestore
+shift
+numbering {(63) makenumber} if
+gsave
+0.00052 (R) numchar
+0.00055 (T) numchar
+0.00059 (M) numchar
+0.00073 (L) numchar
+0.00075 (X) numchar
+0.00075 (S) numchar
+0.00075 (P) numchar
+0.00077 (H) numchar
+0.00082 (G) numchar
+0.00090 (F) numchar
+0.00094 (I) numchar
+0.00099 (W) numchar
+0.00105 (D) numchar
+0.00116 (A) numchar
+0.00119 (Y) numchar
+0.00125 (K) numchar
+0.00144 (E) numchar
+0.00154 (N) numchar
+0.00164 (V) numchar
+0.00177 (Q) numchar
+0.00266 (C) numchar
+grestore
+shift
+numbering {(64) makenumber} if
+gsave
+grestore
+shift
+numbering {(65) makenumber} if
+gsave
+grestore
+shift
+numbering {(66) makenumber} if
+gsave
+grestore
+shift
+numbering {(67) makenumber} if
+gsave
+0.00022 (Z) numchar
+0.00084 (R) numchar
+0.00154 (E) numchar
+0.00177 (T) numchar
+0.00189 (M) numchar
+0.00235 (L) numchar
+0.00241 (X) numchar
+0.00243 (S) numchar
+0.00243 (P) numchar
+0.00250 (H) numchar
+0.00265 (V) numchar
+0.00265 (G) numchar
+0.00289 (F) numchar
+0.00304 (I) numchar
+0.00318 (W) numchar
+0.00337 (D) numchar
+0.00373 (A) numchar
+0.00384 (Y) numchar
+0.00403 (K) numchar
+0.00495 (N) numchar
+0.00568 (Q) numchar
+0.00855 (C) numchar
+grestore
+shift
+numbering {(68) makenumber} if
+gsave
+0.00013 (Z) numchar
+0.00050 (R) numchar
+0.00105 (T) numchar
+0.00113 (M) numchar
+0.00140 (L) numchar
+0.00143 (X) numchar
+0.00144 (S) numchar
+0.00145 (P) numchar
+0.00149 (H) numchar
+0.00157 (V) numchar
+0.00158 (G) numchar
+0.00172 (F) numchar
+0.00189 (W) numchar
+0.00201 (D) numchar
+0.00222 (A) numchar
+0.00228 (Y) numchar
+0.00240 (K) numchar
+0.00276 (E) numchar
+0.00294 (N) numchar
+0.00338 (Q) numchar
+0.00361 (I) numchar
+0.00509 (C) numchar
+grestore
+shift
+numbering {(69) makenumber} if
+gsave
+grestore
+shift
+numbering {(70) makenumber} if
+gsave
+grestore
+shift
+numbering {(71) makenumber} if
+gsave
+grestore
+shift
+numbering {(72) makenumber} if
+gsave
+grestore
+shift
+numbering {(73) makenumber} if
+gsave
+grestore
+shift
+
+endline
+endpage % ]
+
+%%Trailer
+%%Pages: 1
