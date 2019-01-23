@@ -1339,7 +1339,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in state_counts:
                     height_class[aa_class] = (state_counts[aa_class] / sum(state_counts.values())) / (
-                                self.functions[aa_class] / len(self))
+                            self.functions[aa_class] / len(self))
                 for aa_class in height_class:
                     height_dict[pairs][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1366,7 +1366,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in state_counts:
                     height_class[aa_class] = (state_counts[aa_class] / sum(state_counts.values())) / (
-                                self.functions[aa_class] / len(self))
+                            self.functions[aa_class] / len(self))
                 for aa_class in height_class:
                     height_dict[singles][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1416,7 +1416,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in inverse_state_counts:
                     height_class[aa_class] = (inverse_state_counts[aa_class] / sum(inverse_state_counts.values())) / (
-                                inverse_functions[aa_class] / sum(inverse_functions.values()))
+                            inverse_functions[aa_class] / sum(inverse_functions.values()))
                 for aa_class in height_class:
                     height_dict_inverse[pairs][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1450,7 +1450,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in inverse_state_counts:
                     height_class[aa_class] = (inverse_state_counts[aa_class] / sum(inverse_state_counts.values())) / (
-                                inverse_functions[aa_class] / sum(inverse_functions.values()))
+                            inverse_functions[aa_class] / sum(inverse_functions.values()))
                 for aa_class in height_class:
                     height_dict_inverse[singles][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1500,7 +1500,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in inverse_state_counts:
                     height_class[aa_class] = (inverse_state_counts[aa_class] / sum(inverse_state_counts.values())) / (
-                                inverse_functions[aa_class] / sum(inverse_functions.values()))
+                            inverse_functions[aa_class] / sum(inverse_functions.values()))
                 for aa_class in height_class:
                     height_dict_inverse[pairs][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1534,7 +1534,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in inverse_state_counts:
                     height_class[aa_class] = (inverse_state_counts[aa_class] / sum(inverse_state_counts.values())) / (
-                                inverse_functions[aa_class] / sum(inverse_functions.values()))
+                            inverse_functions[aa_class] / sum(inverse_functions.values()))
                 for aa_class in height_class:
                     height_dict_inverse[singles][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1573,7 +1573,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in state_counts:
                     height_class[aa_class] = (state_counts[aa_class] / sum(state_counts.values())) / (
-                                self.functions[aa_class] / len(self))
+                            self.functions[aa_class] / len(self))
                 for aa_class in height_class:
                     height_dict[pairs][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1599,7 +1599,7 @@ class FunctionLogo:
                 height_class = {}
                 for aa_class in state_counts:
                     height_class[aa_class] = (state_counts[aa_class] / sum(state_counts.values())) / (
-                                self.functions[aa_class] / len(self))
+                            self.functions[aa_class] / len(self))
                 for aa_class in height_class:
                     height_dict[singles][state][aa_class] = height_class[aa_class] / sum(height_class.values())
 
@@ -1755,20 +1755,28 @@ class FunctionLogo:
         functions_array = np.array(list(self.functions.values()))
 
         for p in types:
-            kld_prior_dist[p] = self.functions[p] / (functions_array[functions_array != 0].sum())
-            if kld_prior_dist[p] == 0:
-                print(p, " ", self.functions[p], "self.functions[p]")
-                print(functions_array, "functions_array")
+            kld_prior_dist[p] = self.functions[p] + self.pos * 5 / (
+                    functions_array[functions_array != 0].sum() + self.pos * 5 * len(types))
 
         for singles in range(self.pos):
             for state in self.singles:
                 state_counts = self.get([singles], state)
+                for t in types:
+                    if t not in state_counts:
+                        state_counts[t] = 1
+                    else:
+                        state_counts[t] += 1
                 for p in state_counts:
-                    kld_post_dist[singles][state][p] = state_counts[p] / sum(state_counts.values())
+                    kld_post_dist[singles][state][p] = state_counts[p] / (sum(state_counts.values()))
 
         for pair in basepairs:
             for state in pairs:
                 state_counts = self.get(pair, state)
+                for t in types:
+                    if t not in state_counts:
+                        state_counts[t] = 1
+                    else:
+                        state_counts[t] += 1
                 for p in state_counts:
                     kld_post_dist[pair][state][p] = state_counts[p] / sum(state_counts.values())
 
@@ -1791,87 +1799,23 @@ class FunctionLogo:
         for p in back_prior:
             kld_prior += fore_prior[p] * np.log2(fore_prior[p] / back_prior[p])
 
-        # assign probability of eps to undefined probabilities between two stacks
-        eps = 0.001
         for singles in range(self.pos):
             for state in self.singles:
-                symbols = set()
-                for p in back_post[singles][state]:
-                    symbols.add(p)
-                for p in fore_post[singles][state]:
-                    symbols.add(p)
-                back = len(symbols) - len(back_post[singles][state])
-                fore = len(symbols) - len(fore_post[singles][state])
-
-                for p in symbols:
-                    if p not in back_post[singles][state]:
-                        back_post[singles][state][p] = eps
-                    else:
-                        back_post[singles][state][p] - (back * eps / len(back_post[singles][state]))
-                    if p not in fore_post[singles][state]:
-                        fore_post[singles][state][p] = eps
-                    else:
-                        fore_post[singles][state][p] - (fore * eps / len(fore_post[singles][state]))
-
-        for pair in basepairs:
-            for state in pairs:
-                symbols = set()
-                for p in back_post[pair][state]:
-                    symbols.add(p)
-                for p in fore_post[pair][state]:
-                    symbols.add(p)
-
-                back = len(symbols) - len(back_post[pair][state])
-                fore = len(symbols) - len(fore_post[pair][state])
-
-                for p in symbols:
-                    if p not in back_post[pair][state]:
-                        back_post[pair][state][p] = eps
-                    else:
-                        back_post[pair][state][p] - (back * eps / len(back_post[pair][state]))
-                    if p not in fore_post[pair][state]:
-                        fore_post[pair][state][p] = eps
-                    else:
-                        fore_post[pair][state][p] - (fore * eps / len(fore_post[pair][state]))
-
-        for singles in range(self.pos):
-            for state in self.singles:
-                kld_dic[singles][state] = 0
-                state_counts = self.get([singles], state)
-                for p in back_post[singles][state]:
+                for p in types:
                     kld_dic[singles][state] += fore_post[singles][state][p] * np.log2(
                         fore_post[singles][state][p] / back_post[singles][state][p])
 
                     ratios[singles][state][p] = (fore_post[singles][state][p] / fore_prior[p]) / (
                             back_post[singles][state][p] / back_prior[p])
 
-                if sum(state_counts.values()) == 0:
-                    continue
-                if sum(state_counts.values()) <= len(self.exact):
-                    kld_dic[singles][state] -= kld_prior
-                    kld_dic[singles][state] += self.exact[sum(state_counts.values()) - 1]
-                if kld_dic[singles][state] < 0:
-                    kld_dic[singles][state] = 0
-
         for pair in basepairs:
             for state in pairs:
-                kld_dic[pair][state] = 0
-                for p in back_post[pair][state]:
+                for p in types:
                     kld_dic[pair][state] += fore_post[pair][state][p] * np.log2(
                         fore_post[pair][state][p] / back_post[pair][state][p])
 
                     ratios[pair][state][p] = (fore_post[pair][state][p] / fore_prior[p]) / (
                             back_post[pair][state][p] / back_prior[p])
-
-                state_counts = self.get(pair, state)
-                if sum(state_counts.values()) == 0:
-                    continue
-
-                if sum(state_counts.values()) <= len(self.exact):
-                    kld_dic[pair][state] -= kld_prior
-                    kld_dic[pair][state] += self.exact[sum(state_counts.values()) - 1]
-                if kld_dic[pair][state] < 0:
-                    kld_dic[pair][state] = 0
 
         # kld_heights: a dictionary for the height of each symbol within a stack for kld-logo.
         kld_heights = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
@@ -1901,38 +1845,5 @@ class FunctionLogo:
                 for p in kld_heights[pair][state]:
                     if mysum != 0:
                         kld_heights[pair][state][p] = kld_heights[pair][state][p] / mysum
-
-        max = 0
-        for pair in basepairs:
-            for state in pairs:
-                if kld_dic[pair][state] > max:
-                    max = kld_dic[pair][state]
-        for single in range(self.pos):
-            for state in self.singles:
-                if kld_dic[single][state] > max:
-                    max = kld_dic[single][state]
-
-        print("The scale factor for KLD is ", max)
-
-        for single in range(self.pos):
-            for state in self.singles:
-                kld_dic[single][state] = (kld_dic[single][state] / max) * 4
-
-        for pair in basepairs:
-            for state in pairs:
-                kld_dic[pair][state] = (kld_dic[pair][state] / max) * 4
-
-        # adding zero to all the functions that do not exist within a stack
-        for pair in basepairs:
-            for state in pairs:
-                for t in types:
-                    if t not in kld_heights[pair][state]:
-                        kld_heights[pair][state][t] = 0
-
-        for single in range(self.pos):
-            for state in self.singles:
-                for t in types:
-                    if t not in kld_heights[single][state]:
-                        kld_heights[single][state][t] = 0
 
         return kld_dic, kld_heights
