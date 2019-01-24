@@ -1692,12 +1692,18 @@ class FunctionLogo:
                     if p in height_b[single][state] and height_b[single][state][p] != 0:
                         id_height[single][state][p] = (height_f[single][state][p] /
                                                        height_b[single][state][p])
+                        if height_b[single][state][p] > height_f[single][state][p]:
+                            id_height[single][state][p] = 0
                     else:
                         id_height[single][state][p] = height_f[single][state][p]
                 summ = sum(id_height[single][state].values())
                 for p in id_height[single][state]:
-                    if summ != 0:
-                        id_height[single][state][p] = id_height[single][state][p] * info[single][state] / summ
+                    if info[single][state] == 0:
+                        id_height[single][state][p] = 0
+                    else:
+                        # summ wont't become zero when info is not zero!
+                        if summ != 0:
+                            id_height[single][state][p] = id_height[single][state][p] * info[single][state] / summ
 
         for pair in basepairs:
             for state in pairs:
@@ -1705,12 +1711,19 @@ class FunctionLogo:
                     if p in height_b[pair][state] and height_b[pair][state][p] != 0:
                         id_height[pair][state][p] = (height_f[pair][state][p] /
                                                      height_b[pair][state][p])
+
+                        if height_b[pair][state][p] > height_f[pair][state][p]:
+                            id_height[pair][state][p] = 0
                     else:
                         id_height[pair][state][p] = height_f[pair][state][p]
                 summ = sum(id_height[pair][state].values())
                 for p in id_height[pair][state]:
-                    if summ != 0:
-                        id_height[pair][state][p] = id_height[pair][state][p] * info[pair][state] / summ
+                    if info[pair][state] == 0:
+                        id_height[pair][state][p] = 0
+                    else:
+                        # summ wont't become zero when info is not zero!
+                        if summ != 0:
+                            id_height[pair][state][p] = id_height[pair][state][p] * info[pair][state] / summ
 
         for single in range(pos):
             for state in singles:
