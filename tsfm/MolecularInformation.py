@@ -171,6 +171,59 @@ class DistanceCalculator:
 
         if (self.distanceMetric == "jsd"):
             self.rJSD(pandasDict)
+    # _______________________________________________ NEW id logo script ______________________________________________
+
+        if (self.distanceMetric == "id"):
+            # mapdic to map featureset of dataframes to features in info, height dictionaries
+            mapdic = {}
+            key = list(ResultsDict.keys())[0]
+            for v in ResultsDict[key].basepairs:
+                mapdic[format("".join(str(i) for i in v))] = v
+            for v in [i for i in range(ResultsDict[key].pos)]:
+                mapdic[str(v)] = v
+
+            heights, infos = self.id(pandasDict, mapdic)
+            results = {}
+            for key in heights:
+                singles = [b for b in ResultsDict[key].singles if not "-" in b]
+                pairs = [b for b in ResultsDict[key].pairs if not "-" in b]
+                results[key] = FunctionLogoResults(name=key, basepairs=ResultsDict[key].basepairs,
+                                                   pos=ResultsDict[key].pos, pairs=pairs, singles=singles,
+                                                   info=infos[key], height=heights[key])
+                results[key].logo_output()
+
+    def id(self, pandasDict, mapdic):
+        """
+        for all the permutations of keys:
+        calculate the difference of two dataframes
+        save the result in a dataframe and convert it to infos,heights dictionaries
+        """
+        idDict = {}
+        heights = {}
+        infos = {}
+        pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
+        for pair in pairwise_combinations:
+            # pair[0] is forground
+            bits = pandasDict[pair[0]]['bits'] - pandasDict[pair[1]]['bits']
+            bits[bits < 0] = 0
+            idDict[pair[0]] = pandasDict[pair[0]].drop('bits', 1).div(pandasDict[pair[1]].replace(0, 1).drop('bits', 1))
+            # Normalize each row
+            idDict[pair[0]] = idDict[pair[0]].div(idDict[pair[0]].sum(axis=1), axis=0)
+            idDict[pair[0]]['bits'] = bits
+
+            # Convert dataframe to info, height dictionary
+            heights[pair[0]] = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+            infos[pair[0]] = defaultdict(lambda: defaultdict(float))
+            for i, row in idDict[pair[0]].iterrows():
+                state = i.strip('0123456789')
+                position = i[:-len(state)]
+                infos[pair[0]][mapdic[position]][state] = row['bits']
+                for columns in pandasDict[pair[0]].drop('bits', 1):
+                    heights[pair[0]][mapdic[position]][state][columns] = row[columns]
+
+        return heights, infos
+
+    # _______________________________________________ NEW id logo script ______________________________________________
 
     def rJSD(self, pandasDict):
         """

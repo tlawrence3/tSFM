@@ -34,6 +34,7 @@ def main():
     parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
     parser.add_argument("--IDlogo", help='id logo', action="store_true")
+    parser.add_argument("--idlogo", help='id logo', action="store_true")
     parser.add_argument("--KLDlogo", help='KLD logo', action="store_true")
     parser.add_argument("--bt", help='bubble table', action="store_true")
     args = parser.parse_args()
@@ -142,6 +143,9 @@ def main():
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
+    if args.idlogo:
+        distance = MolecularInformation.DistanceCalculator("id")
+        distance.get_distance(results)
 
         # {________________________________ ID Logo _______________________________________________________________
 
@@ -168,6 +172,9 @@ def main():
                 types.add(k)
 
     if args.IDlogo:
+        # Call this with a sample of class DistanceCalculator
+        id_distance = MolecularInformation.DistanceCalculator("id")
+        id_distance.get_distance(results)
         id_info12, id_info21 = logo_dict[key_1].calculate_logoID_infos(info_1=info_height_dic[key_1]['info'],
                                                                        info_2=info_height_dic[key_2]['info'],
                                                                        pos=pos,
