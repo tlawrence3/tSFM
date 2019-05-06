@@ -7,6 +7,7 @@ from multiprocessing import Pool
 from operator import itemgetter
 from string import Template
 from ast import literal_eval as make_tuple
+import os
 import bisect
 import copy
 import pkgutil
@@ -1048,7 +1049,7 @@ class FunctionLogo:
         return j
 
     def permuted(self, items, pieces = 2):
-        random.seed()
+        random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
         sublists = [[] for i in range(pieces)]
         for x in items:
             sublists[random.randint(0, pieces - 1)].append(x)
@@ -1092,6 +1093,39 @@ class FunctionLogo:
             self.permutationList = []
             for x in perm_results:
                 self.permutationList += x
+
+    #new bootstrap method for generating bootstrap replicates over functional classes
+    def bootstrap_sample(self, num_boot, seq_dict):
+        random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
+        bootStructList = []
+        for b in range(num_boot):
+            bootStruct = FunctionLogo(self.basepairs, exact_init = self.exact, inverse_init = self.inverse_exact)
+            for function in seq_dict:
+                bootsample = random.choices(seq_dict[function], k=len(seq_dict[function]))
+                for sample in bootsample:
+                    bootStruct.add_sequence(sample.function, sample.seq)
+            bootStructList.append(bootStruct)
+        return bootStructList
+
+
+    def bootstrap(self, bootstrap_num, proc):
+        with Pool(processes = proc) as pool:
+            #build seq dict for bootstrapping
+            boot_sampling_dict = defaultdict(list)
+            for seq in self.sequences:
+                boot_sampling_dict[seq.function].append(seq)
+            boot_jobs = []
+            for x in range(proc):
+                if (x == 0):
+                    boot_jobs.append((bootstrap_num//proc+bootstrap_num%proc, boot_sampling_dict))
+                else:
+                    boot_jobs.append((bootstrap_num//proc, boot_sampling_dict))
+            
+            boot_results = pool.starmap(self.bootstrap_sample, boot_jobs) 
+            self.bootstrapList = []
+            for x in boot_results:
+                self.bootstrapList += x
+
 
     def permInfo(self, method, proc, inverse = False):
         """

@@ -19,21 +19,26 @@ def main():
     parser.add_argument("-v","--inverse", action="store_true", help="calculate anti-determinates")
     parser.add_argument("-a", "--alpha", type=float, default=0.05, help="Current not implemented. Default = 0.05")
     parser.add_argument("-e", "--entropy", type=str, default = "NSB", help= "Method of entropy estimation. Either NSB or Miller. Default = NSB")
-    parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy correction. Default = 10", type=int, default = 10)
+    parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy correction. Default = 10", type=int, default = 0)
     parser.add_argument('--logo', help='Produce function logo ps files', action="store_true")
-    parser.add_argument("-B", help="Number of permutations. Default value is 100", type=int, default=0)
+    parser.add_argument("-P", help="Number of permutations. Default value is 0", type=int, default=0)
+    #Added command line argument for bootstrap reps
+    parser.add_argument("-b", "--bootstrap", type=int, help="Number of bootstrap reps to perform. Default = 0", default = 0)
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "BH")
     parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
     args = parser.parse_args()
 
+    #dictionary that contains all datasets labeled by the file prefix
     logo_dict = {}
 
+    #create results object from previously calculated function logos
     if (args.file):
         results = {}
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
             results[prefix_name] = MolecularInformation.FunctionLogoResults(prefix, from_file = True)
+    #load datasets into logo objects        
     else:
         if (args.text):
             for prefix in args.file_prefix:
@@ -52,6 +57,7 @@ def main():
             prefix_name = prefix.split("/")[-1]
             logo_dict[prefix_name].parse_sequences(prefix)
 
+        #calculate exact method sample size correction
         if (args.max):
             for key in logo_dict:
                 print("Calculating Sample Size Correction for {}".format(key))
@@ -60,7 +66,14 @@ def main():
                     print("Calculating Sample Size Correction for Inverse {}".format(key))
                     logo_dict[key].calculate_exact(args.max, args.proc, inverse=True)
 
-        if (args.B):
+        #Entry point for performing bootstrap replicates
+        if (args.bootstrap):
+            print("Generating bootstrap samples")
+            for key in logo_dict:
+                logo_dict[key].bootstrap(args.bootstrap, args.proc)
+
+        #Perform function label swapping permutations and calculate entropy distribution from permuations
+        if (args.P):
             multitest_methods = {'bonferroni': 'b', 'sidak': 's', 'holm': 'h',
                                  'holm-sidak': 'hs', 'simes-hochberg': 'sh',
                                  'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
@@ -69,7 +82,7 @@ def main():
             perm_dict = {}
             for key in logo_dict:
                 print("Generating permuted alignment data for {}".format(key), file=sys.stderr)
-                logo_dict[key].permute(args.B, args.proc)
+                logo_dict[key].permute(args.P, args.proc)
             for key in logo_dict:
                 print("Calculating permutation information for {}".format(key), file=sys.stderr)
                 perm_dict[key] = logo_dict[key].permInfo(args.entropy, args.proc)
@@ -107,7 +120,7 @@ def main():
                     info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_MM()
                     results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
 
-        if (args.B):
+        if (args.P):
             print("Calculating p-values")
             for key in results:
                 results[key].add_stats(perm_dict[key], multitest_methods[args.M])
