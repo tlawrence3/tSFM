@@ -2,6 +2,7 @@
 import argparse
 import sys
 import os
+import itertools
 import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
@@ -25,7 +26,9 @@ def main():
     #Added command line argument for bootstrap reps
     parser.add_argument("-b", "--bootstrap", type=int, help="Number of bootstrap reps to perform. Default = 0", default = 0)
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "BH")
-    parser.add_argument("-j", "--jsd", action="store_true", help="")
+    parser.add_argument("-j", "--jsd", action="store_true", help="Produce jsd pairwise distance matrix between function logos")
+    parse.add_argument("-I", "--ID", action="store_true", help="")
+    parser.add_argument("-K", "--KLD", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
     args = parser.parse_args()
 
@@ -93,6 +96,7 @@ def main():
                     perm_inverse_dict[key] = logo_dict[key].permInfo(args.entropy, args.proc, inverse = True)
 
         results = {}
+        #Initialization function logo result objects
         for key in logo_dict:
             results[key] = MolecularInformation.FunctionLogoResults(key,
                                                                     logo_dict[key].basepairs,
@@ -144,6 +148,9 @@ def main():
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
-
+    if (args.ID):
+        pairwise_combinations = itertools.permutations(results.keys(), 2)
+        for pair in pairwise_combinations:
+            pass
 if __name__ == "__main__":
     main()

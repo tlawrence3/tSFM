@@ -170,7 +170,18 @@ class DistanceCalculator:
 
         if (self.distanceMetric == "jsd"):
             self.rJSD(pandasDict)
+        elif: (self.distanceMetric == "ID"):
+            self.informationDifference(pandasDict, ResultsDict)
 
+    def informationDifference(self, pandasDicti, ResultsDict):
+        """
+        doc string
+        """
+        IDlogo_results = {}
+        pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
+        for pair in pairwise_combinations:
+            IDlogo_results["ID{}vs{}".format(pair[0], pair[1])] = FunctionLogoResults("ID{}vs{}".format(pair[0], pair[1]),
+                                                                                      )
 
     def rJSD(self, pandasDict):
         """
