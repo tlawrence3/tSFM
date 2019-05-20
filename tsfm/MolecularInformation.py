@@ -9,7 +9,6 @@ from string import Template
 from ast import literal_eval as make_tuple
 import os
 import bisect
-import copy
 import pkgutil
 import itertools
 import sys
@@ -28,7 +27,7 @@ import tsfm.exact as exact
 class DistanceCalculator:
 
     """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
-    
+
     Currently, a `DistanceCalculator` object can calculate pairwise distance using the square-root of the Jensen-Shannon
     divergence and will print the resulting distance matrix to stdout.
 
@@ -36,15 +35,15 @@ class DistanceCalculator:
         distance (str): Indicates which distance metric to use for pairwise calculations.
 
     Attributes:
-        distanceMetric (str): Indicates the distance metric to be used in 
+        distanceMetric (str): Indicates the distance metric to be used in
             pairwise calculations.
-        featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural 
+        featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural
             features contained in the function logos being compared (e.g. 1A, 173AU).
-        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional 
+        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional
             classes contained in the function logos being compared.
 
     Example::
-        
+
         x = tsfm.MolecularInformation.DistanceCalculator('jsd')
         x.get_distance(function_logos)
 
@@ -216,7 +215,7 @@ class DistanceCalculator:
     def entropy(self, dist):
         return np.sum(-dist[dist!=0]*np.log2(dist[dist!=0]))
 
-    def rJSD_distance(self, dist1, dist2, pi1, pi2):
+    def rJSD_distance(self, dist1, dist2, Ix, Iy):
         r"""
         Weighted square root of the generalized Jensen-Shannon divergence defined by Lin 1991
 
@@ -227,8 +226,10 @@ class DistanceCalculator:
         where :math:`\pi_f^X = \frac{I_f^X}{I_f^X + I_f^Y}` and :math:`\pi_f^Y = \frac{I_f^Y}{I_f^X + I_f^Y}`
 
         """
+        pi1 = Ix/(Ix+Iy)
+        pi2 = Iy/(Ix+Iy)
         step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
-        return (pi1+pi2)*mt.sqrt(step if step >= 0 else 0)
+        return (Ix+Iy)*mt.sqrt(step if step >= 0 else 0)
 
 class FunctionLogoResults:
     """
