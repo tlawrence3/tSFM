@@ -2,7 +2,6 @@
 import argparse
 import sys
 import os
-import itertools
 import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
@@ -148,9 +147,8 @@ def main():
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
-    if (args.ID):
-        pairwise_combinations = itertools.permutations(results.keys(), 2)
-        for pair in pairwise_combinations:
-            pass
+    lif (args.ID):
+        pass
+
 if __name__ == "__main__":
     main()

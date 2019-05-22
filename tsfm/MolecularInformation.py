@@ -179,8 +179,13 @@ class DistanceCalculator:
         IDlogo_results = {}
         pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
         for pair in pairwise_combinations:
-            IDlogo_results["ID{}vs{}".format(pair[0], pair[1])] = FunctionLogoResults("ID{}vs{}".format(pair[0], pair[1]),
-                                                                                      )
+    #(self, name, basepairs = None, pos = 0, sequences = None, pairs = None, singles = None, info = None,
+            name = "ID{}vs{}".format(pair[0], pair[1])
+            IDlogo_results[name] = FunctionLogoResults(name,
+                                                       basepairs = list(set(ResultsDict[pair[0]].basepairs.extend(ResultsDict[pair[1]].basepairs))),
+                                                       pos = ResultsDict[pair[0]].pos,
+                                                       pairs = ResultsDict[pair[0]].pairs | ResultsDict[pair[1]].pairs,
+                                                       singles = ResultsDict[pair[0]].singles | ResultsDict[pair[1]].singles)
 
     def rJSD(self, pandasDict):
         """
