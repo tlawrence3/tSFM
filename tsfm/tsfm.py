@@ -147,7 +147,7 @@ def main():
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
-    lif (args.ID):
+    if (args.ID):
         pass
 
 if __name__ == "__main__":

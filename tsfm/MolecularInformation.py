@@ -169,7 +169,7 @@ class DistanceCalculator:
 
         if (self.distanceMetric == "jsd"):
             self.rJSD(pandasDict)
-        elif: (self.distanceMetric == "ID"):
+        elif (self.distanceMetric == "ID"):
             self.informationDifference(pandasDict, ResultsDict)
 
     def informationDifference(self, pandasDicti, ResultsDict):
