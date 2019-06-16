@@ -26,7 +26,7 @@ import pandas as pd
 
 class DistanceCalculator:
     """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
-    
+
     Currently, a `DistanceCalculator` object can calculate pairwise distance using the square-root of the Jensen-Shannon
     divergence and will print the resulting distance matrix to stdout.
 
@@ -34,15 +34,15 @@ class DistanceCalculator:
         distance (str): Indicates which distance metric to use for pairwise calculations.
 
     Attributes:
-        distanceMetric (str): Indicates the distance metric to be used in 
+        distanceMetric (str): Indicates the distance metric to be used in
             pairwise calculations.
-        featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural 
+        featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural
             features contained in the function logos being compared (e.g. 1A, 173AU).
-        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional 
+        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional
             classes contained in the function logos being compared.
 
     Example::
-        
+
         x = tsfm.MolecularInformation.DistanceCalculator('jsd')
         x.get_distance(function_logos)
 
@@ -58,30 +58,30 @@ class DistanceCalculator:
 
     def get_distance(self, ResultsDict):
         """
-        Prints a pairwise distance matrix using the distance metric indicated during instantiation to file. 
+        Prints a pairwise distance matrix using the distance metric indicated during instantiation to file.
 
         Args:
             ResultsDict (:obj:`dict` of :obj:`str` mapping to :class:`FunctionLogoResults`):
                 The values of the :obj:`dict` are compared using the selected pairwise
                 distance metric.
-        
-        
+
+
         Note:
-            Creates a :obj:`dict` of :obj:`str`: :class:`pandas.DataFrame` from 
-            :obj:`ResultsDict`. The index of the dataframes are the union 
-            of the structural features contained in :obj:`ResultsDict`, 
-            and columns labels are the union of the functional classes contained in 
-            :obj:`ResultsDict` including  a column containing 
-            the functional information of the feature measured in bits. 
-            Rows contain the Gorodkin fractional heights of each functional 
-            class of each feature along with the functional information of the 
-            feature measured in bits. The fractional heights of 
-            each row is normalized to account for filtering of data and rounding 
-            errors. The :obj:`dict` of :obj:`str`: :obj:`pandas.DataFrame` is 
-            passed to the distance method set when the :class:`DistanceCalculator` 
-            was instantiated. Below is an example of the :class:`pandas.DataFrame` 
+            Creates a :obj:`dict` of :obj:`str`: :class:`pandas.DataFrame` from
+            :obj:`ResultsDict`. The index of the dataframes are the union
+            of the structural features contained in :obj:`ResultsDict`,
+            and columns labels are the union of the functional classes contained in
+            :obj:`ResultsDict` including  a column containing
+            the functional information of the feature measured in bits.
+            Rows contain the Gorodkin fractional heights of each functional
+            class of each feature along with the functional information of the
+            feature measured in bits. The fractional heights of
+            each row is normalized to account for filtering of data and rounding
+            errors. The :obj:`dict` of :obj:`str`: :obj:`pandas.DataFrame` is
+            passed to the distance method set when the :class:`DistanceCalculator`
+            was instantiated. Below is an example of the :class:`pandas.DataFrame`
             created\:
-            
+
             +--------+-------+-------+-------+-------+-------+-------+--------+
             |        |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
             +========+=======+=======+=======+=======+=======+=======+========+
@@ -171,6 +171,60 @@ class DistanceCalculator:
 
         if (self.distanceMetric == "jsd"):
             self.rJSD(pandasDict)
+        # _______________________________________________ NEW id logo script __________________________________________
+
+        if (self.distanceMetric == "id"):
+            # mapdic to map featureset of dataframes to features in info, height dictionaries
+            mapdic = {}
+            key = list(ResultsDict.keys())[0]
+            for v in ResultsDict[key].basepairs:
+                mapdic[format("".join(str(i) for i in v))] = v
+            for v in [i for i in range(ResultsDict[key].pos)]:
+                mapdic[str(v)] = v
+
+            heights, infos = self.id(pandasDict, mapdic)
+            results = {}
+            for key in heights:
+                singles = [b for b in ResultsDict[key].singles if not "-" in b]
+                pairs = [b for b in ResultsDict[key].pairs if not "-" in b]
+                results[key] = FunctionLogoResults(name=key, basepairs=ResultsDict[key].basepairs,
+                                                   pos=ResultsDict[key].pos, pairs=pairs, singles=singles,
+                                                   info=infos[key], height=heights[key])
+                results[key].logo_output()
+            return heights, infos
+
+    def id(self, pandasDict, mapdic):
+        """
+        for permutations of keys:
+        calculate the difference of two dataframes
+        save the result in a dataframe and convert it to infos,heights dictionaries
+        """
+        idDict = {}
+        heights = {}
+        infos = {}
+        pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
+        for pair in pairwise_combinations:
+            # pair[0] is forground
+            bits = pandasDict[pair[0]]['bits'] - pandasDict[pair[1]]['bits']
+            bits[bits < 0] = 0
+            idDict[pair[0]] = pandasDict[pair[0]].drop('bits', 1).div(pandasDict[pair[1]].replace(0, 1).drop('bits', 1))
+            # Normalize each row
+            idDict[pair[0]] = idDict[pair[0]].div(idDict[pair[0]].sum(axis=1), axis=0)
+            idDict[pair[0]]['bits'] = bits
+
+            # Convert dataframe to info, height dictionary
+            heights[pair[0]] = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+            infos[pair[0]] = defaultdict(lambda: defaultdict(float))
+            for i, row in idDict[pair[0]].iterrows():
+                state = i.strip('0123456789')
+                position = i[:-len(state)]
+                infos[pair[0]][mapdic[position]][state] = row['bits']
+                for columns in pandasDict[pair[0]].drop('bits', 1):
+                    heights[pair[0]][mapdic[position]][state][columns] = row[columns]
+
+        return heights, infos
+
+    # _______________________________________________ NEW id logo script ______________________________________________
 
     def rJSD(self, pandasDict):
         """
@@ -181,7 +235,7 @@ class DistanceCalculator:
         and :meth:`rJSD_distance` is called to do the calculations.
 
         Args:
-            pandasDict (:obj:`dict` of `str` mapping to :class:`pandas.DataFrame`): 
+            pandasDict (:obj:`dict` of `str` mapping to :class:`pandas.DataFrame`):
                 See :meth:`get_distance` for the format of the Data Frames.
         """
         pairwise_combinations = itertools.permutations(pandasDict.keys(), 2)
@@ -209,8 +263,8 @@ class DistanceCalculator:
         r"""
         Weighted square root of the generalized Jensen-Shannon divergence defined by Lin 1991
 
-        .. math::  
-            
+        .. math::
+
             D(X,Y) \equiv \sum_{f \in F} (I_f^X + I_f^Y) \sqrt{H[\pi_f^X p_f^X + \pi_f^Y p_f^Y] - (\pi_f^X H[p_f^X] + \pi_f^Y H[p_f^Y])}
 
         where :math:`\pi_f^X = \frac{I_f^X}{I_f^X + I_f^Y}` and :math:`\pi_f^Y = \frac{I_f^Y}{I_f^X + I_f^Y}`
@@ -227,72 +281,72 @@ class FunctionLogoResults:
     Args:
         name (:obj:`str`): Value is used as prefix for output files.
         basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`, :obj:`int`)):
-            a list of basepair coordinates encoded as a :obj:`tuple` of two 
-            :obj:`int`. 
-            
+            a list of basepair coordinates encoded as a :obj:`tuple` of two
+            :obj:`int`.
+
             Note:
-                This data structure is created as an attribute of 
+                This data structure is created as an attribute of
                 :class:`FunctionLogo` during instantiation and can be accessed
                 with :attr:`FunctionLogo.basepairs` or created during
                 instantiation of this class when ``from_file = True``
         pos (:obj:`int`): Stores length of the alignment.
-            
+
             Note:
                 See note for :attr:`basepairs`. Accessed using :attr:`FunctionLogo.pos`.
-        sequences (:obj:`list` of :class:`Seq`): a list of :class:`Seq` objects 
+        sequences (:obj:`list` of :class:`Seq`): a list of :class:`Seq` objects
             used for text output and visualization.
 
             Note:
                 See note for :attr:`basepairs`. Accessed using :attr:`FunctionLogo.seq`
         pairs (:obj:`set` of :obj:`str`): unique basepair states found in the dataset.
 
-            Note: 
-                See note for :attr:`basepairs`.
-        singles (:obj:`set` of :obj:`str`): unique states for single sites.
-            
             Note:
                 See note for :attr:`basepairs`.
-        
+        singles (:obj:`set` of :obj:`str`): unique states for single sites.
+
+            Note:
+                See note for :attr:`basepairs`.
+
         info (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features to information content. Add this data structure using :meth:`add_information`.
 
             Note:
-                This data structure is output of 
-                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+                This data structure is output of
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_MM()`.
         height (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features and functional class to class height. Add this data structure using :meth:`add_information`.
 
             Note:
-                This data structure is output of 
-                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+                This data structure is output of
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_MM()`.
         inverseInfo (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features to information content for anti-determinants. Add this data structure using :meth:`add_information`.
 
             Note:
-                This data structure is output of 
-                :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or 
+                This data structure is output of
+                :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_inverse_MM()`.
         inverseHeight (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features and functional class to class height for anti-determinants. Add this data structure using :meth:`add_information`.
 
             Note:
-                This data structure is output of 
-                :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or 
+                This data structure is output of
+                :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_inverse_MM()`.
         p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values.
-            
+
             Note:
                 This data structure is created using :meth:`add_stats()`
         inverse_p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values for anti-determinants
-            
+
             Note:
                 This data structure is created using :meth:`add_stats()`
-        from_file (:obj:`bool`): create :class:`FunctionLogoResults` 
-            object from file written with 
+        from_file (:obj:`bool`): create :class:`FunctionLogoResults`
+            object from file written with
             :meth:`FunctionLogResults.text_output`
-                
+
     """
 
     def __init__(self, name, basepairs=None, pos=0, sequences=None, pairs=None, singles=None, info=None,
@@ -359,8 +413,8 @@ class FunctionLogoResults:
         """
         Read previously calculated results from file.
 
-        Populates :class:`FunctionLogoResults` from previously calculated 
-        results written to a file using :meth:`text_output`. 
+        Populates :class:`FunctionLogoResults` from previously calculated
+        results written to a file using :meth:`text_output`.
 
         Args:
             file_name(:obj:`str`): File path of previously caclulated results
@@ -443,22 +497,22 @@ class FunctionLogoResults:
         """
         Add data structures containing results from information calculations
 
-        This method is used to add results from 
-        :meth:`FunctionLogo.calculate_entropy_NSB()`, 
+        This method is used to add results from
+        :meth:`FunctionLogo.calculate_entropy_NSB()`,
         :meth:`FunctionLogo.calculate_entropy_MM()`,
-        :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or 
+        :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or
         :meth:`FunctionLogo.calculate_entropy_inverse_MM()`. If reading previous
         results from a file this method is unnecessary because these data structures
         are populated from values in the file.
 
         Args:
-            info (:obj:`dict`): mapping of structural features to information 
-                content. This data structure is output of 
-                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+            info (:obj:`dict`): mapping of structural features to information
+                content. This data structure is output of
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_MM()`.
             height (:obj:`dict`): mapping of structural features and functional class to class height.
-                This data structure is output of 
-                :meth:`FunctionLogo.calculate_entropy_NSB()` or 
+                This data structure is output of
+                :meth:`FunctionLogo.calculate_entropy_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_MM()`.
             inverse (:obj:`bool`): Defines if the data structures are for
                 anti-determinates.
@@ -476,13 +530,13 @@ class FunctionLogoResults:
 
         Calculates p-values and multiple testing corrected p-values for
         structural features and functional class heights. Requires an
-        instance of :class:`FunctionLogoDist` and calls the 
+        instance of :class:`FunctionLogoDist` and calls the
         :meth:`FunctionLogoDist.stat_test`. Methods for multiple test
         correction are provided by :class:`statsmodels.stats.multitest`.
 
         Args:
-            distribution (:class:`FunctionLogoDist`): discrete probability 
-                distributions of information content of structural 
+            distribution (:class:`FunctionLogoDist`): discrete probability
+                distributions of information content of structural
                 features and functional class height.
             correction (:obj:`str`): Multiple test correction method.
             inverse (:obj:`bool`): Produce statistical tests for
@@ -722,20 +776,20 @@ class FunctionLogoDist:
     Discrete probability distributions of information values.
     Probabilty distributions are created using a permutation label shuffling
     strategy. Permuted data is created using :meth:`FunctionLogo.permute` and
-    distribution are inferred from the permuted data and 
-    :class:`FunctionLogoDist` objects created using 
+    distribution are inferred from the permuted data and
+    :class:`FunctionLogoDist` objects created using
     :meth:`FunctionLogo.permInfo`.
 
     Attributes:
         bpinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             Discrete probability distribution of basepair feature information
         bpheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
-            Discrete probability distribution of functional class 
+            Discrete probability distribution of functional class
             information of basepair features
         singleinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             Discrete probability distribution of single base feature information
         singleheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
-            Discrete probability distribution of functional class 
+            Discrete probability distribution of functional class
             information of single base features
 
     """
@@ -778,7 +832,7 @@ class FunctionLogoDist:
                 mapping of structural features to information content.
             height (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
                 mapping of structural features and functional class to class height.
-            correction (:obj:`str`): Method for multiple test correction. Any 
+            correction (:obj:`str`): Method for multiple test correction. Any
                 method available in :class:`statsmodels.stats.multitest` is a
                 valid option
         """
@@ -890,11 +944,11 @@ class FunctionLogo:
     """
     Parses structural and sequence infomation and provides methods for Function Logo calculations
 
-    This class provided data structures and methods for calculating 
+    This class provided data structures and methods for calculating
     functional information of basepair a single base features. Additionally,
     methods for producing permuted data sets with function class labels
     shuffled.
-    
+
     Args:
         struct_file (:obj:`str`): File name containing secondary structure
             notation in cove, infernal, or text format.
@@ -1135,7 +1189,7 @@ class FunctionLogo:
             proc (:obj:`int`): Number of concurrent processes to run.
 
         Return:
-        perm_dist (:class:`FunctionLogoDist`): Discrete distribution of 
+        perm_dist (:class:`FunctionLogoDist`): Discrete distribution of
             functional information estimated from permuted datasets.
         """
         bp_info = []
@@ -1266,10 +1320,10 @@ class FunctionLogo:
 
         Calculate the exact method of sample size correction for up to N samples.
         Computational intensive portion of the calculation is implemented as a C
-        extension. This method is fully described in Schneider et al 1986. 
-        This calculation is polynomial in sample size. It becomes prohibitively 
-        expensive to calculate beyond a sample size of 16. The correction 
-        factor of each sample size will be calculated in parallel up to 
+        extension. This method is fully described in Schneider et al 1986.
+        This calculation is polynomial in sample size. It becomes prohibitively
+        expensive to calculate beyond a sample size of 16. The correction
+        factor of each sample size will be calculated in parallel up to
         :obj:`proc` at a time.
 
         Args:
@@ -1638,135 +1692,17 @@ class FunctionLogo:
     def __len__(self):
         return len(self.sequences)
 
-    #  _______________________ ID logo Calculations ___________________________________________________
-
-    def calculate_logoID_infos(self, info_1, info_2, pos, singles, pairs, basepairs):
-        """
-        Calculate information for id-logo (information difference of foreground and background).
-        In id_info12, 2 is the background, 1 is foreground (ID_logo_info12 = info_1 - info_2)
-        """
-
-        id_info12 = defaultdict(lambda: defaultdict(float))
-        id_info21 = defaultdict(lambda: defaultdict(float))
-        for k in range(pos):
-
-            logo_1 = info_1[k]
-            logo_2 = info_2[k]
-
-            for c in singles:
-                id_info21[k][c] = logo_2[c] - logo_1[c]
-                if id_info21[k][c] < 0:
-                    id_info21[k][c] = 0
-
-                id_info12[k][c] = logo_1[c] - logo_2[c]
-                if id_info12[k][c] < 0:
-                    id_info12[k][c] = 0
-
-        for k in basepairs:
-
-            logo_1 = info_1[k]
-            logo_2 = info_2[k]
-            for c in pairs:
-
-                id_info21[k][c] = logo_2[c] - logo_1[c]
-                if id_info21[k][c] < 0:
-                    id_info21[k][c] = 0
-
-                id_info12[k][c] = logo_1[c] - logo_2[c]
-                if id_info12[k][c] < 0:
-                    id_info12[k][c] = 0
-
-        return id_info12, id_info21
-
-    def calculate_logoID_heights(self, height_b, height_f, info, pos, singles, pairs, basepairs, type):
-        """
-        Calculate height of each symbol within a stack for id-logo.
-        """
-
-        id_height = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-        # adding zero to all the functions that do not exist within a stack
-
-        for single in range(pos):
-            for state in singles:
-                for p in height_f[single][state]:
-                    if p in height_b[single][state] and height_b[single][state][p] != 0:
-                        id_height[single][state][p] = (height_f[single][state][p] /
-                                                       height_b[single][state][p])
-                        if height_b[single][state][p] > height_f[single][state][p]:
-                            id_height[single][state][p] = 0
-                    else:
-                        id_height[single][state][p] = height_f[single][state][p]
-                summ = sum(id_height[single][state].values())
-                for p in id_height[single][state]:
-                    if info[single][state] == 0:
-                        id_height[single][state][p] = 0
-                    else:
-                        # summ wont't become zero when info is not zero!
-                        if summ != 0:
-                            id_height[single][state][p] = id_height[single][state][p] * info[single][state] / summ
-
-        for pair in basepairs:
-            for state in pairs:
-                for p in height_f[pair][state]:
-                    if p in height_b[pair][state] and height_b[pair][state][p] != 0:
-                        id_height[pair][state][p] = (height_f[pair][state][p] /
-                                                     height_b[pair][state][p])
-
-                        if height_b[pair][state][p] > height_f[pair][state][p]:
-                            id_height[pair][state][p] = 0
-                    else:
-                        id_height[pair][state][p] = height_f[pair][state][p]
-                summ = sum(id_height[pair][state].values())
-                for p in id_height[pair][state]:
-                    if info[pair][state] == 0:
-                        id_height[pair][state][p] = 0
-                    else:
-                        # summ wont't become zero when info is not zero!
-                        if summ != 0:
-                            id_height[pair][state][p] = id_height[pair][state][p] * info[pair][state] / summ
-
-        for single in range(pos):
-            for state in singles:
-                mysum = sum(id_height[single][state].values())
-                for p in id_height[single][state]:
-                    if mysum != 0:
-                        id_height[single][state][p] = id_height[single][state][p] / mysum
-
-        for pair in basepairs:
-            for state in pairs:
-                mysum = sum(id_height[pair][state].values())
-                for p in id_height[pair][state]:
-                    if mysum != 0:
-                        id_height[pair][state][p] = id_height[pair][state][p] / mysum
-
-        # adding zero to all the functions that do not exist within a stack
-        for single in basepairs:
-            for state in pairs:
-                for t in type:
-                    if t not in id_height[single][state]:
-                        id_height[single][state][t] = 0
-
-        for single in range(pos):
-            for state in singles:
-                for t in type:
-                    if t not in id_height[single][state]:
-                        id_height[single][state][t] = 0
-
-        return id_height
-
     # _______________________ KLD Difference logo Calculations ___________________________________________________
 
     def calculate_prob_dist(self, types, pairs, basepairs, singles):
         """
         Calculate prior probability, p(y), for every function and posterior probability p(y|x) of each symbol within
         a stack for KLD-logo.
-        This function will be called two times for the background and foreground
         """
 
         kld_post_dist = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
         kld_prior_dist = defaultdict(float)
         functions_array = np.array(list(self.functions.values()))
-
         for p in types:
             kld_prior_dist[p] = self.functions[p] + self.pos * len(singles) / (
                     functions_array[functions_array != 0].sum() + self.pos * len(singles) * len(types))
@@ -1817,18 +1753,26 @@ class FunctionLogo:
                 for p in types:
                     kld_dic[single][state] += fore_post[single][state][p] * np.log2(
                         fore_post[single][state][p] / back_post[single][state][p])
-
-                    ratios[single][state][p] = (fore_post[single][state][p] / fore_prior[p]) / (
-                            back_post[single][state][p] / back_prior[p])
+                    state_counts = self.get([single], state)
+                    if state_counts[p] > 1:
+                        ratios[single][state][p] = (fore_post[single][state][p] / fore_prior[p]) / (
+                                back_post[single][state][p] / back_prior[p])
+                    else:
+                        ratios[single][state][p] = 0.0001
 
         for pair in basepairs:
             for state in pairs:
                 for p in types:
                     kld_dic[pair][state] += fore_post[pair][state][p] * np.log2(
                         fore_post[pair][state][p] / back_post[pair][state][p])
+                    state_counts = self.get(pair, state)
 
-                    ratios[pair][state][p] = (fore_post[pair][state][p] / fore_prior[p]) / (
-                            back_post[pair][state][p] / back_prior[p])
+                    if state_counts[p] > 1:
+                        ratios[pair][state][p] = (fore_post[pair][state][p] / fore_prior[p]) / (
+                                back_post[pair][state][p] / back_prior[p])
+
+                    else:
+                        ratios[pair][state][p] = 0.0001
 
         # kld_heights: a dictionary for the height of each symbol within a stack for kld-logo.
         kld_heights = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
@@ -1861,9 +1805,10 @@ class FunctionLogo:
 
         return kld_dic, kld_heights
 
-    # _______________________ creating the table used to make bubble plots ____________________________________________
+    # _______________________ write the table for creating bubble plots ____________________________________________
+    # table need to be mapped to sprinzl coordinates
 
-    def func_ID_KLD_2table(self, fore_logo_info,
+    def func_ID_KLD_2table(self, types, fore_logo_info,
                            fore_logo_height,
                            fore_idlogo_info,
                            back_idlogo_info,
@@ -1906,11 +1851,14 @@ class FunctionLogo:
 
         for single in range(pos):
             for state in fore_idlogo_height[single]:
-                for t in fore_idlogo_height[single][state]:
+                for t in types:
                     pandasTable.loc[
                         (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                pandasTable['aa'] == t), 'gainfht'] = \
-                        fore_idlogo_height[single][state][t]
+                                pandasTable['aa'] == t), 'gainfht'] = 0
+                    if fore_idlogo_height[single][state][t] > 0:
+                        pandasTable.loc[
+                            (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                    pandasTable['aa'] == t), 'gainfht'] = fore_idlogo_height[single][state][t]
 
         for single in range(pos):
             for state in back_idlogo_info[single]:
@@ -1920,11 +1868,15 @@ class FunctionLogo:
 
         for single in range(pos):
             for state in back_idlogo_height[single]:
-                for t in back_idlogo_height[single][state]:
+                for t in types:
                     pandasTable.loc[
                         (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                pandasTable['aa'] == t), 'lossfht'] = \
-                        back_idlogo_height[single][state][t]
+                                pandasTable['aa'] == t), 'lossfht'] = 0
+                    if back_idlogo_height[single][state][t] > 0:
+                        pandasTable.loc[
+                            (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                    pandasTable['aa'] == t), 'lossfht'] = \
+                            back_idlogo_height[single][state][t]
 
         for single in range(pos):
             for state in kld_info[single]:
@@ -1943,8 +1895,7 @@ class FunctionLogo:
         roundcols = ["fbits", "fht", "gainbits", "gainfht", "lossbits", "lossfht", "convbits",
                      "convfht"]
         pandasTable[roundcols] = pandasTable[roundcols].round(4)
-        pandasTable['coord'] = pandasTable['coord'] + 1
+        pandasTable['coord'] = pandasTable['coord']
 
-        print(pandasTable)
         filename = fore + "_Table.txt"
         pandasTable.to_csv(filename, index=None, sep='\t')

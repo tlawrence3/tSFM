@@ -5,7 +5,6 @@ import os
 import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
-
 def main():
     # Setup parser
     parser = argparse.ArgumentParser(description="tsfm")
@@ -33,8 +32,8 @@ def main():
                         default="BH")
     parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
-    parser.add_argument("--IDlogo", help='id logo', action="store_true")
-    parser.add_argument("--KLDlogo", help='KLD logo', action="store_true")
+    parser.add_argument("--idlogo", help='id logo', action="store_true")
+    parser.add_argument("--kldlogo", help='KLD logo', action="store_true")
     parser.add_argument("--bt", help='bubble table', action="store_true")
     args = parser.parse_args()
 
@@ -142,11 +141,20 @@ def main():
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
+    # ____________________________________________________________________________________________________________
+    # new id
 
-        # {________________________________ ID Logo _______________________________________________________________
+    if args.idlogo or args.bt:
+        distance = MolecularInformation.DistanceCalculator("id")
+        heights_id, infos_id = distance.get_distance(results)  # heights are saved with their foreground key
+    # ____________________________________________________________________________________________________________
+    # new kld
 
-    if args.IDlogo or args.KLDlogo:
-        functionA = {}
+    if args.kldlogo or args.bt:
+
+        # ________________________
+
+        # info_height_dic: info and heights for two keys
         info_height_dic = {}
         for key in results:
             info_height_dic[key] = {"info": results[key].info, "height": results[key].height}
@@ -154,122 +162,60 @@ def main():
         key_1 = list(logo_dict.keys())[0]
         key_2 = list(logo_dict.keys())[1]
 
+        # validating variables:
+        # single: which is based on the alphabets used in the trna sequences of each key.
+        # Using the intersection in case one of the sequences has an unknown letter such as N.
+        # pos: length of sequences which is similar for both keys (~= 72)
+        # pairs: all the possible basepairs of alphabet. Using the intersection for the same reason as variable single
+        # types: 21 functiona classes, assuming both organisms have at least one sequence for each class
+
         single = list(set(logo_dict[key_2].singles) & set(logo_dict[key_1].singles))
         pos = results[key_1].pos
         pairs = list(set(logo_dict[key_2].pairs) & set(logo_dict[key_1].pairs))
         basepair = results[key_1].basepairs
+        types = logo_dict[key].functions
 
-        for key in logo_dict:
-            functionA[key] = logo_dict[key].functions
-        types = set()
+        # ________________________
 
-        for k in functionA[key_1]:
-            if k in functionA[key_2]:
-                types.add(k)
+        resultsKLD = {}  # dictionary of posterior and prior probability for each key
+        for key in logo_dict.keys():
+            prior, post = logo_dict[key].calculate_prob_dist(types, pairs=pairs, basepairs=basepair, singles=single)
+            resultsKLD[key] = {}
+            resultsKLD[key]['post'] = post
+            resultsKLD[key]['prior'] = prior
 
-    if args.IDlogo:
-        id_info12, id_info21 = logo_dict[key_1].calculate_logoID_infos(info_1=info_height_dic[key_1]['info'],
-                                                                       info_2=info_height_dic[key_2]['info'],
-                                                                       pos=pos,
-                                                                       singles=single, pairs=pairs,
-                                                                       basepairs=basepair)
+        kld_height_dic = {}  # kld infos are saved with their foreground key same as ID infos
+        pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
+        for pair in pairwise_combinations:
+            # pair[1] as foreground and pair[0] as background
+            # exact is calculated for foreground in KLD So, we need to call calculate_kld with foreground object
+            # so that we have that information for calculating exact
 
-        # 1 is foreground
-        id_height12 = logo_dict[key_1].calculate_logoID_heights(height_b=info_height_dic[key_2]['height'],
-                                                                height_f=info_height_dic[key_1]['height'],
-                                                                info=id_info12,
-                                                                pos=pos,
-                                                                singles=single, pairs=pairs,
-                                                                basepairs=basepair, type=types)
+            kld_info, kld_height = logo_dict[pair[1]].calculate_kld(types, back_prior=resultsKLD[pair[0]]['prior'],
+                                                                    fore_prior=resultsKLD[pair[1]]['prior'],
+                                                                    back_post=resultsKLD[pair[0]]['post'],
+                                                                    fore_post=resultsKLD[pair[1]]['post'], pairs=pairs,
+                                                                    basepairs=basepair, singles=single)
+            kld_height_dic[pair[1]] = {"kld": kld_info, "height": kld_height}
 
-        # 2 is foreground
-        id_height21 = logo_dict[key_1].calculate_logoID_heights(height_b=info_height_dic[key_1]['height'],
-                                                                height_f=info_height_dic[key_2]['height'],
-                                                                info=id_info21,
-                                                                singles=single,
-                                                                pos=pos, pairs=pairs,
-                                                                basepairs=basepair,
-                                                                type=types)  # logo_dict[key_b].singles, pos=pos)
-
-        # The idLogos for when key_1 is foreground and key_2 background are named with <state>_<key_1>.eps
-        results[key_1].add_information(info=id_info12, height=id_height12)
-        results[key_1].logo_output()
-
-        results[key_2].add_information(info=id_info21, height=id_height21)
-        results[key_2].logo_output()
-
-        # {________________________________ KLD Logo _______________________________________________________________
-
-    if args.KLDlogo:
-        resultsKLD = {}
-        prior, post = logo_dict[key_1].calculate_prob_dist(types, pairs=pairs, basepairs=basepair, singles=single)
-        resultsKLD[key_1] = {}
-        resultsKLD[key_1]['post'] = post
-        resultsKLD[key_1]['prior'] = prior
-
-        prior, post = logo_dict[key_2].calculate_prob_dist(types, pairs=pairs, basepairs=basepair, singles=single)
-        resultsKLD[key_2] = {}
-        resultsKLD[key_2]['post'] = post
-        resultsKLD[key_2]['prior'] = prior
-
-        # key_2 is foreground so base correction should be applied on key_1
-        # The KLDLogos for when key_1 is background and key_2 is foreground are named with <state>_<key_1>.eps
-        # exact is calculated for foreground in KLD So, we need to call calculate_kld with foreground object
-        # so that we have that information for calculating exact
-
-        kld_info1, kld_height1 = logo_dict[key_2].calculate_kld(types, back_prior=resultsKLD[key_1]['prior'],
-                                                                fore_prior=resultsKLD[key_2]['prior'],
-                                                                back_post=resultsKLD[key_1]['post'],
-                                                                fore_post=resultsKLD[key_2]['post'], pairs=pairs,
-                                                                basepairs=basepair, singles=single)
-
-        results[key_1].add_information(info=kld_info1, height=kld_height1)
-        results[key_1].logo_output()
-
-        kld_info2, kld_height2 = logo_dict[key_1].calculate_kld(types, back_prior=resultsKLD[key_2]['prior'],
-                                                                fore_prior=resultsKLD[key_1]['prior'],
-                                                                back_post=resultsKLD[key_2]['post'],
-                                                                fore_post=resultsKLD[key_1]['post'], pairs=pairs,
-                                                                basepairs=basepair, singles=single)
-
-        results[key_2].add_information(info=kld_info2, height=kld_height2)
-        results[key_2].logo_output()
-
-        #  ________________________________________________________________________________________________________}
-
-    if args.IDlogo & args.KLDlogo & args.bt:
-        logo_dict[key_1].func_ID_KLD_2table(fore_logo_info=info_height_dic[key_1]['info'],
-                                            fore_logo_height=info_height_dic[key_1]['height'],
-                                            fore_idlogo_info=id_info12,
-                                            back_idlogo_info=id_info21,
-                                            fore_idlogo_height=id_height12,
-                                            back_idlogo_height=id_height21,
-                                            kld_info=kld_info1,
-                                            kld_height=kld_height1, functions=types, states=single, pos=pos,
-                                            fore=key_1)
-
-        logo_dict[key_2].func_ID_KLD_2table(fore_logo_info=info_height_dic[key_2]['info'],
-                                            fore_logo_height=info_height_dic[key_2]['height'],
-                                            fore_idlogo_info=id_info21,
-                                            back_idlogo_info=id_info12,
-                                            fore_idlogo_height=id_height21,
-                                            back_idlogo_height=id_height12,
-                                            kld_info=kld_info2,
-                                            kld_height=kld_height2, functions=types, states=single, pos=pos,
-                                            fore=key_2)
-
-    '''
-    numbering {(60) makenumber} if
-    gsave
-    1.04240 (T) numchar
-    1.34898 (Y) numchar
-    9.97074 (A) numchar
-
-    numbering {(16) makenumber} if
-    gsave
-    16.99092 (F) numchar
-    grestore
-    '''
+            # don't remember why callsed these two function with background key! does it matter?!
+            results[pair[0]].add_information(info=kld_info, height=kld_height)
+            results[pair[0]].logo_output()
+        # bubble tables
+        if args.bt:
+            pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
+            for pair in pairwise_combinations:
+                # pair[1] as foreground and pair[0] as background
+                logo_dict[pair[1]].func_ID_KLD_2table(types, fore_logo_info=info_height_dic[pair[1]]['info'],
+                                                      fore_logo_height=info_height_dic[pair[1]]['height'],
+                                                      fore_idlogo_info=infos_id[pair[1]],
+                                                      back_idlogo_info=infos_id[pair[0]],
+                                                      fore_idlogo_height=heights_id[pair[1]],
+                                                      back_idlogo_height=heights_id[pair[0]],
+                                                      kld_info=kld_height_dic[pair[1]]['kld'],
+                                                      kld_height=kld_height_dic[pair[1]]['height'], functions=types,
+                                                      states=single, pos=pos,
+                                                      fore=pair[1])
 
 
 if __name__ == "__main__":
