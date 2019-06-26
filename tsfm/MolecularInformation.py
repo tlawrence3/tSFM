@@ -1578,3 +1578,378 @@ class FunctionLogo:
 
     def __len__(self):
         return len(self.sequences)
+
+
+class FunctionLogoDifference:
+    """
+        Calculates Kullback-Leibler Divergence and Information Difference as two visualization methods to contrast
+        sequence and function logos between two taxa and provides methods for text output to be used for
+        bubble plot visualization.
+    """
+
+    def __init__(self, pos, functions, pairs, basepairs, singles):
+        self.pos = pos
+        self.pairs = pairs
+        self.singles = singles
+        self.functions = functions
+        self.basepairs = basepairs
+
+        #  _______________________ ID logo Calculations ___________________________________________________
+
+    def calculate_logoID_infos(self, info_b, info_f):
+
+        """
+        Calculate information for id-logo (information difference of foreground and background).
+        """
+
+        id_info = defaultdict(lambda: defaultdict(float))
+        for k in range(self.pos):
+
+            logo_b = info_b[k]
+            logo_f = info_f[k]
+
+            for c in self.singles:
+                id_info[k][c] = logo_f[c] - logo_b[c]
+                if id_info[k][c] < 0:
+                    id_info[k][c] = 0
+
+        for k in self.basepairs:
+
+            logo_b = info_b[k]
+            logo_f = info_f[k]
+
+            for c in self.pairs:
+                id_info[k][c] = logo_f[c] - logo_b[c]
+                if id_info[k][c] < 0:
+                    id_info[k][c] = 0
+
+        return id_info
+
+    def calculate_logoID_heights(self, info, ratios):
+
+        """
+        Calculate height of each symbol within a stack for id-logo.
+        """
+
+        id_height = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        # adding zero to all the functions that do not exist within a stack
+        for single in range(self.pos):
+            for state in self.singles:
+                for p in self.functions:  # back_self.post[single][state]:
+                    if info[single][state] == 0:
+                        id_height[single][state][p] = 0
+                    else:
+                        id_height[single][state][p] = info[single][state] * ratios[single][state][p] / sum(
+                            ratios[single][state].values())
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                for p in self.functions:
+                    if info[pair][state] == 0:
+                        id_height[pair][state][p] = 0
+                    else:
+                        id_height[pair][state][p] = info[pair][state] * ratios[pair][state][p] / sum(
+                            ratios[pair][state].values())
+
+        # adding zero to all the functions that do not exist within a stack
+        for pair in self.basepairs:
+            for state in self.pairs:
+                for t in self.functions:
+                    if t not in id_height[pair][state]:
+                        id_height[pair][state][t] = 0
+
+        for single in range(self.pos):
+            for state in self.singles:
+                for t in self.functions:
+                    if t not in id_height[single][state]:
+                        id_height[single][state][t] = 0
+
+        for single in range(self.pos):
+            for state in self.singles:
+                mysum = sum(id_height[single][state].values())
+                for p in id_height[single][state]:
+                    if mysum != 0:
+                        id_height[single][state][p] = id_height[single][state][p] / mysum
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                mysum = sum(id_height[pair][state].values())
+                for p in id_height[pair][state]:
+                    if mysum != 0:
+                        id_height[pair][state][p] = id_height[pair][state][p] / mysum
+
+        return id_height
+
+    # __________________________________________________________________________
+
+    def calculate_prob_dist_pseudocounts(self, logo_dict, key):
+        """
+        Calculate posterior probability p(y|x) of each symbol within for each feature using pseudo counts.
+        """
+        key1 = list(logo_dict.keys())[0]
+        key2 = list(logo_dict.keys())[1]
+
+        kld_post_dist = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        kld_prior_dist = defaultdict(float)
+
+        functions_array = np.array(list(logo_dict[key].functions.values()))
+        for p in logo_dict[key].functions:
+            kld_prior_dist[p] = logo_dict[key].functions[p] / functions_array[functions_array != 0].sum()
+
+        # calculating the post of background/foreground
+        for single in range(self.pos):
+            for state in self.singles:
+                state_counts1 = logo_dict[key1].get([single], state)
+                state_counts2 = logo_dict[key2].get([single], state)
+                state_counts = logo_dict[key].get([single], state)
+                if len(state_counts1.keys()) < 21 or len(
+                        state_counts2.keys()) < 21:
+                    for t in self.functions:
+                        if t not in state_counts:
+                            state_counts[t] = 1
+                        else:
+                            state_counts[t] += 1
+                for p in self.functions:
+                    kld_post_dist[single][state][p] = state_counts[p] / (sum(state_counts.values()))
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                state_counts1 = logo_dict[key1].get(pair, state)
+                state_counts2 = logo_dict[key2].get(pair, state)
+                state_counts = logo_dict[key].get(pair, state)
+                if len(state_counts1.keys()) < 21 or len(
+                        state_counts2.keys()) < 21:
+                    for t in self.functions:
+                        if t not in state_counts:
+                            state_counts[t] = 1
+                        else:
+                            state_counts[t] += 1
+                for p in self.functions:
+                    kld_post_dist[pair][state][p] = state_counts[p] / (sum(state_counts.values()))
+
+        return kld_post_dist, kld_prior_dist
+
+    def calculate_prob_dist_nopseudocounts(self, logo_dict):
+        """
+        Calculate posterior probability p(y|x) of each symbol within a stack for KLD-logo without pseudocounts.
+        """
+        kld_post_dist = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+
+        for single in range(self.pos):
+            for state in self.singles:
+                state_counts = logo_dict.get([single], state)
+                for p in self.functions:
+                    if sum(state_counts.values()) == 0:
+                        kld_post_dist[single][state][p] = 0
+                    else:
+                        kld_post_dist[single][state][p] = state_counts[p] / (sum(state_counts.values()))
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                state_counts = logo_dict.get(pair, state)
+                for p in self.functions:
+                    if sum(state_counts.values()) == 0:
+                        kld_post_dist[pair][state][p] = 0
+                    else:
+                        kld_post_dist[pair][state][p] = state_counts[p] / (sum(state_counts.values()))
+
+        return kld_post_dist
+
+    def calculate_ratios(self, back_prior, fore_prior, back_post, nopseudo_post_fore):
+        """
+        Calculates the ratios of symbols within each stack of ID and KLD logos
+        """
+
+        ratios = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+
+        for single in range(self.pos):
+            for state in self.singles:
+                for p in self.functions:
+                    ratios[single][state][p] = (nopseudo_post_fore[single][state][p] / fore_prior[p]) / (
+                            back_post[single][state][p] / back_prior[p])
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                for p in self.functions:
+                    ratios[pair][state][p] = (nopseudo_post_fore[pair][state][p] / fore_prior[p]) / (
+                            back_post[pair][state][p] / back_prior[p])
+        return ratios
+
+    def calculate_kld(self, logo_dict, key_back, key_fore, back_prior, fore_prior, back_post, fore_post, ratios):
+        """
+        Calculate height of each symbol within a stack for kld-logo.
+        The height of the individual letters in a stack will be proportional to this ratio
+        """
+
+        kld_prior = 0
+
+        # kld_dic: a dictionary for keeping the height of each stack in kld logo
+        kld_dic = defaultdict(lambda: defaultdict(float))
+
+        for t in self.functions:
+            kld_prior += fore_prior[t] * np.log2(fore_prior[t] / back_prior[t])
+
+        for single in range(self.pos):
+            for state in self.singles:
+
+                state_counts_back = logo_dict[key_back].get([single], state)
+                state_counts_fore = logo_dict[key_fore].get([single], state)
+
+                if sum(state_counts_back.values()) < 6:
+                    kld_dic[single][state] = 0
+                    continue
+                if sum(state_counts_fore.values()) == 0:
+                    kld_dic[single][state] = 0
+                    continue
+
+                for p in self.functions:
+                    kld_dic[single][state] += fore_post[single][state][p] * np.log2(
+                        fore_post[single][state][p] / back_post[single][state][p])
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                state_counts_back = logo_dict[key_back].get(pair, state)
+                state_counts_fore = logo_dict[key_fore].get(pair, state)
+
+                if sum(state_counts_back.values()) < 6:
+                    kld_dic[pair][state] = 0
+                    continue
+                if sum(state_counts_fore.values()) == 0:
+                    kld_dic[pair][state] = 0
+                    continue
+
+                for p in self.functions:
+                    kld_dic[pair][state] += fore_post[pair][state][p] * np.log2(
+                        fore_post[pair][state][p] / back_post[pair][state][p])
+
+        # kld_heights: a dictionary for the height of each symbol within a stack for kld-logo.
+        kld_heights = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+
+        for single in range(self.pos):
+            for state in self.singles:
+                for p in self.functions:  # back_post[single][state]:
+                    if kld_dic[single][state] == 0:
+                        kld_heights[single][state][p] = 0
+                    else:
+                        kld_heights[single][state][p] = kld_dic[single][state] * ratios[single][state][p] / sum(
+                            ratios[single][state].values())
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                for p in self.functions:
+                    if kld_dic[pair][state] == 0:
+                        kld_heights[pair][state][p] = 0
+                    else:
+                        kld_heights[pair][state][p] = kld_dic[pair][state] * ratios[pair][state][p] / sum(
+                            ratios[pair][state].values())
+
+        for single in range(self.pos):
+            for state in self.singles:
+                mysum = sum(kld_heights[single][state].values())
+                for p in kld_heights[single][state]:
+                    if mysum != 0:
+                        kld_heights[single][state][p] = kld_heights[single][state][p] / mysum
+
+        for pair in self.basepairs:
+            for state in self.pairs:
+                mysum = sum(kld_heights[pair][state].values())
+                for p in kld_heights[pair][state]:
+                    if mysum != 0:
+                        kld_heights[pair][state][p] = kld_heights[pair][state][p] / mysum
+
+        return kld_dic, kld_heights
+
+    def func_ID_KLD_2table(self, fore_logo_info,
+                           fore_logo_height,
+                           fore_idlogo_info,
+                           back_idlogo_info,
+                           fore_idlogo_height,
+                           back_idlogo_height,
+                           kld_info,
+                           kld_height, fore):
+        """
+         Writes a text table for creating bubble plots. table need to be mapped to sprinzl coordinates.
+        """
+
+        tableDict = {}
+        # pandasDict = {}
+        nameSet = ["aa", "coord", "state", "fbits", "fht", "gainbits", "gainfht", "lossbits", "lossfht", "convbits",
+                   "convfht", "x", "y", "sprinzl"]
+        functionlist = list(self.functions)
+        for name in nameSet:
+            tableDict[name] = np.zeros(len(functionlist) * self.pos * 4, )
+
+        tableDict['aa'] = [item for item in functionlist for i in range(self.pos * 4)]
+        tableDict['coord'] = [item for item in range(self.pos) for i in range(4)] * len(functionlist)
+        tableDict['state'] = [s for s in self.singles if not "-" in s] * len(functionlist) * self.pos
+
+        pandasTable = pd.DataFrame(tableDict)
+        for single in range(self.pos):
+            for state in fore_logo_info[single]:
+                pandasTable.loc[
+                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'fbits'] = \
+                    fore_logo_info[single][state]
+        for single in range(self.pos):
+            for state in fore_logo_height[single]:
+                for t in fore_logo_height[single][state]:
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                pandasTable['aa'] == t), 'fht'] = \
+                        fore_logo_height[single][state][t]
+
+        for single in range(self.pos):
+            for state in fore_idlogo_info[single]:
+                pandasTable.loc[
+                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'gainbits'] = \
+                    fore_idlogo_info[single][state]
+
+        for single in range(self.pos):
+            for state in fore_idlogo_height[single]:
+                for t in self.functions:
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                pandasTable['aa'] == t), 'gainfht'] = 0
+                    if fore_idlogo_height[single][state][t] > 0:
+                        pandasTable.loc[
+                            (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                    pandasTable['aa'] == t), 'gainfht'] = fore_idlogo_height[single][state][t]
+
+        for single in range(self.pos):
+            for state in back_idlogo_info[single]:
+                pandasTable.loc[
+                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'lossbits'] = \
+                    back_idlogo_info[single][state]
+
+        for single in range(self.pos):
+            for state in back_idlogo_height[single]:
+                for t in self.functions:
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                pandasTable['aa'] == t), 'lossfht'] = 0
+                    if back_idlogo_height[single][state][t] > 0:
+                        pandasTable.loc[
+                            (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                    pandasTable['aa'] == t), 'lossfht'] = \
+                            back_idlogo_height[single][state][t]
+
+        for single in range(self.pos):
+            for state in kld_info[single]:
+                pandasTable.loc[
+                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'convbits'] = kld_info[single][
+                    state]
+
+        for single in range(self.pos):
+            for state in kld_height[single]:
+                for t in kld_height[single][state]:
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
+                                pandasTable['aa'] == t), 'convfht'] = \
+                        kld_height[single][state][t]
+
+        roundcols = ["fbits", "fht", "gainbits", "gainfht", "lossbits", "lossfht", "convbits",
+                     "convfht"]
+        pandasTable[roundcols] = pandasTable[roundcols].round(4)
+        pandasTable['coord'] = pandasTable['coord'] + 1
+
+        filename = fore + "_Table.txt"
+        pandasTable.to_csv(filename, index=None, sep='\t')
