@@ -26,7 +26,7 @@ def main():
     parser.add_argument("-b", "--bootstrap", type=int, help="Number of bootstrap reps to perform. Default = 0", default = 0)
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "BH")
     parser.add_argument("-j", "--jsd", action="store_true", help="Produce jsd pairwise distance matrix between function logos")
-    parse.add_argument("-I", "--ID", action="store_true", help="")
+    parser.add_argument("-I", "--ID", action="store_true", help="")
     parser.add_argument("-K", "--KLD", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
     parser.add_argument("--idlogo", help='ID logo', action="store_true")
