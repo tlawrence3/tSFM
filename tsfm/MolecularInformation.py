@@ -7,26 +7,26 @@ from multiprocessing import Pool
 from operator import itemgetter
 from string import Template
 from ast import literal_eval as make_tuple
+import os
 import bisect
-import copy
 import pkgutil
 import itertools
 import sys
-import numpy as np
-import tsfm.nsb_entropy as nb
 import random
 import time
-import math as mt
-import tsfm.exact as exact
 import glob
+import math as mt
 import re
+import numpy as np
 import statsmodels.stats.multitest as smm
 import pandas as pd
+import tsfm.nsb_entropy as nb
+import tsfm.exact as exact
 
 
 class DistanceCalculator:
     """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
-    
+
     Currently, a `DistanceCalculator` object can calculate pairwise distance using the square-root of the Jensen-Shannon
     divergence and will print the resulting distance matrix to stdout.
 
@@ -34,15 +34,15 @@ class DistanceCalculator:
         distance (str): Indicates which distance metric to use for pairwise calculations.
 
     Attributes:
-        distanceMetric (str): Indicates the distance metric to be used in 
+        distanceMetric (str): Indicates the distance metric to be used in
             pairwise calculations.
-        featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural 
+        featureSet (:obj:`set` of :obj:`str`): A :obj:`set` of the structural
             features contained in the function logos being compared (e.g. 1A, 173AU).
-        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional 
+        functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional
             classes contained in the function logos being compared.
 
     Example::
-        
+
         x = tsfm.MolecularInformation.DistanceCalculator('jsd')
         x.get_distance(function_logos)
 
@@ -171,7 +171,9 @@ class DistanceCalculator:
 
         if (self.distanceMetric == "jsd"):
             self.rJSD(pandasDict)
-
+        elif (self.distanceMetric == "ID"):
+            self.informationDifference(pandasDict, ResultsDict)
+            
     def rJSD(self, pandasDict):
         """
         Produces pairwise comparisons using rJSD metric
@@ -205,7 +207,7 @@ class DistanceCalculator:
     def entropy(self, dist):
         return np.sum(-dist[dist != 0] * np.log2(dist[dist != 0]))
 
-    def rJSD_distance(self, dist1, dist2, pi1, pi2):
+    def rJSD_distance(self, dist1, dist2, Ix, Iy):
         r"""
         Weighted square root of the generalized Jensen-Shannon divergence defined by Lin 1991
 
@@ -216,9 +218,11 @@ class DistanceCalculator:
         where :math:`\pi_f^X = \frac{I_f^X}{I_f^X + I_f^Y}` and :math:`\pi_f^Y = \frac{I_f^Y}{I_f^X + I_f^Y}`
 
         """
-        step = self.entropy(pi1 * dist1 + pi2 * dist2) - (pi1 * self.entropy(dist1) + pi2 * self.entropy(dist2))
-        return (pi1 + pi2) * mt.sqrt(step if step >= 0 else 0)
 
+        pi1 = Ix/(Ix+Iy)
+        pi2 = Iy/(Ix+Iy)
+        step = self.entropy(pi1*dist1+pi2*dist2) - (pi1*self.entropy(dist1) + pi2*self.entropy(dist2))
+        return (Ix+Iy)*mt.sqrt(step if step >= 0 else 0)
 
 class FunctionLogoResults:
     """
@@ -939,7 +943,7 @@ class FunctionLogo:
 
         """
         for fn in glob.glob("{}_?.aln".format(file_prefix)):
-            match = re.search("_([A-Z])\.aln", fn)
+            match = re.search(r"_([A-Z])\.aln", fn)
             aa_class = match.group(1)
             with open(fn, "r") as ALN:
                 good = False
@@ -947,13 +951,13 @@ class FunctionLogo:
                 interleaved = False
                 seq = {}
                 for line in ALN:
-                    match = re.search("^(\S+)\s+(\S+)", line)
-                    if (re.search("^CLUSTAL", line)):
+                    match = re.search(r"^(\S+)\s+(\S+)", line)
+                    if (re.search(r"^CLUSTAL", line)):
                         good = True
                         continue
-                    elif (re.search("^[\s\*\.\:]+$", line) and not interleaved and begin_seq):
+                    elif (re.search(r"^[\s\*\.\:]+$", line) and not interleaved and begin_seq):
                         interleaved = True
-                    elif (re.search("^[\s\*\.\:]+$", line) and interleaved and begin_seq):
+                    elif (re.search(r"^[\s\*\.\:]+$", line) and interleaved and begin_seq):
                         continue
                     elif (match and not interleaved):
                         begin_seq = True
@@ -1080,8 +1084,9 @@ class FunctionLogo:
         print("{:2} {:07.5f}".format(n, j[1]), file=sys.stderr)
         return j
 
-    def permuted(self, items, pieces=2):
-        random.seed()
+
+    def permuted(self, items, pieces = 2):
+        random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
         sublists = [[] for i in range(pieces)]
         for x in items:
             sublists[random.randint(0, pieces - 1)].append(x)
@@ -1126,7 +1131,41 @@ class FunctionLogo:
             for x in perm_results:
                 self.permutationList += x
 
-    def permInfo(self, method, proc, inverse=False):
+
+    #new bootstrap method for generating bootstrap replicates over functional classes
+    def bootstrap_sample(self, num_boot, seq_dict):
+        random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
+        bootStructList = []
+        for b in range(num_boot):
+            bootStruct = FunctionLogo(self.basepairs, exact_init = self.exact, inverse_init = self.inverse_exact)
+            for function in seq_dict:
+                bootsample = random.choices(seq_dict[function], k=len(seq_dict[function]))
+                for sample in bootsample:
+                    bootStruct.add_sequence(sample.function, sample.seq)
+            bootStructList.append(bootStruct)
+        return bootStructList
+
+
+    def bootstrap(self, bootstrap_num, proc):
+        with Pool(processes = proc) as pool:
+            #build seq dict for bootstrapping
+            boot_sampling_dict = defaultdict(list)
+            for seq in self.sequences:
+                boot_sampling_dict[seq.function].append(seq)
+            boot_jobs = []
+            for x in range(proc):
+                if (x == 0):
+                    boot_jobs.append((bootstrap_num//proc+bootstrap_num%proc, boot_sampling_dict))
+                else:
+                    boot_jobs.append((bootstrap_num//proc, boot_sampling_dict))
+            
+            boot_results = pool.starmap(self.bootstrap_sample, boot_jobs) 
+            self.bootstrapList = []
+            for x in boot_results:
+                self.bootstrapList += x
+
+
+    def permInfo(self, method, proc, inverse = False):
         """
         Calculate functional information statistics of permuted datasets.
 
