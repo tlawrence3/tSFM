@@ -25,7 +25,7 @@ def main():
     parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "BH")
     parser.add_argument("-j", "--jsd", action="store_true", help="")
     parser.add_argument("file_prefix", help="File prefix", nargs='+')
-    parser.add_argument("--idlogo", help='id logo', action="store_true")
+    parser.add_argument("--idlogo", help='ID logo', action="store_true")
     parser.add_argument("--kldlogo", help='KLD logo', action="store_true")
     parser.add_argument("--bt", help='bubble table', action="store_true")
     args = parser.parse_args()
@@ -189,8 +189,9 @@ def main():
                                                                 fore_post=results_prob_dist[pair[1]]['post'],
                                                                 ratios=ratios_dic[pair[0]])
                 if args.kldlogo:
+                    logoprifix = "KLD"
                     results[pair[0]].add_information(info=kld_info, height=kld_height)
-                    results[pair[0]].logo_output()
+                    results[pair[0]].logo_output(logo_prefix=logoprifix)
                 kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
 
             if args.idlogo or args.bt:
@@ -201,7 +202,8 @@ def main():
 
                 if args.idlogo:
                     results[pair[0]].add_information(info=id_info, height=id_height)
-                    results[pair[0]].logo_output()
+                    logoprifix = "ID"
+                    results[pair[0]].logo_output(logo_prefix=logoprifix)
 
             # creating the table for bubble plots _____________________________________________________________________
         if args.bt:
@@ -211,7 +213,6 @@ def main():
                 difference.func_ID_KLD_2table(fore_logo_info=info_height_dic[pair[1]]['info'],
                                               fore_logo_height=info_height_dic[pair[1]]['height'],
                                               fore_idlogo_info=id_height_dic[pair[0]]['id'],
-                                              # argumants fore_idlogo_info and back_idlogo_info need to be switched
                                               back_idlogo_info=id_height_dic[pair[1]]['id'],
                                               fore_idlogo_height=id_height_dic[pair[0]]['height'],
                                               back_idlogo_height=id_height_dic[pair[1]]['height'],
