@@ -616,7 +616,7 @@ class FunctionLogoResults:
                     print(output_string, file=file_handle)
         file_handle.close()
 
-    def logo_output(self, inverse=False , logo_prefix=""):
+    def logo_output(self, inverse=False, logo_prefix=""):
         """
         Produce function logo postscript files
         """
@@ -657,7 +657,7 @@ class FunctionLogoResults:
             # output logodata to template
             template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
             logo_template = template_byte.decode('utf-8')
-            with open("{}_{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1]), "w") as logo_output:
+            with open("{}{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1]), "w") as logo_output:
                 src = Template(logo_template)
                 if (len(base) == 2):
                     logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()),

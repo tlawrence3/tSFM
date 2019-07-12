@@ -150,8 +150,6 @@ def main():
     if (args.jsd):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
-    if (args.ID):
-        pass
 
     # ______________________________________________ _________________________________________________________ Added
 
@@ -207,7 +205,7 @@ def main():
                                                                 fore_post=results_prob_dist[pair[1]]['post'],
                                                                 ratios=ratios_dic[pair[0]])
                 if args.kldlogo:
-                    logoprifix = "KLD"
+                    logoprifix = "KLD_"
                     results[pair[0]].add_information(info=kld_info, height=kld_height)
                     results[pair[0]].logo_output(logo_prefix=logoprifix)
                 kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
@@ -220,7 +218,7 @@ def main():
 
                 if args.idlogo:
                     results[pair[0]].add_information(info=id_info, height=id_height)
-                    logoprifix = "ID"
+                    logoprifix = "ID_"
                     results[pair[0]].logo_output(logo_prefix=logoprifix)
 
             # creating the table for bubble plots _____________________________________________________________________
