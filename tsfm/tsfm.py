@@ -2,6 +2,7 @@
 import argparse
 import sys
 import os
+import itertools
 import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
