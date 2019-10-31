@@ -2,9 +2,15 @@
 [![Coverage Status](https://coveralls.io/repos/github/tlawrence3/tsfm/badge.svg?branch=master)](https://coveralls.io/github/tlawrence3/tsfm?branch=master)
 # Read the docs
 http://tsfm-trna-structure-function-mapper.readthedocs.io/en/latest/
+# Installation
+```
+# Clone TSFM GitHub repository
+git clone -v git@github.com:tlawrence3/tSFM.git
+```
+
 # Example command
 ```shell
-tsfm -vc struct_file.txt ferns/FERN Gnetidae/GNET -j
+/path/to/tsfm -vc struct_file.txt ferns/FERN Gnetidae/GNET -j
 ```
 This example command assumes you have the below directory structure and follow this file naming convention (`otuName_function.aln`) for sequence alignment files in clustal format:
 ```shell
