@@ -7,4 +7,3 @@ pandas
 patsy
 mpmath
 statsmodels
-
