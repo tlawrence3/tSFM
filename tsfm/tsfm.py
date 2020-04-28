@@ -33,6 +33,8 @@ def main():
     parser.add_argument("--idlogo", help='ID logo', action="store_true")
     parser.add_argument("--kldlogo", help='KLD logo', action="store_true")
     parser.add_argument("--bt", help='bubble table', action="store_true")
+    parser.add_argument("-kldp", help="Number of permutations. Default value is 0", type=int, default=0)
+    parser.add_argument("-idp", help="Number of permutations. Default value is 0", type=int, default=0)
     args = parser.parse_args()
 
     #dictionary that contains all datasets labeled by the file prefix
@@ -175,7 +177,7 @@ def main():
         basepair = results[key_1].basepairs
         types = logo_dict[key_1].functions
 
-        # initializing class FunctionLogoDifference  __________________________________________________________________
+        # Initializing class FunctionLogoDifference  __________________________________________________________________
         difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
         results_prob_dist = {}
         post_nopseudo = {}
@@ -190,10 +192,12 @@ def main():
         kld_height_dic = {}  # KLDs are saved with the background key
         ratios_dic = {}  # ratios are saved with the background key
         id_height_dic = {}  # IDs are saved with background key
+        kld_infos = {}
+        id_infos = {}
         pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
         for pair in pairwise_combinations:
-            # calculating kld _________________________________________________________________________________________
-            # pair[0] as background
+            # Calculating kld _________________________________________________________________________________________
+            # pair[0] is background
             ratios_dic[pair[0]] = difference.calculate_ratios(back_prior=results_prob_dist[pair[0]]['prior'],
                                                               fore_prior=results_prob_dist[pair[1]]['prior'],
                                                               back_post=results_prob_dist[pair[0]]['post'],
@@ -222,11 +226,14 @@ def main():
                     logoprifix = "ID_"
                     results[pair[0]].logo_output(logo_prefix=logoprifix)
 
-            # creating the table for bubble plots _____________________________________________________________________
+            kld_infos[pair[0]] = kld_info
+            id_infos[pair[0]] = id_info
+
+            # Creating table for bubble plots _____________________________________________________________________
         if args.bt:
             pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
             for pair in pairwise_combinations:
-                # pair[0] as background
+                # pair[0] is background
                 difference.func_ID_KLD_2table(fore_logo_info=info_height_dic[pair[1]]['info'],
                                               fore_logo_height=info_height_dic[pair[1]]['height'],
                                               fore_idlogo_info=id_height_dic[pair[0]]['id'],
@@ -236,6 +243,34 @@ def main():
                                               kld_info=kld_height_dic[pair[0]]['kld'],
                                               kld_height=kld_height_dic[pair[0]]['height'],
                                               fore=pair[1])
+
+            # Calculating KLD/ID logo significance _______________________________________________________________
+
+        if args.kldp:
+            print("Calculating KLD Logo significance ... ")
+            start_time = time.time()
+            klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+            kld_pvalues = klddifference.calculate_kld_significance(logo_dict, kld_infos, args.kldp, args.proc)
+            print("--- Running time: %s seconds ---" % (time.time() - start_time))
+            klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict, "KLD_")
+        if args.idp:
+            if args.entropy == "NSB":
+                print("Calculating ID Logo significance with NSB ... ")
+                start_time = time.time()
+                iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+                id_pvalues = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.proc, args.max,
+                                                                    "NSB")
+                print("--- Running time: %s seconds  ---" % (time.time() - start_time))
+                iddifference.write_pvalues(id_pvalues, id_infos, logo_dict, "ID_NSB_")
+            else:
+                print("Calculating ID Logo significance with Miller ... ")
+                start_time = time.time()
+                iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+                id_pvalues_M = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.proc,
+                                                                      args.max, "Miller")
+                print("---Running time: %s seconds  ---" % (time.time() - start_time))
+                iddifference.write_pvalues(id_pvalues_M, id_infos, logo_dict, "ID_MM_")
+
 
 
 if __name__ == "__main__":

@@ -1881,7 +1881,7 @@ class FunctionLogoDifference:
 
         kld_prior = 0
 
-        # kld_dic: a dictionary for keeping the height of each stack in kld logo
+        # kld_dic: Dictionary for keeping the height of each stack in kld logo
         kld_dic = defaultdict(lambda: defaultdict(float))
 
         for t in self.functions:
@@ -1893,7 +1893,7 @@ class FunctionLogoDifference:
                 state_counts_back = logo_dict[key_back].get([single], state)
                 state_counts_fore = logo_dict[key_fore].get([single], state)
 
-                if sum(state_counts_back.values()) < 6:
+                if sum(state_counts_back.values()) == 0: #< 6:
                     kld_dic[single][state] = 0
                     continue
                 if sum(state_counts_fore.values()) == 0:
@@ -1909,7 +1909,7 @@ class FunctionLogoDifference:
                 state_counts_back = logo_dict[key_back].get(pair, state)
                 state_counts_fore = logo_dict[key_fore].get(pair, state)
 
-                if sum(state_counts_back.values()) < 6:
+                if sum(state_counts_back.values()) == 0: #< 6:
                     kld_dic[pair][state] = 0
                     continue
                 if sum(state_counts_fore.values()) == 0:
@@ -2051,3 +2051,497 @@ class FunctionLogoDifference:
 
         filename = fore + "_Table.txt"
         pandasTable.to_csv(filename, index=None, sep='\t')
+
+    #  _______________________ KLD/ID logo significance calculations ___________________________________________________
+
+    def calculate_kld_significance(self, logo_dict, kld_infos, permute_num, proc):
+
+        pvalue_dic = {}
+        start = 0
+        start_pair = 0
+        end = 0
+        kld = {}
+
+        for key in kld_infos.keys():
+            kld[key] = defaultdict(defaultdict)
+            pvalue_dic[key] = defaultdict(lambda: defaultdict(float))
+            for single in range(self.pos):
+                for state in kld_infos[key][single]:
+                    kld[key][single][state] = kld_infos[key][single][state]
+            for pair in self.basepairs:
+                for basepair in kld_infos[key][pair]:
+                    kld[key][pair][basepair] = kld_infos[key][pair][basepair]
+
+        with Pool(processes=proc) as pool:
+            perm_jobs = []
+
+            for x in range(proc):
+                if x == 0:
+                    end_pair = len(self.basepairs) // proc + len(self.basepairs) % proc
+                    end = self.pos // proc + self.pos % proc
+                    perm_jobs.append((list(range(start, end)), permute_num, logo_dict, kld, start_pair, end_pair))
+                else:
+                    start_pair = end_pair
+                    end_pair = start_pair + len(self.basepairs) // proc
+                    start = end
+                    end = end + self.pos // proc
+                    perm_jobs.append((list(range(start, end)), permute_num, logo_dict, kld, start_pair, end_pair))
+
+            pvalues = pool.starmap(self.perm_kld_calc_pvalue, perm_jobs, 1)
+
+        for x in pvalues:
+            for key in logo_dict.keys():
+                for single in x[key]:
+                    for state in x[key][single]:
+                        pvalue_dic[key][single][state] = x[key][single][state]
+
+        return pvalue_dic
+
+    def perm_kld_calc_pvalue(self, positions, permute_num, logo_dic, kld_infos, start_pair, end_pair):
+
+        pvalue = {}
+        pairwise_combinations = itertools.permutations(logo_dic.keys(), 2)
+        for pair in pairwise_combinations:
+            pvalue[pair[0]] = defaultdict(defaultdict)
+            for single in positions:
+                for state in self.singles:
+                    state_counts_back = logo_dic[pair[0]].get([single], state)
+                    state_counts_fore = logo_dic[pair[1]].get([single], state)
+                    if sum(state_counts_back.values()) == 0 | sum(state_counts_fore.values()) == 0:
+                        continue
+                    class_list = []
+                    for aaclass in state_counts_back.keys():
+                        class_list.extend(aaclass * state_counts_back[aaclass])
+                    for aaclass in state_counts_fore.keys():
+                        class_list.extend(aaclass * state_counts_fore[aaclass])
+
+                    perm_kld_list = self.calc_permuted_kld(permute_num, class_list, sum(state_counts_back.values()))
+
+                    pvalue[pair[0]][single][state] = self.calc_pvalue(perm_kld_list,
+                                                                          kld_infos[pair[0]][single][state])
+            for basepair in self.basepairs[start_pair:end_pair]:
+                for state in kld_infos[pair[0]][basepair]:
+                    state_counts_back = logo_dic[pair[0]].get(basepair, state)
+                    state_counts_fore = logo_dic[pair[1]].get(basepair, state)
+                    if sum(state_counts_back.values()) == 0 | sum(state_counts_fore.values()) == 0:
+                        continue
+                    class_list = []
+                    for aaclass in state_counts_back.keys():
+                        class_list.extend(aaclass * state_counts_back[aaclass])
+                    for aaclass in state_counts_fore.keys():
+                        class_list.extend(aaclass * state_counts_fore[aaclass])
+
+                    perm_kld_list = self.calc_permuted_kld(permute_num, class_list, sum(state_counts_back.values()))
+
+                    pvalue[pair[0]][basepair][state] = self.calc_pvalue(perm_kld_list,
+                                                                            kld_infos[pair[0]][basepair][state])
+
+        return pvalue
+
+    def calc_permuted_kld(self, numPerm, aaclasslist, back_size):
+
+        indices = []
+        permKLDs = []
+        for p in range(numPerm):
+            indices.append(self.shuffled(aaclasslist))
+        for index in indices:
+            permKLD = 0
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+            for i, aaclass in enumerate(index):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            if len(p_state_counts_back.keys()) < 21 or len(
+                    p_state_counts_fore.keys()) < 21:
+                for t in self.functions:
+                    if t not in p_state_counts_back:
+                        p_state_counts_back[t] = 1
+                    else:
+                        p_state_counts_back[t] += 1
+
+                    if t not in p_state_counts_fore:
+                        p_state_counts_fore[t] = 1
+                    else:
+                        p_state_counts_fore[t] += 1
+
+            for p in self.functions:
+                kld_post_dist_back = p_state_counts_back[p] / (sum(p_state_counts_back.values()))
+                kld_post_dist_fore = p_state_counts_fore[p] / (sum(p_state_counts_fore.values()))
+                permKLD += kld_post_dist_fore * np.log2(
+                    kld_post_dist_fore / kld_post_dist_back)
+
+            permKLDs.append(permKLD)
+
+        return permKLDs
+
+    def calc_pvalue(self, perm_klds, point):
+        count = sum(i >= point for i in perm_klds)
+        P = count / len(perm_klds)
+        return P
+
+    def shuffled(self, items, pieces=2):
+        random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
+        sublists = [[] for i in range(pieces)]
+        for x in items:
+            sublists[random.randint(0, pieces - 1)].append(x)
+        permutedList = []
+        for i in range(pieces):
+            time.sleep(0.01)
+            random.seed()
+            random.shuffle(sublists[i])
+            permutedList.extend(sublists[i])
+        return permutedList
+
+    def write_pvalues(self, P, kld, logo_dic, prefix):
+
+
+        print("Writing p-values results in a text file ")
+        tableDict = {}
+        nameSet = ["coord", "state", "P-value", "kld", "B-sample-size", "F-sample-size", "B-class_dist", "F-class_dist"]
+        for name in nameSet:
+            tableDict[name] = np.zeros(self.pos * len(self.singles) + len(self.basepairs) * len(self.pairs), )
+
+        tableDict['coord'] = []
+        for item1 in range(len(self.singles)):
+            for item2 in range(self.pos):
+                tableDict['coord'].append(item2)
+        for item1 in range(len(self.pairs)):
+            for item2 in self.basepairs:
+                tableDict['coord'].append(item2)
+
+        tableDict['state'] = []
+        for item1 in self.singles:
+            tableDict['state'].extend(np.repeat(item1, self.pos))
+        for item1 in self.pairs:
+            tableDict['state'].extend(np.repeat(item1, len(self.basepairs)))
+
+        print(len(tableDict['state']), "tableDict['state']")
+
+        pairwise_combinations = itertools.permutations(P.keys(), 2)
+        for key in pairwise_combinations:
+            pandasTable = pd.DataFrame(tableDict)
+
+            for single in range(self.pos):
+                for state in P[key[0]][single]:
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'P-value'] = \
+                        P[key[0]][single][state]
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'kld'] = \
+                        kld[key[0]][single][state]
+                    state_counts1 = logo_dic[key[0]].get([single], state)
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'B-sample-size'] = sum(
+                        state_counts1.values())
+                    state_counts2 = logo_dic[key[1]].get([single], state)
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'F-sample-size'] = sum(
+                        state_counts2.values())
+
+                    func_dist = ""
+                    for aaclass in state_counts1.keys():
+                        func_dist = func_dist + aaclass + str(state_counts1[aaclass]) + ","
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'B-class_dist'] = func_dist
+                    func_dist = ""
+                    for aaclass in state_counts2.keys():
+                        func_dist = func_dist + aaclass + str(state_counts2[aaclass]) + ","
+                    pandasTable.loc[
+                        (pandasTable['coord'] == single) & (
+                                pandasTable['state'] == state), 'F-class_dist'] = func_dist
+            for basepair in self.basepairs:
+                for state in P[key[0]][basepair]:
+                    pandasTable.loc[
+                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'P-value'] = \
+                        P[key[0]][basepair][state]
+                    pandasTable.loc[
+                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'kld'] = \
+                        kld[key[0]][basepair][state]
+                    state_counts1 = logo_dic[key[0]].get(basepair, state)
+                    pandasTable.loc[
+                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'B-sample-size'] = sum(
+                        state_counts1.values())
+                    state_counts2 = logo_dic[key[1]].get(basepair, state)
+                    pandasTable.loc[
+                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'F-sample-size'] = sum(
+                        state_counts2.values())
+
+                    func_dist = ""
+                    for aaclass in state_counts1.keys():
+                        func_dist = func_dist + aaclass + str(state_counts1[aaclass]) + ","
+                    pandasTable.loc[
+                        (pandasTable['coord'] == basepair) & (
+                                pandasTable['state'] == state), 'B-class_dist'] = func_dist
+                    func_dist = ""
+                    for aaclass in state_counts2.keys():
+                        func_dist = func_dist + aaclass + str(state_counts2[aaclass]) + ","
+                    pandasTable.loc[
+                        (pandasTable['coord'] == basepair) & (
+                                pandasTable['state'] == state), 'F-class_dist'] = func_dist
+
+            filename = prefix + "_B_" + key[0] + "_F_" + key[1] + ".txt"
+            pandasTable.to_csv(filename, index=None, sep='\t')
+
+    def calculate_id_significance(self, logo_dict, id_infos, permute_num, proc, max, method):
+        pvalue_dic = {}
+        start = 0
+        start_pair = 0
+        end = 0
+        id = {}
+
+        for key in id_infos.keys():
+            id[key] = defaultdict(defaultdict)
+            pvalue_dic[key] = defaultdict(lambda: defaultdict(float))
+            for single in range(self.pos):
+                for state in id_infos[key][single]:
+                    id[key][single][state] = id_infos[key][single][state]
+            for pair in self.basepairs:
+                for basepair in id_infos[key][pair]:
+                    id[key][pair][basepair] = id_infos[key][pair][basepair]
+        with Pool(processes=proc) as pool:
+            perm_jobs = []
+
+            for x in range(proc):
+                if x == 0:
+                    end_pair = len(self.basepairs) // proc + len(self.basepairs) % proc
+                    end = self.pos // proc + self.pos % proc
+                    perm_jobs.append(
+                        (list(range(start, end)), permute_num, logo_dict, id, start_pair, end_pair, max, method))
+                else:
+                    start_pair = end_pair
+                    end_pair = start_pair + len(self.basepairs) // proc
+                    start = end
+                    end = end + self.pos // proc
+                    perm_jobs.append(
+                        (list(range(start, end)), permute_num, logo_dict, id, start_pair, end_pair, max, method))
+            pvalues = pool.starmap(self.cal_perm_id, perm_jobs, 1)
+
+        for x in pvalues:
+            for key in logo_dict.keys():
+                for single in x[key]:
+                    for state in x[key][single]:
+                        pvalue_dic[key][single][state] = x[key][single][state]
+
+        return pvalue_dic
+
+    def cal_perm_id(self, positions, permute_num, logo_dic, id_infos, start_pair, end_pair, max, method):
+
+        pvalue = {}
+        pairwise_combinations = itertools.permutations(logo_dic.keys(), 2)
+        for pair in pairwise_combinations:
+            pvalue[pair[0]] = defaultdict(defaultdict)
+            for single in positions:
+                for state in self.singles:
+                    state_counts_back = logo_dic[pair[0]].get([single], state)
+                    state_counts_fore = logo_dic[pair[1]].get([single], state)
+                    if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
+                        continue
+                    class_list = []
+                    for aaclass in state_counts_back.keys():
+                        class_list.extend(aaclass * state_counts_back[aaclass])
+                    for aaclass in state_counts_fore.keys():
+                        class_list.extend(aaclass * state_counts_fore[aaclass])
+
+                    if method == "NSB":
+                        perm_id_list = self.calculate_perm_entropy_NSB(permute_num, class_list,
+                                                                       sum(state_counts_back.values()),
+                                                                       logo_dic[pair[0]].functions,
+                                                                       logo_dic[pair[1]].functions, max)
+
+                    if method == "Miller":
+                        perm_id_list = self.calculate_perm_entropy_MM(permute_num, class_list,
+                                                                      sum(state_counts_back.values()),
+                                                                      logo_dic[pair[0]].functions,
+                                                                      logo_dic[pair[1]].functions, max)
+                    pvalue[pair[0]][single][state] = self.calc_pvalue(perm_id_list,
+                                                                      id_infos[pair[0]][single][state])
+
+            for basepair in self.basepairs[start_pair:end_pair]:
+                for state in id_infos[pair[0]][basepair]:
+                    state_counts_back = logo_dic[pair[0]].get(basepair, state)
+                    state_counts_fore = logo_dic[pair[1]].get(basepair, state)
+                    if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
+                        continue
+                    class_list = []
+                    for aaclass in state_counts_back.keys():
+                        class_list.extend(aaclass * state_counts_back[aaclass])
+                    for aaclass in state_counts_fore.keys():
+                        class_list.extend(aaclass * state_counts_fore[aaclass])
+                    if method == "NSB":
+                        perm_id_list = self.calculate_perm_entropy_NSB(permute_num, class_list,
+                                                                       sum(state_counts_back.values()),
+                                                                       logo_dic[pair[0]].functions,
+                                                                       logo_dic[pair[1]].functions, max)
+
+                    if method == "Miller":
+                        perm_id_list = self.calculate_perm_entropy_MM(permute_num, class_list,
+                                                                      sum(state_counts_back.values()),
+                                                                      logo_dic[pair[0]].functions,
+                                                                      logo_dic[pair[1]].functions, max)
+
+                    pvalue[pair[0]][basepair][state] = self.calc_pvalue(perm_id_list,
+                                                                        id_infos[pair[0]][basepair][state])
+
+        return pvalue
+
+    def calculate_perm_entropy_NSB(self, numPerm, aaclasslist, back_size, b_functions, f_functions, max):
+
+        indices = []
+        permIDs = []
+
+        for p in range(numPerm):
+            indices.append(self.shuffled(aaclasslist))
+        for index in indices:
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+            for i, aaclass in enumerate(index):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            exact = self.calculate_perm_exact(max, f_functions - Counter(index) + Counter(p_state_counts_fore))
+            # calculate info for the Foreground _______________________________________________________________________
+            functions_array = np.array(list((f_functions - Counter(index) + Counter(p_state_counts_fore)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            if sum(p_state_counts_fore.values()) == 0:
+                info_fore = 0  # continue
+            else:  # should I put else  here ????????????
+                nsb_array = np.array(
+                    list(p_state_counts_fore.values()) + [0] * (len(f_functions) - len(p_state_counts_fore)))
+                if sum(p_state_counts_fore.values()) <= len(exact):
+                    expected_bg_entropy = exact[sum(p_state_counts_fore.values()) - 1]
+                    fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                        nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+                else:
+                    expected_bg_entropy = bg_entropy
+                    fg_entropy = nb.S(nb.make_nxkx(nsb_array, nsb_array.size), nsb_array.sum(), nsb_array.size)
+
+                if (expected_bg_entropy - fg_entropy) < 0:
+                    info_fore = 0
+                else:
+                    info_fore = expected_bg_entropy - fg_entropy
+
+            # calculate info for the Background _______________________________________________________________________
+            exact = self.calculate_perm_exact(max, b_functions - Counter(index) + Counter(p_state_counts_back))
+            functions_array = np.array(list((b_functions - Counter(index) + Counter(p_state_counts_back)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            if sum(p_state_counts_back.values()) == 0:
+                info_back = 0  # continue
+            else:
+                nsb_array = np.array(
+                    list(p_state_counts_back.values()) + [0] * (len(b_functions) - len(p_state_counts_back)))
+                if sum(p_state_counts_back.values()) <= len(exact):
+                    expected_bg_entropy = exact[sum(p_state_counts_back.values()) - 1]
+                    fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                        nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+                else:
+                    expected_bg_entropy = bg_entropy
+                    fg_entropy = nb.S(nb.make_nxkx(nsb_array, nsb_array.size), nsb_array.sum(), nsb_array.size)
+
+                if (expected_bg_entropy - fg_entropy) < 0:
+                    info_back = 0
+                else:
+                    info_back = expected_bg_entropy - fg_entropy
+
+            id_info = info_fore - info_back
+            if id_info < 0:
+                id_info = 0
+            permIDs.append(id_info)
+
+        return permIDs
+
+    def calculate_perm_entropy_MM(self, numPerm, aaclasslist, back_size, b_functions, f_functions, max):
+
+        indices = []
+        permIDs = []
+
+        for p in range(numPerm):
+            indices.append(self.shuffled(aaclasslist))
+        for index in indices:
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+            for i, aaclass in enumerate(index):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            exact = self.calculate_perm_exact(max, f_functions - Counter(index) + Counter(p_state_counts_fore))
+            # calculate the info for the fore ___________________________________________________________________________
+            functions_array = np.array(list((f_functions - Counter(index) + Counter(p_state_counts_fore)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            if sum(p_state_counts_fore.values()) == 0:
+                info_fore = 0  # continue
+            else:  # should I put else  here ????????????
+                nsb_array = np.array(
+                    list(p_state_counts_fore.values()) + [0] * (len(f_functions) - len(p_state_counts_fore)))
+                fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                    nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+                if sum(p_state_counts_fore.values()) <= len(exact):
+                    expected_bg_entropy = exact[sum(p_state_counts_fore.values()) - 1]
+                else:
+                    expected_bg_entropy = self.approx_expect(bg_entropy, len(f_functions),
+                                                             sum(p_state_counts_fore.values()))
+
+                if (expected_bg_entropy - fg_entropy) < 0:
+                    info_fore = 0
+                else:
+                    info_fore = expected_bg_entropy - fg_entropy
+
+            # calculate the info for the back ___________________________________________________________________________
+            exact = self.calculate_perm_exact(max, b_functions - Counter(index) + Counter(p_state_counts_back))
+            functions_array = np.array(list((b_functions - Counter(index) + Counter(p_state_counts_back)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            if sum(p_state_counts_back.values()) == 0:
+                info_back = 0  # continue
+            else:
+                nsb_array = np.array(
+                    list(p_state_counts_back.values()) + [0] * (len(b_functions) - len(p_state_counts_back)))
+                fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                    nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+                if sum(p_state_counts_back.values()) <= len(exact):
+                    expected_bg_entropy = exact[sum(p_state_counts_back.values()) - 1]
+                else:
+                    expected_bg_entropy = self.approx_expect(bg_entropy, len(b_functions),
+                                                             sum(p_state_counts_back.values()))
+
+                if (expected_bg_entropy - fg_entropy) < 0:
+                    info_back = 0
+                else:
+                    info_back = expected_bg_entropy - fg_entropy
+
+            # subtract the fore - back to get the ID logo  ___________________________________________________________________________
+            id_info = info_fore - info_back
+            if id_info < 0:
+                id_info = 0
+            permIDs.append(id_info)
+
+        return permIDs
+
+    def calculate_perm_exact(self, n, functions):
+        exact_list = []
+
+        p = [x / sum(list(functions.values())) for x in functions.values()]
+        for i in range(1, n + 1):
+            j = exact.calc_exact(i, p, len(functions.values()))
+            exact_list.append(j[1])
+        return exact_list
+
+    def approx_expect(self, H, k, N):
+        return H - ((k - 1) / ((mt.log(4)) * N))
