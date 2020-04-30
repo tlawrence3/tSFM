@@ -155,7 +155,6 @@ def main():
         distance.get_distance(results)
 
     # ______________________________________________ _________________________________________________________ Added
-
     if args.kldlogo or args.bt or args.idlogo:
 
         info_height_dic = {}
@@ -252,7 +251,7 @@ def main():
             klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
             kld_pvalues = klddifference.calculate_kld_significance(logo_dict, kld_infos, args.kldp, args.proc)
             print("--- Running time: %s seconds ---" % (time.time() - start_time))
-            klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict, "KLD_")
+            klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict, "KLD")
         if args.idp:
             if args.entropy == "NSB":
                 print("Calculating ID Logo significance with NSB ... ")
@@ -261,7 +260,7 @@ def main():
                 id_pvalues = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.proc, args.max,
                                                                     "NSB")
                 print("--- Running time: %s seconds  ---" % (time.time() - start_time))
-                iddifference.write_pvalues(id_pvalues, id_infos, logo_dict, "ID_NSB_")
+                iddifference.write_pvalues(id_pvalues, id_infos, logo_dict, "ID")
             else:
                 print("Calculating ID Logo significance with Miller ... ")
                 start_time = time.time()
@@ -269,7 +268,7 @@ def main():
                 id_pvalues_M = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.proc,
                                                                       args.max, "Miller")
                 print("---Running time: %s seconds  ---" % (time.time() - start_time))
-                iddifference.write_pvalues(id_pvalues_M, id_infos, logo_dict, "ID_MM_")
+                iddifference.write_pvalues(id_pvalues_M, id_infos, logo_dict, "ID")
 
 
 
