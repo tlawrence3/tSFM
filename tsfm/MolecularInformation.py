@@ -2118,6 +2118,7 @@ class FunctionLogoDifference:
                     perm_kld_list = self.calc_permuted_kld(permute_num, class_list, sum(state_counts_back.values()))
                     pvalue[pair[0]][single][state] = self.calc_pvalue(perm_kld_list,
                                                                       kld_infos[pair[0]][single][state])
+
             for basepair in self.basepairs[start_pair:end_pair]:
                 for state in kld_infos[pair[0]][basepair]:
                     state_counts_back = logo_dic[pair[0]].get(basepair, state)
@@ -2178,7 +2179,7 @@ class FunctionLogoDifference:
 
     def calc_pvalue(self, perm_infos, point):
         count = sum(i >= point for i in perm_infos)
-        P = count / len(perm_infos)
+        P = (count + 1) / (len(perm_infos) + 1)
         return P
 
     def shuffled(self, items, pieces=2):
@@ -2480,7 +2481,6 @@ class FunctionLogoDifference:
         pairwise_combinations = itertools.permutations(P.keys(), 2)
         for key in pairwise_combinations:
             pandasTable = pd.DataFrame(tableDict)
-
             for single in range(self.pos):
                 for state in P[key[0]][single]:
                     pandasTable.loc[
