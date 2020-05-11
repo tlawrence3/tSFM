@@ -7,150 +7,160 @@ import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
 def main():
-     #Setup parser
+    # Setup parser
     parser = argparse.ArgumentParser(description = "tsfm")
-    parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
+    # Required arguments
+    parser.add_argument("file_prefix", help="One or more prefixes of sets of input files in clustalW format. Input files expected to be named as in <prefix>_<functional-class>.<extension>, where <functional_class> is a single letter", nargs='+')
+
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-i", "--infernal", type=argparse.FileType("r"), help="Structure file is in infernal format")
-    group.add_argument("-c", "--cove", type=argparse.FileType("r"), help="Structure file is in cove format")
-    group.add_argument("-t", "--text", type=argparse.FileType("r"), help="Structure file is in text format")
-    group.add_argument("-f", "--file", action="store_true", help="use to read in previous results from file")
-    group.add_argument("-s", "--single", action="store_true", help="Calculate functional information for single sites only")
-    parser.add_argument("-p", "--proc", type = int, default = os.cpu_count(), help="Maximum number of concurrent processes. Default is number of cores reported by the OS")
-    parser.add_argument("-v","--inverse", action="store_true", help="calculate anti-determinates")
-    parser.add_argument("-a", "--alpha", type=float, default=0.05, help="Current not implemented. Default = 0.05")
-    parser.add_argument("-e", "--entropy", type=str, default = "NSB", help= "Method of entropy estimation. Either NSB or Miller. Default = NSB")
-    parser.add_argument('--max', '-x', help="Maximum sample size to calculate the exact entropy correction. Default = 10", type=int, default = 0)
-    parser.add_argument('--logo', help='Produce function logo ps files', action="store_true")
-    parser.add_argument("-P", help="Number of permutations. Default value is 0", type=int, default=0)
-    #Added command line argument for bootstrap reps
-    parser.add_argument("-b", "--bootstrap", type=int, help="Number of bootstrap reps to perform. Default = 0", default = 0)
-    parser.add_argument("-M", help = "Specify method to correct p-values for multiple-comparisons. Current methods available: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH, BY, TSBH, TSBKY, and GBS. Default is BH", default = "BH")
-    parser.add_argument("-j", "--jsd", action="store_true", help="Produce jsd pairwise distance matrix between function logos")
-    parser.add_argument("-I", "--ID", action="store_true", help="")
-    parser.add_argument("-K", "--KLD", action="store_true", help="")
-    parser.add_argument("file_prefix", help="File prefix", nargs='+')
-    parser.add_argument("--idlogo", help='ID logo', action="store_true")
-    parser.add_argument("--kldlogo", help='KLD logo', action="store_true")
-    parser.add_argument("--bt", help='bubble table', action="store_true")
-    parser.add_argument("-kldp", help="Number of permutations. Default value is 0", type=int, default=0)
-    parser.add_argument("-idp", help="Number of permutations. Default value is 0", type=int, default=0)
+    group.add_argument("-i", "--infernal", type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, in Infernal format")
+    group.add_argument("-c", "--cove",     type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, in COVE format")
+    group.add_argument("-t", "--text",     type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, is in text format")
+    group.add_argument("-s", "--single",   action="store_true", help="Do not calculate functional information of base-pair features. Calculate for single-site features only.")
+    # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
+
+    # Options
+    parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
+    parser.add_argument("-p", "--processes", type = int, default = os.cpu_count(), help="Maximum number of concurrent processes. Default is the number of cores reported by the operating system.")
+    parser.add_argument("-e", "--entropy", type=str, default = "NSB", help= "Entropy estimator to use when conditional sample sizes exceed maximum for exact calculation. Either \"NSB\" for Nemenman-Shafee-Bialek or \"Miller\" for Miller-Madow. Default is NSB")
+    parser.add_argument("-x", "--exact",   help="Maximum conditional sample size to exactly calculate entropy correction. Default = 5", type=int, default = 5)
+    parser.add_argument("-l", "--logos",   help="Visualize feature information using function/inverse function logos in extended postscript format.", action="store_true")
+    parser.add_argument("-v", "--inverse", action="store_true", help="Calculate functional information for inverse features/logos (anti-determinants under-represented in specific functional classes)")
+    parser.add_argument("-P", "--permutations",  help="Number of permutations for significance calculations of CIFs. Default is to not calculate significance of CIFs.", type=int, default=0)
+    parser.add_argument("-C", "--correction",  help = "Specify method for multiple test correction: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH", default = "BH")
+    parser.add_argument("-I", "--idlogo",  help='Compute Information Differece logos for each pair of prefixes', action="store_true")
+    parser.add_argument("-K", "--kldlogo", help='Comput Kullback-Liebler Divergence logos for each pair of prefixes', action="store_true")
+    parser.add_argument("-B", "--bt",      help='Compute input table to compute structural bubble-plots in R like those of Kelly et al. (2020)', action="store_true")
+    parser.add_argument("--kldp",          help="Number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.", type=int, default=0)
+    parser.add_argument("--idp",           help="Number of permutations to compute significance of Information Differences. Default is to not calculate signifiance (SLOW).", type=int, default=0)
+    parser.add_argument("-J", "--JSD",     help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergence", action="store_true")
+
+    # parser.add_argument("-a", "--alpha", type=float, default=0.05, help="Currently not implemented. Default = 0.05")
+    # Added command line argument for bootstrap reps
+    # parser.add_argument("-b", "--bootstrap", type=int, help="Number of bootstrap reps to perform. Default = 0", default = 0)
+
     args = parser.parse_args()
 
-    #dictionary that contains all datasets labeled by the file prefix
+    # initialize dictionary that contains all datasets labeled by the file prefix
     logo_dict = {}
 
-    #create results object from previously calculated function logos
-    if (args.file):
-        results = {}
+    # create results object from previously calculated function logos
+    #if (args.file):
+    #    results = {}
+    #    for prefix in args.file_prefix:
+    #        prefix_name = prefix.split("/")[-1]
+    #        results[prefix_name] = MolecularInformation.FunctionLogoResults(prefix, from_file = True)
+
+    # load datasets into logo objects        
+    # else:
+    
+    if (args.text):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            results[prefix_name] = MolecularInformation.FunctionLogoResults(prefix, from_file = True)
-    #load datasets into logo objects        
-    else:
-        if (args.text):
-            for prefix in args.file_prefix:
-                prefix_name = prefix.split("/")[-1]
-                logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text")
-        elif (args.cove):
-            for prefix in args.file_prefix:
-                prefix_name = prefix.split("/")[-1]
-                logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove")
-        elif (args.single):
-            for prefix in args.file_prefix:
-                prefix_name = prefix.split("/")[-1]
-                logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "s")
-
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text")
+    elif (args.cove):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name].parse_sequences(prefix)
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove")
+    elif (args.infernal):
+        for prefix in args.file_prefix:
+            prefix_name = prefix.split("/")[-1]
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.infernal, "infernal")          
+    elif (args.single):
+        for prefix in args.file_prefix:
+            prefix_name = prefix.split("/")[-1]
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "s")
 
-        #calculate exact method sample size correction
-        if (args.max):
-            for key in logo_dict:
-                print("Calculating Sample Size Correction for {}".format(key))
-                logo_dict[key].calculate_exact(args.max, args.proc)
-                if (args.inverse):
-                    print("Calculating Sample Size Correction for Inverse {}".format(key))
-                    logo_dict[key].calculate_exact(args.max, args.proc, inverse=True)
+    for prefix in args.file_prefix:
+        prefix_name = prefix.split("/")[-1]
+        logo_dict[prefix_name].parse_sequences(prefix)
 
-        #Entry point for performing bootstrap replicates
-        if (args.bootstrap):
-            print("Generating bootstrap samples")
-            for key in logo_dict:
-                logo_dict[key].bootstrap(args.bootstrap, args.proc)
-
-        #Perform function label swapping permutations and calculate entropy distribution from permuations
-        if (args.P):
-            multitest_methods = {'bonferroni': 'b', 'sidak': 's', 'holm': 'h',
-                                 'holm-sidak': 'hs', 'simes-hochberg': 'sh',
-                                 'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
-                                 'TSHB': 'fdr_tsbh', 'TSBKY': 'fdr_tsbky',
-                                 'GBS': 'fdr_gbs'}
-            perm_dict = {}
-            for key in logo_dict:
-                print("Generating permuted alignment data for {}".format(key), file=sys.stderr)
-                logo_dict[key].permute(args.P, args.proc)
-            for key in logo_dict:
-                print("Calculating permutation information for {}".format(key), file=sys.stderr)
-                perm_dict[key] = logo_dict[key].permInfo(args.entropy, args.proc)
-            if (args.inverse):
-                perm_inverse_dict = {}
-                for key in logo_dict:
-                    print("Calculating inverse permutation information for {}".format(key), file = sys.stderr)
-                    perm_inverse_dict[key] = logo_dict[key].permInfo(args.entropy, args.proc, inverse = True)
-
-        results = {}
-        #Initialization function logo result objects
+    # Calculate exact method sample size correction
+    if (args.exact):
         for key in logo_dict:
-            results[key] = MolecularInformation.FunctionLogoResults(key,
-                                                                    logo_dict[key].basepairs,
-                                                                    logo_dict[key].pos,
-                                                                    logo_dict[key].sequences,
-                                                                    logo_dict[key].pairs,
-                                                                    logo_dict[key].singles)
-        
-        if (args.entropy == "NSB"):
-            for key in logo_dict:
-                print("Calculating information statistics for {} using NSB estimator".format(key), file = sys.stderr)
-                info, height_dict = logo_dict[key].calculate_entropy_NSB()
-                results[key].add_information(info = info, height = height_dict)
-                if (args.inverse):
-                    print("Calculating inverse information statistics for {} using NSB estimator".format(key), file = sys.stderr)
-                    info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_NSB()
-                    results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
-        else:
-            for key in logo_dict:
-                print("Calculating information statistics using Miller-Maddow estimator")
-                info, height_dict = logo_dict[key].calculate_entropy_MM()
-                results[key].add_information(info = info, height = height_dict)
-                if (args.inverse):
-                    print("Calculating inverse using Miller-Maddow estimator")
-                    info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_MM()
-                    results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
+            print("Calculating Sample Size Correction for {}".format(key))
+            logo_dict[key].calculate_exact(args.exact, args.processes)
+            if (args.inverse):
+                print("Calculating Sample Size Correction for Inverse {}".format(key))
+                logo_dict[key].calculate_exact(args.exact, args.processes, inverse=True)
 
-        if (args.P):
-            print("Calculating p-values")
-            for key in results:
-                results[key].add_stats(perm_dict[key], multitest_methods[args.M])
-                if (args.inverse):
-                    results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.M], inverse = True)
+    # Entry point for performing bootstrap replicates
+    # if (args.bootstrap):
+    #    print("Generating bootstrap samples")
+    #    for key in logo_dict:
+    #        logo_dict[key].bootstrap(args.bootstrap, args.processes)
 
+    # Perform function label swapping permutations and calculate entropy distribution from permutations
+    if (args.permutations):
+        multitest_methods = {'bonferroni': 'b', 'sidak': 's', 'holm': 'h',
+                             'holm-sidak': 'hs', 'simes-hochberg': 'sh',
+                                 'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
+                                 'GBS': 'fdr_gbs'}
+        perm_dict = {}
+        for key in logo_dict:
+            print("Generating permuted alignment data for {}".format(key), file=sys.stderr)
+            logo_dict[key].permute(args.permutations, args.processes)
+        for key in logo_dict:
+            print("Calculating permutation information for {}".format(key), file=sys.stderr)
+            perm_dict[key] = logo_dict[key].permInfo(args.entropy, args.processes)
+        if (args.inverse):
+            perm_inverse_dict = {}
+            for key in logo_dict:
+                print("Calculating inverse permutation information for {}".format(key), file = sys.stderr)
+                perm_inverse_dict[key] = logo_dict[key].permInfo(args.entropy, args.processes, inverse = True)
+
+    results = {}
+    
+    #Initialization of function logo result objects
+    for key in logo_dict:
+        results[key] = MolecularInformation.FunctionLogoResults(key,
+                                                                logo_dict[key].basepairs,
+                                                                logo_dict[key].pos,
+                                                                logo_dict[key].sequences,
+                                                                logo_dict[key].pairs,
+                                                                logo_dict[key].singles)
+
+    if (args.entropy == "NSB"):
+        for key in logo_dict:
+            print("Calculating information statistics for {} using NSB estimator".format(key), file = sys.stderr)
+            info, height_dict = logo_dict[key].calculate_entropy_NSB()
+            results[key].add_information(info = info, height = height_dict)
+            if (args.inverse):
+                print("Calculating inverse information statistics for {} using NSB estimator".format(key), file = sys.stderr)
+                info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_NSB()
+                results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
+    else:
+        for key in logo_dict:
+            print("Calculating information statistics using Miller-Maddow estimator")
+            info, height_dict = logo_dict[key].calculate_entropy_MM()
+            results[key].add_information(info = info, height = height_dict)
+            if (args.inverse):
+                print("Calculating inverse using Miller-Maddow estimator")
+                info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_MM()
+                results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
+
+    if (args.permutations):
+        print("Calculating p-values")
         for key in results:
-            print("Writing text output for {}".format(key))
-            results[key].text_output()
+            results[key].add_stats(perm_dict[key], multitest_methods[args.correction])
+            if (args.inverse):
+                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], inverse = True)
+
+    for key in results:
+        print("Writing text output for {}".format(key))
+        results[key].text_output()
 
 
-        if (args.logo and not args.inverse):
-            for key in results:
-                print("Writing function logo postscript files for {}".format(key))
-                results[key].logo_output()
-        elif (args.logo and args.inverse):
-            for key in results:
-                print("Writing function logo postscript files for {}".format(key))
-                results[key].logo_output(inverse=True)
+    if (args.logos and not args.inverse):
+        for key in results:
+            print("Writing function logo postscript files for {}".format(key))
+            results[key].logo_output()
+    elif (args.logos and args.inverse):
+        for key in results:
+            print("Writing inverse function logo postscript files for {}".format(key))
+            results[key].logo_output(inverse=True)
 
-    if (args.jsd):
+    if (args.JSD):
         distance = MolecularInformation.DistanceCalculator("jsd")
         distance.get_distance(results)
 
@@ -166,7 +176,7 @@ def main():
         # Using the intersection in case one of the sequences has an unknown letter such as N.
         # pos: length of sequences which is similar for both keys (~= 72)
         # pairs: all the possible basepairs of alphabet. Using the intersection for the same reason as variable single
-        # types: 21 functiona classes, assuming both organisms have at least one sequence for each class
+        # types: 21 or 22 functional classes, assuming both organisms have at least one sequence for each class
 
         key_1 = list(logo_dict.keys())[0]
         key_2 = list(logo_dict.keys())[1]
@@ -209,9 +219,9 @@ def main():
                                                                 fore_post=results_prob_dist[pair[1]]['post'],
                                                                 ratios=ratios_dic[pair[0]])
                 if args.kldlogo:
-                    logoprifix = "KLD_"
+                    logoprefix = "KLD_"
                     results[pair[0]].add_information(info=kld_info, height=kld_height)
-                    results[pair[0]].logo_output(logo_prefix=logoprifix)
+                    results[pair[0]].logo_output(logo_prefix=logoprefix)
                 kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
 
             if args.idlogo or args.bt:
@@ -222,8 +232,8 @@ def main():
 
                 if args.idlogo:
                     results[pair[0]].add_information(info=id_info, height=id_height)
-                    logoprifix = "ID_"
-                    results[pair[0]].logo_output(logo_prefix=logoprifix)
+                    logoprefix = "ID_"
+                    results[pair[0]].logo_output(logo_prefix=logoprefix)
 
             kld_infos[pair[0]] = kld_info
             id_infos[pair[0]] = id_info
@@ -246,27 +256,27 @@ def main():
             # Calculating KLD/ID logo significance _______________________________________________________________
 
         if args.kldp:
-            print("Calculating KLD Logo significance ... ")
+            print("Calculating significance of Kullback-Leibler Divergences using NSB estimator")
             start_time = time.time()
             klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-            kld_pvalues = klddifference.calculate_kld_significance(logo_dict, kld_infos, args.kldp, args.proc)
+            kld_pvalues = klddifference.calculate_kld_significance(logo_dict, kld_infos, args.kldp, args.processes)
             print("--- Running time: %s seconds ---" % (time.time() - start_time))
             klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict, "KLD")
         if args.idp:
             if args.entropy == "NSB":
-                print("Calculating ID Logo significance with NSB ... ")
+                print("Calculating significance of information differences using NSB estimator")
                 start_time = time.time()
                 iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                id_pvalues = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.proc, args.max,
+                id_pvalues = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.processes, args.exact,
                                                                     "NSB")
                 print("--- Running time: %s seconds  ---" % (time.time() - start_time))
                 iddifference.write_pvalues(id_pvalues, id_infos, logo_dict, "ID")
             else:
-                print("Calculating ID Logo significance with Miller ... ")
+                print("Calculating significance of information differences using Miller-Maddow estimator")
                 start_time = time.time()
                 iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                id_pvalues_M = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.proc,
-                                                                      args.max, "Miller")
+                id_pvalues_M = iddifference.calculate_id_significance(logo_dict, id_infos, args.idp, args.processes,
+                                                                      args.exact, "Miller")
                 print("---Running time: %s seconds  ---" % (time.time() - start_time))
                 iddifference.write_pvalues(id_pvalues_M, id_infos, logo_dict, "ID")
 
