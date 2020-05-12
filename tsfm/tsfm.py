@@ -34,6 +34,7 @@ def main():
     parser.add_argument("--kldp",          help="Number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.", type=int, default=0)
     parser.add_argument("--idp",           help="Number of permutations to compute significance of Information Differences. Default is to not calculate signifiance (SLOW).", type=int, default=0)
     parser.add_argument("-J", "--JSD",     help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergence", action="store_true")
+    parser.add_argument("--clade", type=str, help= "Specify a single clade to be used to calculate KLd or ID of one-against-all")
 
     # parser.add_argument("-a", "--alpha", type=float, default=0.05, help="Currently not implemented. Default = 0.05")
     # Added command line argument for bootstrap reps
@@ -213,7 +214,7 @@ def main():
                 if args.kldlogo:
                     logoprefix = "KLD_"
                     results[pair[0]].add_information(info=kld_info, height=kld_height)
-                    results[pair[0]].logo_output(logo_prefix=logoprefix,logo_postfix=pair[1])
+                    results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
                 kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
 
             if args.idlogo or args.bt:
@@ -225,7 +226,7 @@ def main():
                 if args.idlogo:
                     results[pair[0]].add_information(info=id_info, height=id_height)
                     logoprefix = "ID_"
-                    results[pair[0]].logo_output(logo_prefix=logoprefix,logo_postfix=pair[1])
+                    results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
 
             kld_infos[pair[0]] = kld_info
             id_infos[pair[0]] = id_info
@@ -257,6 +258,9 @@ def main():
 
         if args.kldp:
             pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
+            if args.clade:
+                pairwise_combinations = [(x, y) for (x, y) in itertools.product(
+                    [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
             for pair in pairwise_combinations:
                 print("Calculating KLD p-values of", pair[0], "and", pair[1])
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -272,6 +276,9 @@ def main():
         if args.idp:
             if args.entropy == "NSB":
                 pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
+                if args.clade:
+                    pairwise_combinations = [(x, y) for (x, y) in itertools.product(
+                        [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
                 for pair in pairwise_combinations:
                     print("Calculating ID p-values of", pair[0], "and", pair[1])
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -288,6 +295,9 @@ def main():
 
             else:
                 pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
+                if args.clade:
+                    pairwise_combinations = [(x, y) for (x, y) in itertools.product(
+                        [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
                 for pair in pairwise_combinations:
                     print("Calculating ID p-values of", pair[0], "and", pair[1])
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
