@@ -23,7 +23,6 @@ import pandas as pd
 import tsfm.nsb_entropy as nb
 import tsfm.exact as exact
 
-
 class DistanceCalculator:
     """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
 
@@ -617,7 +616,7 @@ class FunctionLogoResults:
                     print(output_string, file=file_handle)
         file_handle.close()
 
-    def logo_output(self, inverse=False, logo_prefix=""):
+    def logo_output(self, inverse=False, logo_prefix="",logo_postfix=""):
         """
         Produce function logo postscript files
         """
@@ -658,7 +657,8 @@ class FunctionLogoResults:
             # output logodata to template
             template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
             logo_template = template_byte.decode('utf-8')
-            with open("{}{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1]), "w") as logo_output:
+            with open("{}{}_{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1], logo_postfix),
+                      "w") as logo_output:
                 src = Template(logo_template)
                 if (len(base) == 2):
                     logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()),
@@ -1777,26 +1777,23 @@ class FunctionLogoDifference:
 
     # __________________________________________________________________________
 
-    def calculate_prob_dist_pseudocounts(self, logo_dict, key):
+    def calculate_prob_dist_pseudocounts(self, logo_dict1,logo_dict2):
         """
         Calculate posterior probability p(y|x) of each symbol within for each feature using pseudo counts.
         """
-        key1 = list(logo_dict.keys())[0]
-        key2 = list(logo_dict.keys())[1]
-
         kld_post_dist = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
         kld_prior_dist = defaultdict(float)
 
-        functions_array = np.array(list(logo_dict[key].functions.values()))
-        for p in logo_dict[key].functions:
-            kld_prior_dist[p] = logo_dict[key].functions[p] / functions_array[functions_array != 0].sum()
+        functions_array = np.array(list(logo_dict1.functions.values()))
+        for p in logo_dict1.functions:
+            kld_prior_dist[p] = logo_dict1.functions[p] / functions_array[functions_array != 0].sum()
 
         # calculating the post of background/foreground
         for single in range(self.pos):
             for state in self.singles:
-                state_counts1 = logo_dict[key1].get([single], state)
-                state_counts2 = logo_dict[key2].get([single], state)
-                state_counts = logo_dict[key].get([single], state)
+                state_counts1 = logo_dict1.get([single], state)
+                state_counts2 = logo_dict2.get([single], state)
+                state_counts = logo_dict1.get([single], state)
                 if len(state_counts1.keys()) < 21 or len(
                         state_counts2.keys()) < 21:
                     for t in self.functions:
@@ -1809,9 +1806,9 @@ class FunctionLogoDifference:
 
         for pair in self.basepairs:
             for state in self.pairs:
-                state_counts1 = logo_dict[key1].get(pair, state)
-                state_counts2 = logo_dict[key2].get(pair, state)
-                state_counts = logo_dict[key].get(pair, state)
+                state_counts1 = logo_dict1.get(pair, state)
+                state_counts2 = logo_dict2.get(pair, state)
+                state_counts = logo_dict1.get(pair, state)
                 if len(state_counts1.keys()) < 21 or len(
                         state_counts2.keys()) < 21:
                     for t in self.functions:
@@ -2454,8 +2451,6 @@ class FunctionLogoDifference:
         return H - ((k - 1) / ((mt.log(4)) * N))
 
     def write_pvalues(self, P, height, logo_dic, prefix):
-
-        print("Writing p-values results in a text file ")
         tableDict = {}
         nameSet = ["coord", "state", "P-value", "height", "B-sample-size",
                    "F-sample-size"]
