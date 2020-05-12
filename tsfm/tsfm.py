@@ -74,7 +74,6 @@ def main():
     for prefix in args.file_prefix:
         prefix_name = prefix.split("/")[-1]
         logo_dict[prefix_name].parse_sequences(prefix)
-
     # Calculate exact method sample size correction
     if (args.exact):
         for key in logo_dict:
@@ -108,7 +107,6 @@ def main():
             for key in logo_dict:
                 print("Calculating inverse permutation information for {}".format(key), file = sys.stderr)
                 perm_inverse_dict[key] = logo_dict[key].permInfo(args.entropy, args.processes, inverse = True)
-
     results = {}
     
     #Initialization of function logo result objects
@@ -150,7 +148,6 @@ def main():
         print("Writing text output for {}".format(key))
         results[key].text_output()
 
-
     if (args.logos and not args.inverse):
         for key in results:
             print("Writing function logo postscript files for {}".format(key))
@@ -169,8 +166,7 @@ def main():
         info_height_dic = {}
         for key in results:
             info_height_dic[key] = {"info": results[key].info, "height": results[key].height}
-
-        # Initializing class FunctionLogoDifference  __________________________________________________________________
+            
         results_prob_dist = {}
         post_nopseudo = {}
 
