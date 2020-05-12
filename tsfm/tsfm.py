@@ -202,7 +202,6 @@ def main():
         # Dictionary used in significance calculation
         kld_infos = {}
         id_infos = {}
-
         pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
         if args.clade:
             pairwise_combinations = [(x, y) for (x, y) in itertools.product(
@@ -230,6 +229,7 @@ def main():
                     logoprefix = "KLD_"
                     results[pair[0]].add_information(info=kld_info, height=kld_height)
                     results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
+
                 kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
 
             if args.idlogo or args.bt:
@@ -243,10 +243,12 @@ def main():
                     logoprefix = "ID_"
                     results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
 
+
             kld_infos[pair[0]] = kld_info
             id_infos[pair[0]] = id_info
 
             # Creating table for bubble plots ______________________________________________________________________
+
         if args.bt:
             pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
             if args.clade:
