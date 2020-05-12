@@ -23,7 +23,6 @@ import pandas as pd
 import tsfm.nsb_entropy as nb
 import tsfm.exact as exact
 
-
 class DistanceCalculator:
     """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
 
