@@ -2452,7 +2452,6 @@ class FunctionLogoDifference:
         return H - ((k - 1) / ((mt.log(4)) * N))
 
     def write_pvalues(self, P, height, logo_dic, prefix):
-
         tableDict = {}
         nameSet = ["coord", "state", "P-value", "height", "B-sample-size",
                    "F-sample-size"]

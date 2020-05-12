@@ -109,7 +109,6 @@ def main():
             for key in logo_dict:
                 print("Calculating inverse permutation information for {}".format(key), file = sys.stderr)
                 perm_inverse_dict[key] = logo_dict[key].permInfo(args.entropy, args.processes, inverse = True)
-
     results = {}
     
     #Initialization of function logo result objects
@@ -151,7 +150,6 @@ def main():
         print("Writing text output for {}".format(key))
         results[key].text_output()
 
-
     if (args.logos and not args.inverse):
         for key in results:
             print("Writing function logo postscript files for {}".format(key))
@@ -170,8 +168,6 @@ def main():
         info_height_dic = {}
         for key in results:
             info_height_dic[key] = {"info": results[key].info, "height": results[key].height}
-
-        # Initializing class FunctionLogoDifference  __________________________________________________________________
         results_prob_dist = {}
         post_nopseudo = {}
 
@@ -200,6 +196,7 @@ def main():
             single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
             difference = MolecularInformation.FunctionLogoDifference(results[pair[0]].pos, logo_dict[pair[0]].functions,
                                                                      pairs, results[pair[0]].basepairs, single)
+
             ratios_dic[pair[0]] = difference.calculate_ratios(back_prior=results_prob_dist[pair[0]]['prior'],
                                                               fore_prior=results_prob_dist[pair[1]]['prior'],
                                                               back_post=results_prob_dist[pair[0]]['post'],
@@ -250,8 +247,7 @@ def main():
                                               kld_height=kld_height_dic[pair[0]]['height'],
                                               fore=pair[1])
 
-            # Calculating KLD/ID logo significance _______________________________________________________________
-
+            # Calculating KLD/ID logo significance ______________________________________________________________
         pos = results[list(logo_dict.keys())[0]].pos
         basepair = results[list(logo_dict.keys())[0]].basepairs
         types = logo_dict[list(logo_dict.keys())[0]].functions
