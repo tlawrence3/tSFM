@@ -131,7 +131,7 @@ def main():
                 results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
                 
     if (args.permutations):
-        print("Calculating p-values")
+        print("Calculating p-values using {} multiple test correction".format(args.correction))
         for key in results:
             results[key].add_stats(perm_dict[key], multitest_methods[args.correction])
             if (args.inverse):
