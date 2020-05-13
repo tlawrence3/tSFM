@@ -517,8 +517,6 @@ class FunctionLogoResults:
         Write results to file named\: :attr:`name`\_results.txt
         """
         # build output heading
-        import pdb 
-        pdb.set_trace()
         file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
         heading_dict = {}
         if (self.p):
