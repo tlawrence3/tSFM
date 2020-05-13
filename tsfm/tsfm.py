@@ -14,8 +14,8 @@ def main():
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-i", "--infernal", type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, in Infernal format")
-    group.add_argument("-c", "--cove",     type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, in COVE format")
-    group.add_argument("-t", "--text",     type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, is in text format")
+    group.add_argument("-c", "--cove",     type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, in COVE format. Example: \"#=CS  >>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....\n#=CS      ...<<<<<<<<<<<<.\"")
+    group.add_argument("-t", "--text",     type=argparse.FileType("r"), help="Secondary structure file, required to calculate functional information of base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
     group.add_argument("-s", "--single",   action="store_true", help="Do not calculate functional information of base-pair features. Calculate for single-site features only.")
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
@@ -35,10 +35,6 @@ def main():
     parser.add_argument("--idp",           help="Number of permutations to compute significance of Information Differences. Default is to not calculate signifiance (SLOW).", type=int, default=0)
     parser.add_argument("-J", "--JSD",     help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergence", action="store_true")
     parser.add_argument("--clade", type=str, help= "Specify a single clade to be used to calculate KLd or ID of one-against-all")
-
-    # parser.add_argument("-a", "--alpha", type=float, default=0.05, help="Currently not implemented. Default = 0.05")
-    # Added command line argument for bootstrap reps
-    # parser.add_argument("-b", "--bootstrap", type=int, help="Number of bootstrap reps to perform. Default = 0", default = 0)
 
     args = parser.parse_args()
 
@@ -84,12 +80,6 @@ def main():
             if (args.inverse):
                 print("Calculating Sample Size Correction for Inverse {}".format(key))
                 logo_dict[key].calculate_exact(args.exact, args.processes, inverse=True)
-
-    # Entry point for performing bootstrap replicates
-    # if (args.bootstrap):
-    #    print("Generating bootstrap samples")
-    #    for key in logo_dict:
-    #        logo_dict[key].bootstrap(args.bootstrap, args.processes)
 
     # Perform function label swapping permutations and calculate entropy distribution from permutations
     if (args.permutations):
@@ -196,8 +186,8 @@ def main():
             post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
 
         kld_height_dic = {}  # KLDs are saved with the background key
-        ratios_dic = {}  # ratios are saved with the background key
-        id_height_dic = {}  # IDs are saved with background key
+        ratios_dic = {}      # ratios are saved with the background key
+        id_height_dic = {}   # IDs are saved with background key
 
         # Dictionary used in significance calculation
         kld_infos = {}
