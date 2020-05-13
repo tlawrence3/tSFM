@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """This module contains classes for calculating functional molecular information statistics.
-
 """
 from collections import Counter, defaultdict
 from multiprocessing import Pool
@@ -25,13 +24,10 @@ import tsfm.exact as exact
 
 class DistanceCalculator:
     """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
-
     Currently, a `DistanceCalculator` object can calculate pairwise distance using the square-root of the Jensen-Shannon
     divergence and will print the resulting distance matrix to stdout.
-
     Args:
         distance (str): Indicates which distance metric to use for pairwise calculations.
-
     Attributes:
         distanceMetric (str): Indicates the distance metric to be used in
             pairwise calculations.
@@ -39,17 +35,13 @@ class DistanceCalculator:
             features contained in the function logos being compared (e.g. 1A, 173AU).
         functionSet (:obj:`set` of :obj:`str`): A :obj:`set` of the functional
             classes contained in the function logos being compared.
-
     Example::
-
         x = tsfm.MolecularInformation.DistanceCalculator('jsd')
         x.get_distance(function_logos)
-
     """
 
     def __init__(self, distance):
         """The initialization of a `DistanceCalculator` object requires a :str: indicating the distance metric to be used.
-
         """
         self.distanceMetric = distance
         self.featureSet = set()
@@ -58,13 +50,10 @@ class DistanceCalculator:
     def get_distance(self, ResultsDict):
         """
         Prints a pairwise distance matrix using the distance metric indicated during instantiation to file.
-
         Args:
             ResultsDict (:obj:`dict` of :obj:`str` mapping to :class:`FunctionLogoResults`):
                 The values of the :obj:`dict` are compared using the selected pairwise
                 distance metric.
-
-
         Note:
             Creates a :obj:`dict` of :obj:`str`: :class:`pandas.DataFrame` from
             :obj:`ResultsDict`. The index of the dataframes are the union
@@ -80,7 +69,6 @@ class DistanceCalculator:
             passed to the distance method set when the :class:`DistanceCalculator`
             was instantiated. Below is an example of the :class:`pandas.DataFrame`
             created\:
-
             +--------+-------+-------+-------+-------+-------+-------+--------+
             |        |   A   |   C   |   D   |   E   |   F   |   E   |  bits  |
             +========+=======+=======+=======+=======+=======+=======+========+
@@ -88,7 +76,6 @@ class DistanceCalculator:
             +--------+-------+-------+-------+-------+-------+-------+--------+
             |   1U   | 0.000 | 0.250 | 0.125 | 0.500 | 0.125 | 0.000 | 2.453  |
             +--------+-------+-------+-------+-------+-------+-------+--------+
-
         """
         for result in ResultsDict:
             for coord in ResultsDict[result].basepairs:
@@ -176,11 +163,9 @@ class DistanceCalculator:
     def rJSD(self, pandasDict):
         """
         Produces pairwise comparisons using rJSD metric
-
         This is method should not be directly called. Instead use the
         :meth:`get_distance`. All pairwise comparsions of OTUs are produced
         and :meth:`rJSD_distance` is called to do the calculations.
-
         Args:
             pandasDict (:obj:`dict` of `str` mapping to :class:`pandas.DataFrame`):
                 See :meth:`get_distance` for the format of the Data Frames.
@@ -209,13 +194,9 @@ class DistanceCalculator:
     def rJSD_distance(self, dist1, dist2, Ix, Iy):
         r"""
         Weighted square root of the generalized Jensen-Shannon divergence defined by Lin 1991
-
         .. math::
-
             D(X,Y) \equiv \sum_{f \in F} (I_f^X + I_f^Y) \sqrt{H[\pi_f^X p_f^X + \pi_f^Y p_f^Y] - (\pi_f^X H[p_f^X] + \pi_f^Y H[p_f^Y])}
-
         where :math:`\pi_f^X = \frac{I_f^X}{I_f^X + I_f^Y}` and :math:`\pi_f^Y = \frac{I_f^Y}{I_f^X + I_f^Y}`
-
         """
 
         pi1 = Ix / (Ix + Iy)
@@ -227,76 +208,62 @@ class DistanceCalculator:
 class FunctionLogoResults:
     """
     Stores results from information calculations and provides methods for text output and visualization.
-
     Args:
         name (:obj:`str`): Value is used as prefix for output files.
         basepairs (:obj:`list` of :obj:`tuples` of (:obj:`int`, :obj:`int`)):
             a list of basepair coordinates encoded as a :obj:`tuple` of two
             :obj:`int`.
-
             Note:
                 This data structure is created as an attribute of
                 :class:`FunctionLogo` during instantiation and can be accessed
                 with :attr:`FunctionLogo.basepairs` or created during
                 instantiation of this class when ``from_file = True``
         pos (:obj:`int`): Stores length of the alignment.
-
             Note:
                 See note for :attr:`basepairs`. Accessed using :attr:`FunctionLogo.pos`.
         sequences (:obj:`list` of :class:`Seq`): a list of :class:`Seq` objects
             used for text output and visualization.
-
             Note:
                 See note for :attr:`basepairs`. Accessed using :attr:`FunctionLogo.seq`
         pairs (:obj:`set` of :obj:`str`): unique basepair states found in the dataset.
-
             Note:
                 See note for :attr:`basepairs`.
         singles (:obj:`set` of :obj:`str`): unique states for single sites.
-
             Note:
                 See note for :attr:`basepairs`.
-
         info (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features to information content. Add this data structure using :meth:`add_information`.
-
             Note:
                 This data structure is output of
                 :meth:`FunctionLogo.calculate_entropy_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_MM()`.
         height (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features and functional class to class height. Add this data structure using :meth:`add_information`.
-
             Note:
                 This data structure is output of
                 :meth:`FunctionLogo.calculate_entropy_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_MM()`.
         inverseInfo (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features to information content for anti-determinants. Add this data structure using :meth:`add_information`.
-
             Note:
                 This data structure is output of
                 :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_inverse_MM()`.
         inverseHeight (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
             mapping of structural features and functional class to class height for anti-determinants. Add this data structure using :meth:`add_information`.
-
             Note:
                 This data structure is output of
                 :meth:`FunctionLogo.calculate_entropy_inverse_NSB()` or
                 :meth:`FunctionLogo.calculate_entropy_inverse_MM()`.
         p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values.
-
             Note:
                 This data structure is created using :meth:`add_stats()`
         inverse_p (:obj:`dict` of :obj:`str` mapping to :obj:`dict`): mapping of structural features and class height to p-values for anti-determinants
-
             Note:
                 This data structure is created using :meth:`add_stats()`
         from_file (:obj:`bool`): create :class:`FunctionLogoResults`
             object from file written with
             :meth:`FunctionLogResults.text_output`
-
     """
 
     def __init__(self, name, basepairs=None, pos=0, sequences=None, pairs=None, singles=None, info=None,
@@ -362,10 +329,8 @@ class FunctionLogoResults:
     def from_file(self, file_name):
         """
         Read previously calculated results from file.
-
         Populates :class:`FunctionLogoResults` from previously calculated
         results written to a file using :meth:`text_output`.
-
         Args:
             file_name(:obj:`str`): File path of previously caclulated results
         """
@@ -446,7 +411,6 @@ class FunctionLogoResults:
     def add_information(self, info, height, inverse=False):
         """
         Add data structures containing results from information calculations
-
         This method is used to add results from
         :meth:`FunctionLogo.calculate_entropy_NSB()`,
         :meth:`FunctionLogo.calculate_entropy_MM()`,
@@ -454,7 +418,6 @@ class FunctionLogoResults:
         :meth:`FunctionLogo.calculate_entropy_inverse_MM()`. If reading previous
         results from a file this method is unnecessary because these data structures
         are populated from values in the file.
-
         Args:
             info (:obj:`dict`): mapping of structural features to information
                 content. This data structure is output of
@@ -477,13 +440,11 @@ class FunctionLogoResults:
     def add_stats(self, distribution, correction, inverse=False):
         """
         Perform statisical testing and multiple test correction
-
         Calculates p-values and multiple testing corrected p-values for
         structural features and functional class heights. Requires an
         instance of :class:`FunctionLogoDist` and calls the
         :meth:`FunctionLogoDist.stat_test`. Methods for multiple test
         correction are provided by :class:`statsmodels.stats.multitest`.
-
         Args:
             distribution (:class:`FunctionLogoDist`): discrete probability
                 distributions of information content of structural
@@ -512,7 +473,7 @@ class FunctionLogoResults:
 
         return ret_counter
 
-    def text_output(self):
+    def text_output(self, correction):
         """
         Write results to file named\: :attr:`name`\_results.txt
         """
@@ -520,8 +481,8 @@ class FunctionLogoResults:
         file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
         heading_dict = {}
         if (self.p):
-            heading_dict['P'] = "\tp-value\t{}".format(self.correction)
-            heading_dict['p'] = "\tclass:height:p-value:{}".format(self.correction)
+            heading_dict['P'] = "\tp-value \t{:<10}".format(correction)
+            heading_dict['p'] = "\tclass:height:p-value:{}".format(correction)
         else:
             heading_dict['P'] = ""
             heading_dict['p'] = "\tclass:height"
@@ -657,7 +618,7 @@ class FunctionLogoResults:
             # output logodata to template
             template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
             logo_template = template_byte.decode('utf-8')
-            with open("{}{}_{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1], logo_postfix),
+            with open("{}{}_{}{}.eps".format(logo_prefix, base, self.name.split("/")[-1], logo_postfix),
                       "w") as logo_output:
                 src = Template(logo_template)
                 if (len(base) == 2):
@@ -730,7 +691,6 @@ class FunctionLogoDist:
     distribution are inferred from the permuted data and
     :class:`FunctionLogoDist` objects created using
     :meth:`FunctionLogo.permInfo`.
-
     Attributes:
         bpinfodist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             Discrete probability distribution of basepair feature information
@@ -742,7 +702,6 @@ class FunctionLogoDist:
         singleheightdist (:obj:`dict` of :obj:`float` mapping to :obj:`int`):
             Discrete probability distribution of functional class
             information of single base features
-
     """
 
     def __init__(self):
@@ -772,12 +731,10 @@ class FunctionLogoDist:
     def stat_test(self, info, height, correction):
         """
         Performs statistical tests and multiple test correction.
-
         Calculates a p-value using a right tail probability test on the
         instance's discrete probability distributions. Methods for multiple test
         correction are provided by :class:`statsmodels.stats.multitest`. This
         method is usually invoked using :meth:`FunctionLogoResults.add_stats`.
-
         Args:
             info (:obj:`dict` of :obj:`int` or :obj:`tuple` mapping to :obj:`dict` of :obj:`str` mapping to :obj:`float`):
                 mapping of structural features to information content.
@@ -877,7 +834,6 @@ class FunctionLogoDist:
 class Seq:
     """
     Providing a data structure constisting of a molecular sequence labeled with a functional class.
-
     Args:
         function (:obj:`str`): Functional annotation of the sequence.
         seq (:obj:`str`): Molecular sequence data.
@@ -894,17 +850,14 @@ class Seq:
 class FunctionLogo:
     """
     Parses structural and sequence infomation and provides methods for Function Logo calculations
-
     This class provided data structures and methods for calculating
     functional information of basepair a single base features. Additionally,
     methods for producing permuted data sets with function class labels
     shuffled.
-
     Args:
         struct_file (:obj:`str`): File name containing secondary structure
             notation in cove, infernal, or text format.
         kind (:obj:`str`): secondary structure notation format.
-
     """
 
     def __init__(self, struct_file, kind=None, exact_init=None, inverse_init=None):
@@ -934,14 +887,11 @@ class FunctionLogo:
     def parse_sequences(self, file_prefix):
         """
         Parse sequence alignment data in clustal format
-
         Sequence alignment files are required to be in clustal format with
         each functional class having its own file. Alignment files must
         conform to the naming standard ``fileprefix_functionalclass.aln``.
-
         Args:
             file_prefix (:obj:`str`): Prefix used to identify a group of alignment files.
-
         """
         for fn in glob.glob("{}_?.aln".format(file_prefix)):
             match = re.search(r"_([A-Z])\.aln", fn)
@@ -975,7 +925,6 @@ class FunctionLogo:
     def parse_struct(self, struct_file, kind):
         """
         Parse secondary structure file for basepair locations.
-
         Args:
         struct_file (:obj:`str`): File containing structural annotation
         kind (:obj:`str`): Structural annotation format
@@ -1113,7 +1062,6 @@ class FunctionLogo:
     def permute(self, permute_num, proc):
         """
         Creates permuted datasets by shuffling functional annotation labels of sequences.
-
         Args:
             permute_num (:obj:`int`): Number of permutations to perform
             proc (:obj:`int`): Number of concurrent processes to run
@@ -1165,11 +1113,9 @@ class FunctionLogo:
     def permInfo(self, method, proc, inverse=False):
         """
         Calculate functional information statistics of permuted datasets.
-
         Args:
             method (:obj:`str`): Entropy estimation method. Either NSB or Miller-Maddow.
             proc (:obj:`int`): Number of concurrent processes to run.
-
         Return:
         perm_dist (:class:`FunctionLogoDist`): Discrete distribution of 
             functional information estimated from permuted datasets.
@@ -1299,7 +1245,6 @@ class FunctionLogo:
     def calculate_exact(self, n, proc, inverse=False):
         """
         Exact method of small sample size correction.
-
         Calculate the exact method of sample size correction for up to N samples.
         Computational intensive portion of the calculation is implemented as a C
         extension. This method is fully described in Schneider et al 1986. 
@@ -1307,7 +1252,6 @@ class FunctionLogo:
         expensive to calculate beyond a sample size of 16. The correction 
         factor of each sample size will be calculated in parallel up to 
         :obj:`proc` at a time.
-
         Args:
             n (:obj:`int`): Calculate correction up to this sample size.
             proc (:obj:`int`): Number of concurrent processes to run
@@ -2451,7 +2395,6 @@ class FunctionLogoDifference:
         return H - ((k - 1) / ((mt.log(4)) * N))
 
     def write_pvalues(self, P, height, logo_dic, prefix):
-
         tableDict = {}
         nameSet = ["coord", "state", "P-value", "height", "B-sample-size",
                    "F-sample-size"]
