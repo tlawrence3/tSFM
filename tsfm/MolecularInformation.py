@@ -520,7 +520,7 @@ class FunctionLogoResults:
         file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
         heading_dict = {}
         if (self.p):
-            heading_dict['P'] = "\tp-value \t{}".format(correction)
+            heading_dict['P'] = "\tp-value \t{:<10}".format(correction)
             heading_dict['p'] = "\tclass:height:p-value:{}".format(correction)
         else:
             heading_dict['P'] = ""
