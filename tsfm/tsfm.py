@@ -8,33 +8,69 @@ from tsfm._version import __version__
 
 def main():
     # Setup parser
-    parser = argparse.ArgumentParser(description = "tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergence for tRNAs, and other RNA families.",epilog = "Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
+    parser = argparse.ArgumentParser(
+        description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergence for tRNAs, and other RNA families.",
+        epilog="Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
     # Required arguments
-    parser.add_argument("file_prefix", help="One or more prefixes of sets of input files in clustalW format. Input files expected to be named as in <prefix>_<functional-class>.<extension>, where <functional_class> is a single letter", nargs='+')
+    parser.add_argument("file_prefix",
+                        help="One or more prefixes of sets of input files in clustalW format. Input files expected to be named as in <prefix>_<functional-class>.<extension>, where <functional_class> is a single letter",
+                        nargs='+')
 
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("-i", "--infernal", type=argparse.FileType("r"), help="Use secondary structure file INFERNAL, required to calculate functional information of base-pair features, in Infernal format")
-    group.add_argument("-c", "--cove",     type=argparse.FileType("r"), help="Use secondary structure file COVE, required to calculate functional information of base-pair features, in COVE format. Example: \"#=CS  >>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....\n#=CS      ...<<<<<<<<<<<<.\"")
-    group.add_argument("-t", "--text",     type=argparse.FileType("r"), help="Use secondary structure file TEXT, required to calculate functional information of base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
-    group.add_argument("-s", "--single",   action="store_true", help="Do not calculate functional information of base-pair features. Calculate for single-site features only.")
+    group.add_argument("-i", "--infernal", type=argparse.FileType("r"),
+                       help="Use secondary structure file INFERNAL, required to calculate functional information of base-pair features, in Infernal format")
+    group.add_argument("-c", "--cove", type=argparse.FileType("r"),
+                       help="Use secondary structure file COVE, required to calculate functional information of base-pair features, in COVE format. Example: \"#=CS  >>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....\n#=CS      ...<<<<<<<<<<<<.\"")
+    group.add_argument("-t", "--text", type=argparse.FileType("r"),
+                       help="Use secondary structure file TEXT, required to calculate functional information of base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
+    group.add_argument("-s", "--single", action="store_true",
+                       help="Do not calculate functional information of base-pair features. Calculate for single-site features only.")
+
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
     # Options
     parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
-    parser.add_argument("-p", "--processes", type = int, default = os.cpu_count(), help="Set the maximum number of concurrent processes. Default is the number of cores reported by the operating system.")
-    parser.add_argument("-e", "--entropy", type=str, default = "NSB", help= "Use entropy estimator ENTROPY when conditional sample sizes exceed maximum for exact calculation. If value is \"NSB\", use Nemenman-Shafee-Bialek estimator. If value is \"MM\", use Miller-Madow estimator. Default is NSB",choices=['NSB','MM'])
-    parser.add_argument("-x", "--exact",   help="Maximum conditional sample size to exactly calculate entropy correction. Default = 5", type=int, default = 5)
-    parser.add_argument("-l", "--logos",   help="Visualize feature information using function/inverse function logos in extended postscript format.", action="store_true")
-    parser.add_argument("-v", "--inverse", action="store_true", help="Additionally calculate functional information for inverse features/logos (anti-determinants under-represented in specific functional classes)")
-    parser.add_argument("-P", "--permutations", help = "Number of permutations for significance calculations of CIFs. Default is to not calculate significance of CIFs.", type=int, default=0)
-    parser.add_argument("-C", help = "Specify method for multiple test correction: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH", default = "BH", choices=['bonferroni','sidak','holm','holm-sidak','simes-hochberg','hommel','BH','BY','GBS'],dest="correction")
-    parser.add_argument("-I", "--idlogo",  help='Compute Information Differece logos for each pair of prefixes', action="store_true")
-    parser.add_argument("-K", "--kldlogo", help='Comput Kullback-Liebler Divergence logos for each pair of prefixes', action="store_true")
-    parser.add_argument("-B", "--bt",      help='Compute input table to compute structural bubble-plots in R like those of Kelly et al. (2020)', action="store_true")
-    parser.add_argument("--kldp",          help="Number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.", type=int, default=0)
-    parser.add_argument("--idp",           help="Number of permutations to compute significance of Information Differences. Default is to not calculate signifiance (SLOW).", type=int, default=0)
-    parser.add_argument("-J", "--JSD",     help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergence", action="store_true")
-    parser.add_argument("--clade", type=str, help= "Specify a single clade to be used to calculate KLD or ID of one-against-all")
+
+    parser.add_argument("-p", "--processes", type=int, default=os.cpu_count(),
+                        help="Set the maximum number of concurrent processes. Default is the number of cores reported by the operating system.")
+    parser.add_argument("-e", "--entropy", type=str, default="NSB",
+                        help="Use entropy estimator ENTROPY when conditional sample sizes exceed maximum for exact calculation. If value is \"NSB\", use Nemenman-Shafee-Bialek estimator. If value is \"MM\", use Miller-Madow estimator. Default is NSB",
+                        choices=['NSB', 'MM'])
+    parser.add_argument("-x", "--exact",
+                        help="Maximum conditional sample size to exactly calculate entropy correction. Default = 5",
+                        type=int, default=5)
+    parser.add_argument("-l", "--logos",
+                        help="Visualize feature information using function/inverse function logos in extended postscript format.",
+                        action="store_true")
+    parser.add_argument("-v", "--inverse", action="store_true",
+                        help="Additionally calculate functional information for inverse features/logos (anti-determinants under-represented in specific functional classes)")
+    parser.add_argument("-P", "--permutations",
+                        help="Number of permutations for significance calculations of CIFs. Default is to not calculate significance of CIFs.",
+                        type=int, default=0)
+    parser.add_argument("-C",
+                        help="Specify method for multiple test correction: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH",
+                        default="BH",
+                        choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY',
+                                 'GBS'], dest="correction")
+    parser.add_argument("-I", "--idlogo", help='Compute Information Differece logos for each pair of prefixes',
+                        action="store_true")
+    parser.add_argument("-K", "--kldlogo", help='Comput Kullback-Liebler Divergence logos for each pair of prefixes',
+                        action="store_true")
+    parser.add_argument("-B", "--bt",
+                        help='Compute input table to compute structural bubble-plots in R like those of Kelly et al. (2020)',
+                        action="store_true")
+    parser.add_argument("--kldp",
+                        help="Number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.",
+                        type=int, default=0)
+    parser.add_argument("--idp",
+                        help="Number of permutations to compute significance of Information Differences. Default is to not calculate signifiance (SLOW).",
+                        type=int, default=0)
+    parser.add_argument("-J", "--JSD",
+                        help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergence",
+                        action="store_true")
+    parser.add_argument("--clade", type=str,
+                        help="Specify a single clade to be used to calculate KLD or ID of one-against-all")
+
 
     args = parser.parse_args()
 
@@ -42,15 +78,15 @@ def main():
     logo_dict = {}
 
     # create results object from previously calculated function logos
-    #if (args.file):
+    # if (args.file):
     #    results = {}
     #    for prefix in args.file_prefix:
     #        prefix_name = prefix.split("/")[-1]
     #        results[prefix_name] = MolecularInformation.FunctionLogoResults(prefix, from_file = True)
 
-    # load datasets into logo objects        
+    # load datasets into logo objects
     # else:
-    
+
     if (args.text):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
@@ -62,7 +98,7 @@ def main():
     elif (args.infernal):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.infernal, "infernal")          
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.infernal, "infernal")
     elif (args.single):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
@@ -85,8 +121,8 @@ def main():
     if (args.permutations):
         multitest_methods = {'bonferroni': 'b', 'sidak': 's', 'holm': 'h',
                              'holm-sidak': 'hs', 'simes-hochberg': 'sh',
-                                 'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
-                                 'GBS': 'fdr_gbs'}
+                             'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
+                             'GBS': 'fdr_gbs'}
         perm_dict = {}
         for key in logo_dict:
             print("Generating permuted alignment data for {}".format(key), file=sys.stderr)
@@ -98,11 +134,11 @@ def main():
             perm_inverse_dict = {}
             for key in logo_dict:
                 print("Calculating inverse permutation information for {}".format(key), file = sys.stderr)
-                perm_inverse_dict[key] = logo_dict[key].permInfo(args.entropy, args.processes, inverse = True)
+                perm_inverse_dict[key] = logo_dict[key].permInfo(args.entropy, args.processes, inverse=True)
 
     results = {}
-    
-    #Initialization of function logo result objects
+
+    # Initialization of function logo result objects
     for key in logo_dict:
         results[key] = MolecularInformation.FunctionLogoResults(key,
                                                                 logo_dict[key].basepairs,
@@ -115,32 +151,33 @@ def main():
         for key in logo_dict:
             print("Calculating information statistics for {} using NSB estimator".format(key), file = sys.stderr)
             info, height_dict = logo_dict[key].calculate_entropy_NSB()
-            results[key].add_information(info = info, height = height_dict)
+            results[key].add_information(info=info, height=height_dict)
             if (args.inverse):
-                print("Calculating inverse information statistics for {} using NSB estimator".format(key), file = sys.stderr)
+                print("Calculating inverse information statistics for {} using NSB estimator".format(key), file
+                      = sys.stderr)
                 info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_NSB()
-                results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
+                results[key].add_information(info=info_inverse, height=height_dict_inverse, inverse=True)
+
     elif (args.entropy == "MM"):
         for key in logo_dict:
             print("Calculating information statistics using Miller-Maddow estimator")
             info, height_dict = logo_dict[key].calculate_entropy_MM()
-            results[key].add_information(info = info, height = height_dict)
+            results[key].add_information(info=info, height=height_dict)
             if (args.inverse):
                 print("Calculating inverse using Miller-Maddow estimator")
                 info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_MM()
-                results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
-                
+                results[key].add_information(info=info_inverse, height=height_dict_inverse, inverse=True)
+
     if (args.permutations):
         print("Calculating p-values using {} multiple test correction".format(args.correction))
         for key in results:
             results[key].add_stats(perm_dict[key], multitest_methods[args.correction])
             if (args.inverse):
-                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], inverse = True)
+                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], inverse=True)
 
     for key in results:
         print("Writing text output for {}".format(key))
         results[key].text_output(args.correction)
-
 
     if (args.logos and not args.inverse):
         for key in results:
@@ -221,6 +258,7 @@ def main():
                     results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
 
                 kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
+                kld_infos[pair[0]] = kld_info
 
             if args.idlogo or args.bt:
                 id_info = difference.calculate_logoID_infos(info_b=info_height_dic[pair[0]]['info'],
@@ -232,10 +270,7 @@ def main():
                     results[pair[0]].add_information(info=id_info, height=id_height)
                     logoprefix = "ID_"
                     results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
-
-
-            kld_infos[pair[0]] = kld_info
-            id_infos[pair[0]] = id_info
+                id_infos[pair[0]] = id_info
 
             # Creating table for bubble plots ______________________________________________________________________
 
