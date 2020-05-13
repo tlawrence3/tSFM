@@ -120,7 +120,7 @@ def main():
                 print("Calculating inverse information statistics for {} using NSB estimator".format(key), file = sys.stderr)
                 info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_NSB()
                 results[key].add_information(info = info_inverse, height = height_dict_inverse, inverse = True)
-    else if (args.entropy == "MM"):
+    elif (args.entropy == "MM"):
         for key in logo_dict:
             print("Calculating information statistics using Miller-Maddow estimator")
             info, height_dict = logo_dict[key].calculate_entropy_MM()
