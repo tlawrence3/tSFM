@@ -512,16 +512,18 @@ class FunctionLogoResults:
 
         return ret_counter
 
-    def text_output(self):
+    def text_output(self, correction):
         """
         Write results to file named\: :attr:`name`\_results.txt
         """
         # build output heading
+        import pdb 
+        pdb.set_trace()
         file_handle = open("{}_results.txt".format(self.name.split("/")[-1]), "w")
         heading_dict = {}
         if (self.p):
-            heading_dict['P'] = "\tp-value\t{}".format(self.correction)
-            heading_dict['p'] = "\tclass:height:p-value:{}".format(self.correction)
+            heading_dict['P'] = "\tp-value\t{}".format(correction)
+            heading_dict['p'] = "\tclass:height:p-value:{}".format(correction)
         else:
             heading_dict['P'] = ""
             heading_dict['p'] = "\tclass:height"

@@ -139,7 +139,7 @@ def main():
 
     for key in results:
         print("Writing text output for {}".format(key))
-        results[key].text_output()
+        results[key].text_output(args.correction)
 
 
     if (args.logos and not args.inverse):
