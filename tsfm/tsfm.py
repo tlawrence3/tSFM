@@ -8,7 +8,7 @@ from tsfm._version import __version__
 
 def main():
     # Setup parser
-    parser = argparse.ArgumentParser(description = "tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features and their evolutionary divergence for tRNAs, and other RNA families.",epilog = "Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
+    parser = argparse.ArgumentParser(description = "tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergence for tRNAs, and other RNA families.",epilog = "Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
     # Required arguments
     parser.add_argument("file_prefix", help="One or more prefixes of sets of input files in clustalW format. Input files expected to be named as in <prefix>_<functional-class>.<extension>, where <functional_class> is a single letter", nargs='+')
 
@@ -25,7 +25,7 @@ def main():
     parser.add_argument("-e", "--entropy", type=str, default = "NSB", help= "Use entropy estimator ENTROPY when conditional sample sizes exceed maximum for exact calculation. If value is \"NSB\", use Nemenman-Shafee-Bialek estimator. If value is \"MM\", use Miller-Madow estimator. Default is NSB",choices=['NSB','MM'])
     parser.add_argument("-x", "--exact",   help="Maximum conditional sample size to exactly calculate entropy correction. Default = 5", type=int, default = 5)
     parser.add_argument("-l", "--logos",   help="Visualize feature information using function/inverse function logos in extended postscript format.", action="store_true")
-    parser.add_argument("-v", "--inverse", action="store_true", help="Calculate functional information for inverse features/logos (anti-determinants under-represented in specific functional classes)")
+    parser.add_argument("-v", "--inverse", action="store_true", help="Additionally calculate functional information for inverse features/logos (anti-determinants under-represented in specific functional classes)")
     parser.add_argument("-P", "--permutations", help = "Number of permutations for significance calculations of CIFs. Default is to not calculate significance of CIFs.", type=int, default=0)
     parser.add_argument("-C", help = "Specify method for multiple test correction: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH", default = "BH", choices=['bonferroni','sidak','holm','holm-sidak','simes-hochberg','hommel','BH','BY','GBS'],dest="correction")
     parser.add_argument("-I", "--idlogo",  help='Compute Information Differece logos for each pair of prefixes', action="store_true")

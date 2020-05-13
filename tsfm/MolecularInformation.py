@@ -657,7 +657,7 @@ class FunctionLogoResults:
             # output logodata to template
             template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
             logo_template = template_byte.decode('utf-8')
-            with open("{}{}_{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1], logo_postfix),
+            with open("{}{}_{}{}.eps".format(logo_prefix, base, self.name.split("/")[-1], logo_postfix),
                       "w") as logo_output:
                 src = Template(logo_template)
                 if (len(base) == 2):
