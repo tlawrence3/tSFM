@@ -25,10 +25,12 @@ def main():
                        help="Use secondary structure file TEXT, required to calculate functional information of base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
     group.add_argument("-s", "--single", action="store_true",
                        help="Do not calculate functional information of base-pair features. Calculate for single-site features only.")
+
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
     # Options
     parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
+
     parser.add_argument("-p", "--processes", type=int, default=os.cpu_count(),
                         help="Set the maximum number of concurrent processes. Default is the number of cores reported by the operating system.")
     parser.add_argument("-e", "--entropy", type=str, default="NSB",
@@ -68,6 +70,7 @@ def main():
                         action="store_true")
     parser.add_argument("--clade", type=str,
                         help="Specify a single clade to be used to calculate KLD or ID of one-against-all")
+
 
     args = parser.parse_args()
 
@@ -154,6 +157,7 @@ def main():
                       = sys.stderr)
                 info_inverse, height_dict_inverse = logo_dict[key].calculate_entropy_inverse_NSB()
                 results[key].add_information(info=info_inverse, height=height_dict_inverse, inverse=True)
+
     elif (args.entropy == "MM"):
         for key in logo_dict:
             print("Calculating information statistics using Miller-Maddow estimator")
@@ -219,8 +223,8 @@ def main():
             post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
 
         kld_height_dic = {}  # KLDs are saved with the background key
-        ratios_dic = {}  # ratios are saved with the background key
-        id_height_dic = {}  # IDs are saved with background key
+        ratios_dic = {}      # ratios are saved with the background key
+        id_height_dic = {}   # IDs are saved with background key
 
         # Dictionary used in significance calculation
         kld_infos = {}
