@@ -202,109 +202,80 @@ def main():
 
         results_prob_dist = {}
         post_nopseudo = {}
-        pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
+        pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
         if args.clade:
             pairwise_combinations = [(x, y) for (x, y) in itertools.product(
                 [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
-            pairwise_combinations = pairwise_combinations + [tup[::-1] for tup in pairwise_combinations]
-        for pair in pairwise_combinations:
-            pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
-            single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
-            difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-
-            results_prob_dist[pair[0]] = {}
-            results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]][
-                'prior'] = difference.calculate_prob_dist_pseudocounts(
-                logo_dict[pair[0]], logo_dict[pair[1]])
-            post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
-
-        kld_height_dic = {}  # KLDs are saved with the background key
-        ratios_dic = {}  # ratios are saved with the background key
-        id_height_dic = {}  # IDs are saved with background key
-
-        # Dictionary used in significance calculation
-        kld_infos = {}
-        id_infos = {}
-        pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
-        if args.clade:
-            pairwise_combinations = [(x, y) for (x, y) in itertools.product(
-                [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
-            pairwise_combinations = pairwise_combinations + [tup[::-1] for tup in pairwise_combinations]
-        for pair in pairwise_combinations:
-            # Calculating kld _______________________________________________________________________________________
-            # pair[0] is background
-            pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
-            single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
-            difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-
-            ratios_dic[pair[0]] = difference.calculate_ratios(back_prior=results_prob_dist[pair[0]]['prior'],
-                                                              fore_prior=results_prob_dist[pair[1]]['prior'],
-                                                              back_post=results_prob_dist[pair[0]]['post'],
-                                                              nopseudo_post_fore=post_nopseudo[pair[1]])
-            if args.kldlogo or args.bt:
-                kld_info, kld_height = difference.calculate_kld(logo_dict, key_back=pair[0], key_fore=pair[1],
-                                                                back_prior=results_prob_dist[pair[0]]['prior'],
-                                                                fore_prior=results_prob_dist[pair[1]]['prior'],
-                                                                back_post=results_prob_dist[pair[0]]['post'],
-                                                                fore_post=results_prob_dist[pair[1]]['post'],
-                                                                ratios=ratios_dic[pair[0]])
-                if args.kldlogo:
-                    logoprefix = "KLD_"
-                    results[pair[0]].add_information(info=kld_info, height=kld_height)
-                    results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
-
-                kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
-                kld_infos[pair[0]] = kld_info
-
-            if args.idlogo or args.bt:
-                id_info = difference.calculate_logoID_infos(info_b=info_height_dic[pair[0]]['info'],
-                                                            info_f=info_height_dic[pair[1]]['info'])
-                id_height = difference.calculate_logoID_heights(info=id_info, ratios=ratios_dic[pair[0]])
-                id_height_dic[pair[0]] = {"id": id_info, "height": id_height}
-
-                if args.idlogo:
-                    results[pair[0]].add_information(info=id_info, height=id_height)
-                    logoprefix = "ID_"
-                    results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
-                id_infos[pair[0]] = id_info
-
-            # Creating table for bubble plots ______________________________________________________________________
-
-        if args.bt:
-            pairwise_combinations = itertools.permutations(logo_dict.keys(), 2)
-            if args.clade:
-                pairwise_combinations = [(x, y) for (x, y) in itertools.product(
-                    [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
-                pairwise_combinations = pairwise_combinations + [tup[::-1] for tup in pairwise_combinations]
-            for pair in pairwise_combinations:
-                # pair[0] is background
+        for cpair in pairwise_combinations:
+            pairwise_permutation = itertools.permutations(cpair, 2)
+            for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                 single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
                 difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
 
-                difference.func_ID_KLD_2table(fore_logo_info=info_height_dic[pair[1]]['info'],
-                                              fore_logo_height=info_height_dic[pair[1]]['height'],
-                                              fore_idlogo_info=id_height_dic[pair[0]]['id'],
-                                              back_idlogo_info=id_height_dic[pair[1]]['id'],
-                                              fore_idlogo_height=id_height_dic[pair[0]]['height'],
-                                              back_idlogo_height=id_height_dic[pair[1]]['height'],
-                                              kld_info=kld_height_dic[pair[0]]['kld'],
-                                              kld_height=kld_height_dic[pair[0]]['height'],
-                                              fore=pair[1])
+                results_prob_dist[pair[0]] = {}
+                results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]][
+                    'prior'] = difference.calculate_prob_dist_pseudocounts(
+                    logo_dict[pair[0]], logo_dict[pair[1]])
+                post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
+            kld_height_dic = {}  # KLDs are saved with the background key
+            ratios_dic = {}  # ratios are saved with the background key
+            id_height_dic = {}  # IDs are saved with background key
+            kld_infos = {}
+            id_infos = {}
+            for pair in pairwise_permutation:
+                pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
+                single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
+                difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
 
-            # Calculating KLD/ID logo significance _________________________________________________________________
+                ratios_dic[pair[0]] = difference.calculate_ratios(back_prior=results_prob_dist[pair[0]]['prior'],
+                                                                  fore_prior=results_prob_dist[pair[1]]['prior'],
+                                                                  back_post=results_prob_dist[pair[0]]['post'],
+                                                                  nopseudo_post_fore=post_nopseudo[pair[1]])
+                if args.kldlogo or args.bt:
+                    kld_info, kld_height = difference.calculate_kld(logo_dict, key_back=pair[0], key_fore=pair[1],
+                                                                    back_prior=results_prob_dist[pair[0]]['prior'],
+                                                                    fore_prior=results_prob_dist[pair[1]]['prior'],
+                                                                    back_post=results_prob_dist[pair[0]]['post'],
+                                                                    fore_post=results_prob_dist[pair[1]]['post'],
+                                                                    ratios=ratios_dic[pair[0]])
+                    if args.kldlogo:
+                        logoprefix = "KLD_"
+                        results[pair[0]].add_information(info=kld_info, height=kld_height)
+                        results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
 
-        if args.kldp:
-            pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
-            if args.clade:
-                pairwise_combinations = [(x, y) for (x, y) in itertools.product(
-                    [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
+                    kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
+                    kld_infos[pair[0]] = kld_info
 
-                # pairwise_combinations is not permutation of tuples
-                # permutations of each tuple will be calculated in calculate_kld_significance()
+                if args.idlogo or args.bt:
+                    id_info = difference.calculate_logoID_infos(info_b=info_height_dic[pair[0]]['info'],
+                                                                info_f=info_height_dic[pair[1]]['info'])
+                    id_height = difference.calculate_logoID_heights(info=id_info, ratios=ratios_dic[pair[0]])
+                    id_height_dic[pair[0]] = {"id": id_info, "height": id_height}
 
-            for pair in pairwise_combinations:
-                print("Calculating KLD significance of", pair[0], "and", pair[1])
+                    if args.idlogo:
+                        results[pair[0]].add_information(info=id_info, height=id_height)
+                        logoprefix = "ID_"
+                        results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
+                    id_infos[pair[0]] = id_info
+
+            if args.bt:
+                for pair in pairwise_combinations:
+                    # pair[0] is background
+                    pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
+                    single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
+                    difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+
+                    difference.func_ID_KLD_2table(fore_logo_info=info_height_dic[pair[1]]['info'],
+                                                  fore_logo_height=info_height_dic[pair[1]]['height'],
+                                                  fore_idlogo_info=id_height_dic[pair[0]]['id'],
+                                                  back_idlogo_info=id_height_dic[pair[1]]['id'],
+                                                  fore_idlogo_height=id_height_dic[pair[0]]['height'],
+                                                  back_idlogo_height=id_height_dic[pair[1]]['height'],
+                                                  kld_info=kld_height_dic[pair[0]]['kld'],
+                                                  kld_height=kld_height_dic[pair[0]]['height'],
+                                                  fore=pair[1])
+            if args.kldp:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                 single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
@@ -315,13 +286,9 @@ def main():
 
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, kld_infos_pair, logo_dict_pair, "KLD")
-        if args.idp:
-            if args.entropy == "NSB":
-                pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
-                if args.clade:
-                    pairwise_combinations = [(x, y) for (x, y) in itertools.product(
-                        [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
-                for pair in pairwise_combinations:
+
+            if args.idp:
+                if args.entropy == "NSB":
                     print("Calculating ID significance of", pair[0], "and", pair[1])
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                     single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
@@ -335,12 +302,7 @@ def main():
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, id_infos_pair, logo_dict_pair, "ID")
 
-            else:
-                pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
-                if args.clade:
-                    pairwise_combinations = [(x, y) for (x, y) in itertools.product(
-                        [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
-                for pair in pairwise_combinations:
+                else:
                     print("Calculating ID significance of", pair[0], "and", pair[1])
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                     single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
@@ -353,7 +315,6 @@ def main():
                                                                         "Miller")
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, id_infos_pair, logo_dict_pair, "ID")
-
 
 if __name__ == "__main__":
     main()

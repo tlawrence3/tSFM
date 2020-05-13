@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """This module contains classes for calculating functional molecular information statistics.
+
 """
 from collections import Counter, defaultdict
 from multiprocessing import Pool
