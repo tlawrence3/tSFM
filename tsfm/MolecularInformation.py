@@ -1926,6 +1926,10 @@ class FunctionLogoDifference:
                 pandasTable.loc[
                     (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'fbits'] = \
                     fore_logo_info[single][state]
+                pandasTable.loc[
+                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'gainbits'] = \
+                    fore_idlogo_info[single][state]
+        
         for single in range(self.pos):
             for state in fore_logo_height[single]:
                 for t in fore_logo_height[single][state]:
@@ -1933,16 +1937,6 @@ class FunctionLogoDifference:
                         (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
                                 pandasTable['aa'] == t), 'fht'] = \
                         fore_logo_height[single][state][t]
-
-        for single in range(self.pos):
-            for state in fore_idlogo_info[single]:
-                pandasTable.loc[
-                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'gainbits'] = \
-                    fore_idlogo_info[single][state]
-
-        for single in range(self.pos):
-            for state in fore_idlogo_height[single]:
-                for t in self.functions:
                     pandasTable.loc[
                         (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
                                 pandasTable['aa'] == t), 'gainfht'] = 0
