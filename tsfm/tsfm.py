@@ -245,7 +245,7 @@ def main():
                                                                     fore_post=results_prob_dist[pair[1]]['post'],
                                                                     ratios=ratios_dic[pair[0]])
                     if args.kldlogos:
-                        logoprefix = "KLD_"
+                        logoprefix = "KLD"
                         results[pair[0]].add_information(info=kld_info, height=kld_height)
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
 
@@ -260,7 +260,7 @@ def main():
 
                     if args.idlogos:
                         results[pair[0]].add_information(info=id_info, height=id_height)
-                        logoprefix = "ID_"
+                        logoprefix = "ID"
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
                     id_infos[pair[0]] = id_info
 
