@@ -207,7 +207,8 @@ def main():
             pairwise_combinations = [(x, y) for (x, y) in itertools.product(
                 [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
         for cpair in pairwise_combinations:
-            pairwise_permutation = itertools.permutations(cpair, 2)
+            print("Calculating ID|KLD for", cpair[0], "and", cpair[1])
+            pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                 single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
@@ -223,6 +224,7 @@ def main():
             id_height_dic = {}  # IDs are saved with background key
             kld_infos = {}
             id_infos = {}
+            pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                 single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
@@ -260,7 +262,8 @@ def main():
                     id_infos[pair[0]] = id_info
 
             if args.bt:
-                for pair in pairwise_combinations:
+                pairwise_permutation = itertools.permutations(list(cpair), 2)
+                for pair in pairwise_permutation:
                     # pair[0] is background
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                     single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
@@ -276,45 +279,43 @@ def main():
                                                   kld_height=kld_height_dic[pair[0]]['height'],
                                                   fore=pair[1])
             if args.kldp:
-                pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
-                single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
+                print("Calculating KLD significance of", cpair[0], "and", cpair[1])
+                pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
+                single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                logo_dict_pair = {key: logo_dict[key] for key in [pair[0], pair[1]]}
-                kld_infos_pair = {key: kld_infos[key] for key in [pair[0], pair[1]]}
-                kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos_pair, args.kldp,
+                logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
+                kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldp,
                                                                        args.processes)
 
                 print("Writing text output for KLD significance")
-                klddifference.write_pvalues(kld_pvalues, kld_infos_pair, logo_dict_pair, "KLD")
+                klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict_pair, "KLD")
 
             if args.idp:
                 if args.entropy == "NSB":
-                    print("Calculating ID significance of", pair[0], "and", pair[1])
-                    pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
-                    single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
+                    print("Calculating ID significance of", cpair[0], "and", cpair[1])
+                    pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
+                    single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                     iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                    logo_dict_pair = {key: logo_dict[key] for key in [pair[0], pair[1]]}
-                    id_infos_pair = {key: id_infos[key] for key in [pair[0], pair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos_pair, args.idp,
+                    logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
+                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idp,
                                                                         args.processes,
                                                                         args.exact,
                                                                         "NSB")
                     print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_infos_pair, logo_dict_pair, "ID")
+                    iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
 
                 else:
-                    print("Calculating ID significance of", pair[0], "and", pair[1])
-                    pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
-                    single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
+                    print("Calculating ID significance of", cpair[0], "and", cpair[1])
+                    pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
+                    single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                     iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                    logo_dict_pair = {key: logo_dict[key] for key in [pair[0], pair[1]]}
-                    id_infos_pair = {key: id_infos[key] for key in [pair[0], pair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos_pair, args.idp,
+                    logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
+                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idp,
                                                                         args.processes,
                                                                         args.exact,
                                                                         "Miller")
                     print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_infos_pair, logo_dict_pair, "ID")
+                    iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
 
 if __name__ == "__main__":
     main()
