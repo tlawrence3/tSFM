@@ -44,7 +44,7 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.githubpages',
               'sphinx.ext.napoleon',
-              'sphinx.ext.intersphinx', 'sphinx.ext.viewcode']
+              'sphinx.ext.intersphinx', 'sphinx.ext.viewcode','sphinxcontrib.bibtex']
 
 intersphinx_mapping = {'python': ('http://docs.python.org/3/', None),
  'pandas': ('http://pandas.pydata.org/pandas-docs/stable/', None),
