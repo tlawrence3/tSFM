@@ -10,7 +10,12 @@ def main():
     # Setup parser
     parser = argparse.ArgumentParser(
         description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergences for tRNAs or other RNA families.",
-        epilog="Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
+        epilog="""
+
+
+
+Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
+""")
     # Required arguments
     parser.add_argument("file_prefix",
                         help="One or more paths/file-prefix strings corresponding to sets of input files compiled for a single clade in clustalW format. Input files should be named <path>/<prefix>_<functional-class>.<extension>, where <functional_class> is a single letter",
@@ -107,6 +112,10 @@ def main():
 
     if (args.clade and args.clade not in logo_dict.keys()):
         sys.exit("Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
+
+    if (args.bubbles and not args.clade):
+        sys.exit("Option --bubbles requires designation of a specific clade to contrast against using option --clade.")
+        
         
     # Calculate exact method sample size correction
     if (args.exact):
@@ -212,7 +221,7 @@ def main():
             pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
 
         for cpair in pairwise_combinations:
-            print("Calculating ID and/or KLD for", cpair[0], "and", cpair[1])
+            print("Calculating ID and/or KLD logos for", cpair[0], "and", cpair[1])
             pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -245,7 +254,7 @@ def main():
                                                                     fore_post=results_prob_dist[pair[1]]['post'],
                                                                     ratios=ratios_dic[pair[0]])
                     if args.kldlogos:
-                        logoprefix = "KLD"
+                        logoprefix = "KLDlogo"
                         results[pair[0]].add_information(info=kld_info, height=kld_height)
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
 
@@ -260,12 +269,11 @@ def main():
 
                     if args.idlogos:
                         results[pair[0]].add_information(info=id_info, height=id_height)
-                        logoprefix = "ID"
+                        logoprefix = "IDlogo"
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
                     id_infos[pair[0]] = id_info
 
             if args.bubbles:
-                pairwise_permutation = itertools.permutations(list(cpair), 2)
                 for pair in pairwise_permutation:
                     # pair[0] is background
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
