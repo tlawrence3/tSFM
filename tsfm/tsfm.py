@@ -10,12 +10,7 @@ def main():
     # Setup parser
     parser = argparse.ArgumentParser(
         description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergences for tRNAs or other RNA families.",
-        epilog="""
-
-
-
-Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
-""")
+        epilog="Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
     # Required arguments
     parser.add_argument("file_prefix",
                         help="One or more paths/file-prefix strings corresponding to sets of input files compiled for a single clade in clustalW format. Input files should be named <path>/<prefix>_<functional-class>.<extension>, where <functional_class> is a single letter",
@@ -201,7 +196,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
         distance.get_distance(results)
 
     # ______________________________________________________________________________________________________________
-    if args.kldlogos or args.idlogos or args.bubbles:
+    if args.kldlogos or args.idlogos or args.bubbles or args.idperms or args.kldperms:
         info_height_dic = {}
         for key in results:
             info_height_dic[key] = {"info": results[key].info, "height": results[key].height}
@@ -221,7 +216,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
             pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
 
         for cpair in pairwise_combinations:
-            print("Calculating ID and/or KLD logos for", cpair[0], "and", cpair[1])
+            print("Calculating ID and/or KLD for", cpair[0], "and", cpair[1])
             pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -246,7 +241,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                                                                   fore_prior=results_prob_dist[pair[1]]['prior'],
                                                                   back_post=results_prob_dist[pair[0]]['post'],
                                                                   nopseudo_post_fore=post_nopseudo[pair[1]])
-                if args.kldlogos or args.bubbles:
+                if args.kldlogos or args.bubbles or args.kldperms:
                     kld_info, kld_height = difference.calculate_kld(logo_dict, key_back=pair[0], key_fore=pair[1],
                                                                     back_prior=results_prob_dist[pair[0]]['prior'],
                                                                     fore_prior=results_prob_dist[pair[1]]['prior'],
@@ -254,6 +249,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                                                                     fore_post=results_prob_dist[pair[1]]['post'],
                                                                     ratios=ratios_dic[pair[0]])
                     if args.kldlogos:
+                        print("Writing KLD logos for", cpair[0], "and", cpair[1])
                         logoprefix = "KLDlogo"
                         results[pair[0]].add_information(info=kld_info, height=kld_height)
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
@@ -261,13 +257,14 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                     kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
                     kld_infos[pair[0]] = kld_info
 
-                if args.idlogos or args.bubbles:
+                if args.idlogos or args.bubbles or args.idperms:
                     id_info = difference.calculate_logoID_infos(info_b=info_height_dic[pair[0]]['info'],
                                                                 info_f=info_height_dic[pair[1]]['info'])
                     id_height = difference.calculate_logoID_heights(info=id_info, ratios=ratios_dic[pair[0]])
                     id_height_dic[pair[0]] = {"id": id_info, "height": id_height}
 
                     if args.idlogos:
+                        print("Writing ID logos for", cpair[0], "and", cpair[1])
                         results[pair[0]].add_information(info=id_info, height=id_height)
                         logoprefix = "IDlogo"
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
