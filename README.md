@@ -1,5 +1,4 @@
-[![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/format/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/pyversions/tsfm.svg)]() [![PyPI](https://img.shields.io/pypi/l/tsfm.svg)]()
-[![Coverage Status](https://coveralls.io/repos/github/tlawrence3/tsfm/badge.svg?branch=master)](https://coveralls.io/github/tlawrence3/tsfm?branch=master)
+[![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]()
 # Read the docs
 http://tsfm-trna-structure-function-mapper.readthedocs.io/en/latest/
 # Example command
