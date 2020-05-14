@@ -5,3 +5,4 @@ scipy
 pandas
 patsy
 mpmath
+sphinxcontrib-bibtex
