@@ -9,11 +9,11 @@ from tsfm._version import __version__
 def main():
     # Setup parser
     parser = argparse.ArgumentParser(
-        description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergence for tRNAs, and other RNA families.",
+        description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergences for tRNAs or other RNA families.",
         epilog="Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
     # Required arguments
     parser.add_argument("file_prefix",
-                        help="One or more prefixes of sets of input files in clustalW format. Input files expected to be named as in <prefix>_<functional-class>.<extension>, where <functional_class> is a single letter",
+                        help="One or more paths/file-prefix strings corresponding to sets of input files compiled for a single clade in clustalW format. Input files should be named <path>/<prefix>_<functional-class>.<extension>, where <functional_class> is a single letter",
                         nargs='+')
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -24,7 +24,7 @@ def main():
     group.add_argument("-t", "--text", type=argparse.FileType("r"),
                        help="Use secondary structure file TEXT, required to calculate functional information of base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
     group.add_argument("-s", "--single", action="store_true",
-                       help="Do not calculate functional information of base-pair features. Calculate for single-site features only.")
+                       help="Do not calculate functional information for paired features. Calculate for single-site features only.")
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
     # Options
@@ -41,33 +41,33 @@ def main():
                         help="Visualize feature information using function/inverse function logos in extended postscript format.",
                         action="store_true")
     parser.add_argument("-v", "--inverse", action="store_true",
-                        help="Additionally calculate functional information for inverse features/logos (anti-determinants under-represented in specific functional classes)")
+                        help="Additionally calculate functional information for inverse features/logos (features under-represented in specific functional classes)")
     parser.add_argument("-P", "--permutations",
-                        help="Number of permutations for significance calculations of CIFs. Default is to not calculate significance of CIFs.",
+                        help="Set the number of permutations for significance calculations of CIFs to PERMUTATIONS (an integer). Default is to not calculate significance of CIFs.",
                         type=int, default=0)
     parser.add_argument("-C",
-                        help="Specify method for multiple test correction: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH",
+                        help="Specify a method for multiple test correction for significance calculations: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH",
                         default="BH",
                         choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY',
                                  'GBS'], dest="correction")
-    parser.add_argument("-I", "--idlogo", help='Compute Information Differece logos for each pair of prefixes',
+    parser.add_argument("-I", "--idlogos", help='Compute Information Differece logos for each pair of clades',
                         action="store_true")
-    parser.add_argument("-K", "--kldlogo", help='Comput Kullback-Liebler Divergence logos for each pair of prefixes',
+    parser.add_argument("-K", "--kldlogos", help='Compute Kullback-Liebler Divergence logos for each pair of clades',
                         action="store_true")
-    parser.add_argument("-B", "--bt",
-                        help='Compute input table to compute structural bubble-plots in R like those of Kelly et al. (2020)',
+    parser.add_argument("-B", "--bubbles",
+                        help='Compute input table for structural bubble-plots (to be computed in R) like those appearing in Kelly et al. (2020).',
                         action="store_true")
-    parser.add_argument("--kldp",
-                        help="Number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.",
+    parser.add_argument("--kldperms",
+                        help="Set the number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.",
                         type=int, default=0)
-    parser.add_argument("--idp",
-                        help="Number of permutations to compute significance of Information Differences. Default is to not calculate signifiance (SLOW).",
+    parser.add_argument("--idperms",
+                        help="Set the number of permutations to compute significance of Information Differences (SLOW). Default is to not calculate signifiance.",
                         type=int, default=0)
     parser.add_argument("-J", "--JSD",
-                        help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergence",
+                        help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergences",
                         action="store_true")
     parser.add_argument("--clade", type=str,
-                        help="Specify a single clade to be used to calculate KLD or ID of one-against-all")
+                        help="Contrast clade CLADE against all others. CLADE should be one of the file-prefix strings passed as a required argument to the program, stripped of its path. Default is to compute contrasts for all pairs of clades.")
 
     args = parser.parse_args()
 
@@ -105,6 +105,9 @@ def main():
         prefix_name = prefix.split("/")[-1]
         logo_dict[prefix_name].parse_sequences(prefix)
 
+    if (args.clade and args.clade not in logo_dict.keys()):
+        sys.exit("Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
+        
     # Calculate exact method sample size correction
     if (args.exact):
         for key in logo_dict:
@@ -189,7 +192,7 @@ def main():
         distance.get_distance(results)
 
     # ______________________________________________________________________________________________________________
-    if args.kldlogo or args.bt or args.idlogo:
+    if args.kldlogos or args.idlogos or args.bubbles:
         info_height_dic = {}
         for key in results:
             info_height_dic[key] = {"info": results[key].info, "height": results[key].height}
@@ -202,12 +205,14 @@ def main():
 
         results_prob_dist = {}
         post_nopseudo = {}
-        pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
         if args.clade:
             pairwise_combinations = [(x, y) for (x, y) in itertools.product(
                 [element for element in logo_dict.keys() if element not in args.clade], [args.clade])]
+        else:
+            pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
+
         for cpair in pairwise_combinations:
-            print("Calculating ID|KLD for", cpair[0], "and", cpair[1])
+            print("Calculating ID and/or KLD for", cpair[0], "and", cpair[1])
             pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -215,9 +220,7 @@ def main():
                 difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
 
                 results_prob_dist[pair[0]] = {}
-                results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]][
-                    'prior'] = difference.calculate_prob_dist_pseudocounts(
-                    logo_dict[pair[0]], logo_dict[pair[1]])
+                results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]]['prior'] = difference.calculate_prob_dist_pseudocounts(logo_dict[pair[0]], logo_dict[pair[1]])
                 post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
             kld_height_dic = {}  # KLDs are saved with the background key
             ratios_dic = {}  # ratios are saved with the background key
@@ -234,14 +237,14 @@ def main():
                                                                   fore_prior=results_prob_dist[pair[1]]['prior'],
                                                                   back_post=results_prob_dist[pair[0]]['post'],
                                                                   nopseudo_post_fore=post_nopseudo[pair[1]])
-                if args.kldlogo or args.bt:
+                if args.kldlogos or args.bubbles:
                     kld_info, kld_height = difference.calculate_kld(logo_dict, key_back=pair[0], key_fore=pair[1],
                                                                     back_prior=results_prob_dist[pair[0]]['prior'],
                                                                     fore_prior=results_prob_dist[pair[1]]['prior'],
                                                                     back_post=results_prob_dist[pair[0]]['post'],
                                                                     fore_post=results_prob_dist[pair[1]]['post'],
                                                                     ratios=ratios_dic[pair[0]])
-                    if args.kldlogo:
+                    if args.kldlogos:
                         logoprefix = "KLD_"
                         results[pair[0]].add_information(info=kld_info, height=kld_height)
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
@@ -249,19 +252,19 @@ def main():
                     kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
                     kld_infos[pair[0]] = kld_info
 
-                if args.idlogo or args.bt:
+                if args.idlogos or args.bubbles:
                     id_info = difference.calculate_logoID_infos(info_b=info_height_dic[pair[0]]['info'],
                                                                 info_f=info_height_dic[pair[1]]['info'])
                     id_height = difference.calculate_logoID_heights(info=id_info, ratios=ratios_dic[pair[0]])
                     id_height_dic[pair[0]] = {"id": id_info, "height": id_height}
 
-                    if args.idlogo:
+                    if args.idlogos:
                         results[pair[0]].add_information(info=id_info, height=id_height)
                         logoprefix = "ID_"
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
                     id_infos[pair[0]] = id_info
 
-            if args.bt:
+            if args.bubbles:
                 pairwise_permutation = itertools.permutations(list(cpair), 2)
                 for pair in pairwise_permutation:
                     # pair[0] is background
@@ -278,8 +281,8 @@ def main():
                                                   kld_info=kld_height_dic[pair[0]]['kld'],
                                                   kld_height=kld_height_dic[pair[0]]['height'],
                                                   fore=pair[1])
-            if args.kldp:
-                print("Calculating KLD significance of", cpair[0], "and", cpair[1])
+            if args.kldperms:
+                print("Calculating significance of KLDs between", cpair[0], "and", cpair[1])
                 pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
                 single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
@@ -290,7 +293,7 @@ def main():
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict_pair, "KLD")
 
-            if args.idp:
+            if args.idperms:
                 if args.entropy == "NSB":
                     print("Calculating ID significance of", cpair[0], "and", cpair[1])
                     pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
@@ -305,7 +308,7 @@ def main():
                     iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
 
                 else:
-                    print("Calculating ID significance of", cpair[0], "and", cpair[1])
+                    print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
                     pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
                     single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                     iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
