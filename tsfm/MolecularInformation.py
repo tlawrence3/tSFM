@@ -619,8 +619,11 @@ class FunctionLogoResults:
             # output logodata to template
             template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
             logo_template = template_byte.decode('utf-8')
-            with open("{}_{}_{}_{}.eps".format(logo_prefix, base, logo_postfix, self.name.split("/")[-1]),
-                      "w") as logo_output:
+            if (logo_postfix):
+                filename = "{}_{}_{}_{}.eps".format(logo_prefix, base, logo_postfix, self.name.split("/")[-1])
+            else:
+                filename = "{}_{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1])
+            with open(filename,"w") as logo_output:
                 src = Template(logo_template)
                 if (len(base) == 2):
                     logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()),
@@ -2190,7 +2193,7 @@ class FunctionLogoDifference:
                                                                        logo_dic[pair[0]].functions,
                                                                        logo_dic[pair[1]].functions, max)
 
-                    if method == "Miller":
+                    if method == "MM":
                         perm_id_list = self.calculate_perm_entropy_MM(permute_num, state_counts_back, state_counts_fore,
                                                                       sum(state_counts_back.values()),
                                                                       logo_dic[pair[0]].functions,
@@ -2211,7 +2214,7 @@ class FunctionLogoDifference:
                                                                        sum(state_counts_back.values()),
                                                                        logo_dic[pair[0]].functions,
                                                                        logo_dic[pair[1]].functions, max)
-                    if method == "Miller":
+                    if method == "MM":
                         perm_id_list = self.calculate_perm_entropy_MM(permute_num, state_counts_back, state_counts_fore,
                                                                       sum(state_counts_back.values()),
                                                                       logo_dic[pair[0]].functions,
@@ -2447,5 +2450,5 @@ class FunctionLogoDifference:
                         (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'F-sample-size'] = sum(
                         state_counts2.values())
 
-            filename = prefix + "_B_" + key[0] + "_F_" + key[1] + ".txt"
+            filename = prefix + '_' + key[1] + '_' + key[0] + "_stats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')

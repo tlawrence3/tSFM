@@ -190,7 +190,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
     if (args.logos and not args.inverse):
         for key in results:
             print("Writing function logo postscript files for {}".format(key))
-            results[key].logo_output()
+            results[key].logo_output(logo_prefix="functionlogo")
     elif (args.logos and args.inverse):
         for key in results:
             print("Writing inverse function logo postscript files for {}".format(key))
@@ -295,36 +295,22 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                 single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldp,
+                kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldperms,
                                                                        args.processes)
 
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict_pair, "KLD")
 
             if args.idperms:
-                if args.entropy == "NSB":
-                    print("Calculating ID significance of", cpair[0], "and", cpair[1])
-                    pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
-                    single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
-                    iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                    logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idp,
-                                                                        args.processes,
-                                                                        args.exact,
-                                                                        "NSB")
-                    print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
-
-                else:
                     print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
                     pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
                     single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                     iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
                     logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idp,
+                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idperms,
                                                                         args.processes,
                                                                         args.exact,
-                                                                        "Miller")
+                                                                        args.entropy)
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
 
