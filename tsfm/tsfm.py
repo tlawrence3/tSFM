@@ -6,6 +6,7 @@ import itertools
 import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
+
 def main():
     # Setup parser
     parser = argparse.ArgumentParser(
@@ -106,12 +107,12 @@ def main():
         logo_dict[prefix_name].parse_sequences(prefix)
 
     if (args.clade and args.clade not in logo_dict.keys()):
-        sys.exit("Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
+        sys.exit(
+            "Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
 
     if (args.bubbles and not args.clade):
         sys.exit("Option --bubbles requires designation of a specific clade to contrast against using option --clade.")
-        
-        
+
     # Calculate exact method sample size correction
     if (args.exact):
         for key in logo_dict:
@@ -224,7 +225,8 @@ def main():
                 difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
 
                 results_prob_dist[pair[0]] = {}
-                results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]]['prior'] = difference.calculate_prob_dist_pseudocounts(logo_dict[pair[0]], logo_dict[pair[1]])
+                results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]][
+                    'prior'] = difference.calculate_prob_dist_pseudocounts(logo_dict[pair[0]], logo_dict[pair[1]])
                 post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
             kld_height_dic = {}  # KLDs are saved with the background key
             ratios_dic = {}  # ratios are saved with the background key
@@ -271,6 +273,8 @@ def main():
                     id_infos[pair[0]] = id_info
 
             if args.bubbles:
+                pairwise_permutation = itertools.permutations(list(cpair), 2)
+                print("Writing text output for bubble plots")
                 for pair in pairwise_permutation:
                     # pair[0] is background
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -285,7 +289,7 @@ def main():
                                                   back_idlogo_height=id_height_dic[pair[1]]['height'],
                                                   kld_info=kld_height_dic[pair[0]]['kld'],
                                                   kld_height=kld_height_dic[pair[0]]['height'],
-                                                  fore=pair[1])
+                                                  fore=pair[1],back=pair[0])
             if args.kldperms:
                 print("Calculating significance of KLDs between", cpair[0], "and", cpair[1])
                 pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
@@ -299,17 +303,18 @@ def main():
                 klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict_pair, "KLD")
 
             if args.idperms:
-                    print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
-                    pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
-                    single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
-                    iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                    logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idperms,
-                                                                        args.processes,
-                                                                        args.exact,
-                                                                        args.entropy)
-                    print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
+                print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
+                pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
+                single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
+                iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+                logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
+                id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idperms,
+                                                                    args.processes,
+                                                                    args.exact,
+                                                                    args.entropy)
+                print("Writing text output for ID significance")
+                iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
+
 
 if __name__ == "__main__":
     main()

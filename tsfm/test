@@ -1,0 +1,4 @@
+single = ["A","B","C"]
+func = ["N","K","T"]
+pos = [1,2,3,4,5]
+[for s in single for ]
