@@ -25,9 +25,12 @@ def main():
                        help="Use secondary structure file TEXT, required to calculate functional information of base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
     group.add_argument("-s", "--single", action="store_true",
                        help="Do not calculate functional information for paired features. Calculate for single-site features only.")
+
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
     # Options
+    parser.add_argument("-n", "--nosingle", action="store_true",
+                       help="Do not calculate functional information for single-site features. Calculate for paired-site features only.")
     parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
     parser.add_argument("-p", "--processes", type=int, default=os.cpu_count(),
                         help="Set the maximum number of concurrent processes. Default is the number of cores reported by the operating system.")
@@ -43,13 +46,14 @@ def main():
     parser.add_argument("-v", "--inverse", action="store_true",
                         help="Additionally calculate functional information for inverse features/logos (features under-represented in specific functional classes)")
     parser.add_argument("-P", "--permutations",
-                        help="Set the number of permutations for significance calculations of CIFs to PERMUTATIONS (an integer). Default is to not calculate significance of CIFs.",
+                        help="Calculate the significance of CIFs by a permutation test, with a number of permutations equal to PERMUTATIONS (an integer). Default is to not calculate significance of CIFs.",
                         type=int, default=0)
     parser.add_argument("-C",
-                        help="Specify a method for multiple test correction for significance calculations: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH",
-                        default="BH",
-                        choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY',
-                                 'GBS'], dest="correction")
+                        help="Specify a method for multiple test correction for significance calculations: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH", default="BH", choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY','GBS'], dest="correction")   
+    parser.add_argument("-T",
+                        help="Test the significance of only CIF stack-heights, only CIF letter-heights, or both. Default is both.",
+                        default="both",
+                        choices=['stacks', 'letters', 'both'], dest="test") 
     parser.add_argument("-I", "--idlogos", help='Compute Information Differece logos for each pair of clades',
                         action="store_true")
     parser.add_argument("-K", "--kldlogos", help='Compute Kullback-Liebler Divergence logos for each pair of clades',
@@ -71,6 +75,9 @@ def main():
 
     args = parser.parse_args()
 
+    if (args.single and args.nosingle):
+        sys.exit("Options --single and --nosingle are incompatible.")
+    
     # initialize dictionary that contains all datasets labeled by the file prefix
     logo_dict = {}
 
@@ -87,29 +94,29 @@ def main():
     if (args.text):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text")
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text", args.nosingle)
     elif (args.cove):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove")
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove", args.nosingle)
     elif (args.infernal):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.infernal, "infernal")
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.infernal, "infernal", args.nosingle)
     elif (args.single):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "s")
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "s", args.nosingle)
 
     for prefix in args.file_prefix:
         prefix_name = prefix.split("/")[-1]
         logo_dict[prefix_name].parse_sequences(prefix)
 
     if (args.clade and args.clade not in logo_dict.keys()):
-        sys.exit("Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
+        sys.exit("tsfm: Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
 
     if (args.bubbles and not args.clade):
-        sys.exit("Option --bubbles requires designation of a specific clade to contrast against using option --clade.")
+        sys.exit("tsfm: Option --bubbles requires designation of a specific clade to contrast against using option --clade.")
         
         
     # Calculate exact method sample size correction
@@ -174,9 +181,9 @@ def main():
     if (args.permutations):
         print("Calculating p-values using {} multiple test correction".format(args.correction))
         for key in results:
-            results[key].add_stats(perm_dict[key], multitest_methods[args.correction])
+            results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test)
             if (args.inverse):
-                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], inverse=True)
+                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test, inverse=True)
 
     for key in results:
         print("Writing text output for {}".format(key))
@@ -293,7 +300,7 @@ def main():
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
                 kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldperms,
-                                                                       args.processes)
+                                                                       args.processes, args.correction, args.test)
 
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict_pair, "KLD")
@@ -307,7 +314,9 @@ def main():
                     id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idperms,
                                                                         args.processes,
                                                                         args.exact,
-                                                                        args.entropy)
+                                                                        args.entropy,
+                                                                        args.correction,
+                                                                        args.test)
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
 
