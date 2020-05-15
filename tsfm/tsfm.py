@@ -6,16 +6,12 @@ import itertools
 import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
+
 def main():
     # Setup parser
     parser = argparse.ArgumentParser(
         description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergences for tRNAs or other RNA families.",
-        epilog="""
-
-
-
-Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
-""")
+        epilog="Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
     # Required arguments
     parser.add_argument("file_prefix",
                         help="One or more paths/file-prefix strings corresponding to sets of input files compiled for a single clade in clustalW format. Input files should be named <path>/<prefix>_<functional-class>.<extension>, where <functional_class> is a single letter",
@@ -111,12 +107,12 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
         logo_dict[prefix_name].parse_sequences(prefix)
 
     if (args.clade and args.clade not in logo_dict.keys()):
-        sys.exit("Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
+        sys.exit(
+            "Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
 
     if (args.bubbles and not args.clade):
         sys.exit("Option --bubbles requires designation of a specific clade to contrast against using option --clade.")
-        
-        
+
     # Calculate exact method sample size correction
     if (args.exact):
         for key in logo_dict:
@@ -190,7 +186,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
     if (args.logos and not args.inverse):
         for key in results:
             print("Writing function logo postscript files for {}".format(key))
-            results[key].logo_output()
+            results[key].logo_output(logo_prefix="functionlogo")
     elif (args.logos and args.inverse):
         for key in results:
             print("Writing inverse function logo postscript files for {}".format(key))
@@ -201,7 +197,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
         distance.get_distance(results)
 
     # ______________________________________________________________________________________________________________
-    if args.kldlogos or args.idlogos or args.bubbles:
+    if args.kldlogos or args.idlogos or args.bubbles or args.idperms or args.kldperms:
         info_height_dic = {}
         for key in results:
             info_height_dic[key] = {"info": results[key].info, "height": results[key].height}
@@ -221,7 +217,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
             pairwise_combinations = itertools.combinations(logo_dict.keys(), 2)
 
         for cpair in pairwise_combinations:
-            print("Calculating ID and/or KLD logos for", cpair[0], "and", cpair[1])
+            print("Calculating ID and/or KLD for", cpair[0], "and", cpair[1])
             pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -229,7 +225,8 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                 difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
 
                 results_prob_dist[pair[0]] = {}
-                results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]]['prior'] = difference.calculate_prob_dist_pseudocounts(logo_dict[pair[0]], logo_dict[pair[1]])
+                results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]][
+                    'prior'] = difference.calculate_prob_dist_pseudocounts(logo_dict[pair[0]], logo_dict[pair[1]])
                 post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
             kld_height_dic = {}  # KLDs are saved with the background key
             ratios_dic = {}  # ratios are saved with the background key
@@ -246,7 +243,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                                                                   fore_prior=results_prob_dist[pair[1]]['prior'],
                                                                   back_post=results_prob_dist[pair[0]]['post'],
                                                                   nopseudo_post_fore=post_nopseudo[pair[1]])
-                if args.kldlogos or args.bubbles:
+                if args.kldlogos or args.bubbles or args.kldperms:
                     kld_info, kld_height = difference.calculate_kld(logo_dict, key_back=pair[0], key_fore=pair[1],
                                                                     back_prior=results_prob_dist[pair[0]]['prior'],
                                                                     fore_prior=results_prob_dist[pair[1]]['prior'],
@@ -254,6 +251,7 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                                                                     fore_post=results_prob_dist[pair[1]]['post'],
                                                                     ratios=ratios_dic[pair[0]])
                     if args.kldlogos:
+                        print("Writing KLD logos for", cpair[0], "and", cpair[1])
                         logoprefix = "KLDlogo"
                         results[pair[0]].add_information(info=kld_info, height=kld_height)
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
@@ -261,19 +259,22 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                     kld_height_dic[pair[0]] = {"kld": kld_info, "height": kld_height}
                     kld_infos[pair[0]] = kld_info
 
-                if args.idlogos or args.bubbles:
+                if args.idlogos or args.bubbles or args.idperms:
                     id_info = difference.calculate_logoID_infos(info_b=info_height_dic[pair[0]]['info'],
                                                                 info_f=info_height_dic[pair[1]]['info'])
                     id_height = difference.calculate_logoID_heights(info=id_info, ratios=ratios_dic[pair[0]])
                     id_height_dic[pair[0]] = {"id": id_info, "height": id_height}
 
                     if args.idlogos:
+                        print("Writing ID logos for", cpair[0], "and", cpair[1])
                         results[pair[0]].add_information(info=id_info, height=id_height)
                         logoprefix = "IDlogo"
                         results[pair[0]].logo_output(logo_prefix=logoprefix, logo_postfix=pair[1])
                     id_infos[pair[0]] = id_info
 
             if args.bubbles:
+                pairwise_permutation = itertools.permutations(list(cpair), 2)
+                print("Writing text output for bubble plots")
                 for pair in pairwise_permutation:
                     # pair[0] is background
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
@@ -288,45 +289,32 @@ Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.
                                                   back_idlogo_height=id_height_dic[pair[1]]['height'],
                                                   kld_info=kld_height_dic[pair[0]]['kld'],
                                                   kld_height=kld_height_dic[pair[0]]['height'],
-                                                  fore=pair[1])
+                                                  fore=pair[1],back=pair[0])
             if args.kldperms:
                 print("Calculating significance of KLDs between", cpair[0], "and", cpair[1])
                 pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
                 single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldp,
+                kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldperms,
                                                                        args.processes)
 
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict_pair, "KLD")
 
             if args.idperms:
-                if args.entropy == "NSB":
-                    print("Calculating ID significance of", cpair[0], "and", cpair[1])
-                    pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
-                    single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
-                    iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                    logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idp,
-                                                                        args.processes,
-                                                                        args.exact,
-                                                                        "NSB")
-                    print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
+                print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
+                pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
+                single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
+                iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+                logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
+                id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idperms,
+                                                                    args.processes,
+                                                                    args.exact,
+                                                                    args.entropy)
+                print("Writing text output for ID significance")
+                iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
 
-                else:
-                    print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
-                    pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
-                    single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
-                    iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
-                    logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idp,
-                                                                        args.processes,
-                                                                        args.exact,
-                                                                        "Miller")
-                    print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
 
 if __name__ == "__main__":
     main()

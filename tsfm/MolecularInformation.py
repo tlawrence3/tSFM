@@ -578,7 +578,7 @@ class FunctionLogoResults:
                     print(output_string, file=file_handle)
         file_handle.close()
 
-    def logo_output(self, inverse=False, logo_prefix="",logo_postfix=""):
+    def logo_output(self, inverse=False, logo_prefix="", logo_postfix=""):
         """
         Produce function logo postscript files
         """
@@ -619,8 +619,11 @@ class FunctionLogoResults:
             # output logodata to template
             template_byte = pkgutil.get_data('tsfm', 'eps/Template.eps')
             logo_template = template_byte.decode('utf-8')
-            with open("{}_{}_{}_{}.eps".format(logo_prefix, base, logo_postfix, self.name.split("/")[-1]),
-                      "w") as logo_output:
+            if (logo_postfix):
+                filename = "{}_{}_{}_{}.eps".format(logo_prefix, base, logo_postfix, self.name.split("/")[-1])
+            else:
+                filename = "{}_{}_{}.eps".format(logo_prefix, base, self.name.split("/")[-1])
+            with open(filename, "w") as logo_output:
                 src = Template(logo_template)
                 if (len(base) == 2):
                     logodata_dict = {'logo_data': logodata, 'low': min(logo_outputDict[base].keys()),
@@ -1722,7 +1725,7 @@ class FunctionLogoDifference:
 
     # __________________________________________________________________________
 
-    def calculate_prob_dist_pseudocounts(self, logo_dict1,logo_dict2):
+    def calculate_prob_dist_pseudocounts(self, logo_dict1, logo_dict2):
         """
         Calculate posterior probability p(y|x) of each symbol within for each feature using pseudo counts.
         """
@@ -1897,92 +1900,50 @@ class FunctionLogoDifference:
         return kld_dic, kld_heights
 
     def func_ID_KLD_2table(self, fore_logo_info,
-                           fore_logo_height,
-                           fore_idlogo_info,
-                           back_idlogo_info,
-                           fore_idlogo_height,
-                           back_idlogo_height,
-                           kld_info,
-                           kld_height, fore):
+                            fore_logo_height,
+                            fore_idlogo_info,
+                            back_idlogo_info,
+                            fore_idlogo_height,
+                            back_idlogo_height,
+                            kld_info,
+                            kld_height, back, fore):
         """
          Writes a text table for creating bubble plots. table need to be mapped to sprinzl coordinates.
         """
-
         tableDict = {}
-        # pandasDict = {}
         nameSet = ["aa", "coord", "state", "fbits", "fht", "gainbits", "gainfht", "lossbits", "lossfht", "convbits",
                    "convfht", "x", "y", "sprinzl"]
         functionlist = list(self.functions)
         for name in nameSet:
             tableDict[name] = np.zeros(len(functionlist) * self.pos * 4, )
+        singles = [s for s in self.singles if not "-" in s]
+        tableDict['coord'] = [single for single in range(self.pos) for state in singles for t in self.functions]
+        tableDict['aa'] = [t for single in range(self.pos) for state in singles for t in self.functions]
+        tableDict['state'] = [state for single in range(self.pos) for state in singles for t in self.functions]
 
-        tableDict['aa'] = [item for item in functionlist for i in range(self.pos * 4)]
-        tableDict['coord'] = [item for item in range(self.pos) for i in range(4)] * len(functionlist)
-        tableDict['state'] = [s for s in self.singles if not "-" in s] * len(functionlist) * self.pos
+        tableDict['fht'] = [fore_logo_height[single][state][t] for single in range(self.pos) for state in singles
+                            for t in self.functions]
+        tableDict['gainfht'] = [fore_idlogo_height[single][state][t] for single in range(self.pos) for state in
+                                singles for t in self.functions]
+        tableDict['convfht'] = [kld_height[single][state][t] for single in range(self.pos) for state in singles for
+                                t in self.functions]
+        tableDict['lossfht'] = [back_idlogo_height[single][state][t] for single in range(self.pos) for state in
+                                singles for t in self.functions]
 
+        tableDict['fbits'] = [fore_logo_info[single][state] for single in range(self.pos) for state in singles
+                              for t in self.functions]
+        tableDict['gainbits'] = [fore_idlogo_info[single][state] for single in range(self.pos) for state in singles
+                                 for t in self.functions]
+        tableDict['lossbits'] = [back_idlogo_info[single][state] for single in range(self.pos) for state in singles
+                                 for t in self.functions]
+        tableDict['convbits'] = [kld_info[single][state] for single in range(self.pos) for state in singles for t
+                                 in self.functions]
         pandasTable = pd.DataFrame(tableDict)
-        for single in range(self.pos):
-            for state in fore_logo_info[single]:
-                pandasTable.loc[
-                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'fbits'] = \
-                    fore_logo_info[single][state]
-                pandasTable.loc[
-                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'gainbits'] = \
-                    fore_idlogo_info[single][state]
-        
-        for single in range(self.pos):
-            for state in fore_logo_height[single]:
-                for t in fore_logo_height[single][state]:
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                pandasTable['aa'] == t), 'fht'] = \
-                        fore_logo_height[single][state][t]
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                pandasTable['aa'] == t), 'gainfht'] = 0
-                    if fore_idlogo_height[single][state][t] > 0:
-                        pandasTable.loc[
-                            (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                    pandasTable['aa'] == t), 'gainfht'] = fore_idlogo_height[single][state][t]
-
-        for single in range(self.pos):
-            for state in back_idlogo_info[single]:
-                pandasTable.loc[
-                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'lossbits'] = \
-                    back_idlogo_info[single][state]
-
-        for single in range(self.pos):
-            for state in back_idlogo_height[single]:
-                for t in self.functions:
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                pandasTable['aa'] == t), 'lossfht'] = 0
-                    if back_idlogo_height[single][state][t] > 0:
-                        pandasTable.loc[
-                            (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                    pandasTable['aa'] == t), 'lossfht'] = \
-                            back_idlogo_height[single][state][t]
-
-        for single in range(self.pos):
-            for state in kld_info[single]:
-                pandasTable.loc[
-                    (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'convbits'] = kld_info[single][
-                    state]
-
-        for single in range(self.pos):
-            for state in kld_height[single]:
-                for t in kld_height[single][state]:
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state) & (
-                                pandasTable['aa'] == t), 'convfht'] = \
-                        kld_height[single][state][t]
-
         roundcols = ["fbits", "fht", "gainbits", "gainfht", "lossbits", "lossfht", "convbits",
                      "convfht"]
         pandasTable[roundcols] = pandasTable[roundcols].round(4)
         pandasTable['coord'] = pandasTable['coord'] + 1
-
-        filename = fore + "_Table.txt"
+        filename = "F_" + fore + "_B_" + back + "_Table.txt"
         pandasTable.to_csv(filename, index=None, sep='\t')
 
     #  _______________________ KLD/ID logo significance calculations ___________________________________________________
@@ -2190,7 +2151,7 @@ class FunctionLogoDifference:
                                                                        logo_dic[pair[0]].functions,
                                                                        logo_dic[pair[1]].functions, max)
 
-                    if method == "Miller":
+                    if method == "MM":
                         perm_id_list = self.calculate_perm_entropy_MM(permute_num, state_counts_back, state_counts_fore,
                                                                       sum(state_counts_back.values()),
                                                                       logo_dic[pair[0]].functions,
@@ -2211,7 +2172,7 @@ class FunctionLogoDifference:
                                                                        sum(state_counts_back.values()),
                                                                        logo_dic[pair[0]].functions,
                                                                        logo_dic[pair[1]].functions, max)
-                    if method == "Miller":
+                    if method == "MM":
                         perm_id_list = self.calculate_perm_entropy_MM(permute_num, state_counts_back, state_counts_fore,
                                                                       sum(state_counts_back.values()),
                                                                       logo_dic[pair[0]].functions,
@@ -2447,5 +2408,5 @@ class FunctionLogoDifference:
                         (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'F-sample-size'] = sum(
                         state_counts2.values())
 
-            filename = prefix + "_B_" + key[0] + "_F_" + key[1] + ".txt"
+            filename = prefix + '_' + key[1] + '_' + key[0] + "_stats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')
