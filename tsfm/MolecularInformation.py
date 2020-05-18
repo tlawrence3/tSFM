@@ -864,7 +864,7 @@ class FunctionLogo:
         kind (:obj:`str`): secondary structure notation format.
     """
 
-    def __init__(self, struct_file, kind=None, nosingle):
+    def __init__(self, struct_file, kind=None, nosingle=None):
         self.exact = []
         self.inverse_exact = []
         self.nosingle = nosingle
@@ -2342,64 +2342,75 @@ class FunctionLogoDifference:
     def approx_expect(self, H, k, N):
         return H - ((k - 1) / ((mt.log(4)) * N))
 
-    def write_pvalues(self, P, height, logo_dic, prefix):
+    def addstats(self, pvalues, correction):
+        P_corrected = {}
+        for key in pvalues.keys():
+            P_corrected[key] = defaultdict(lambda: defaultdict(float))
+            bp_coords = []
+            ss_coords = []
+            for coord in pvalues[key]:
+                # for state in pvalues[key][coord]:
+                if ("," in str(coord)):
+                    bp_coords.append(coord)
+                else:
+                    ss_coords.append(coord)
+
+            test_ss = []
+            test_bp = []
+            ss_coords.sort()
+            bp_coords.sort()
+            for coord in ss_coords:
+                for state in sorted(pvalues[key][coord]):
+                    test_ss.append(pvalues[key][coord][state])
+
+            for coord in bp_coords:
+                for state in sorted(pvalues[key][coord]):
+                    test_bp.append(pvalues[key][coord][state])
+
+            test_bp_results = smm.multipletests(test_bp, method=correction)[1].tolist()
+            test_ss_results = smm.multipletests(test_ss, method=correction)[1].tolist()
+
+            for coord in ss_coords:
+                for state in sorted(pvalues[key][coord]):
+                    P_corrected[key][coord][state] = test_ss_results.pop(0)
+
+            for coord in bp_coords:
+                for state in sorted(pvalues[key][coord]):
+                    P_corrected[key][coord][state] = test_bp_results.pop(0)
+
+        return P_corrected
+
+    def write_pvalues(self, P, corrected_P, height, logo_dic, prefix):
         tableDict = {}
-        nameSet = ["coord", "state", "P-value", "height", "B-sample-size",
-                   "F-sample-size"]
+        nameSet = ["coord", "state", "P-value", "corrected_P", "height", "B-sample-size", "F-sample-size"]
         for name in nameSet:
             tableDict[name] = np.zeros(self.pos * len(self.singles) + len(self.basepairs) * len(self.pairs), )
 
-        tableDict['coord'] = []
-        for item1 in range(len(self.singles)):
-            for item2 in range(self.pos):
-                tableDict['coord'].append(item2)
-        for item1 in range(len(self.pairs)):
-            for item2 in self.basepairs:
-                tableDict['coord'].append(item2)
-
-        tableDict['state'] = []
-        for item1 in self.singles:
-            tableDict['state'].extend(np.repeat(item1, self.pos))
-        for item1 in self.pairs:
-            tableDict['state'].extend(np.repeat(item1, len(self.basepairs)))
-
         pairwise_combinations = itertools.permutations(P.keys(), 2)
         for key in pairwise_combinations:
+            tableDict['coord'] = [pos for pos in range(self.pos) for state in self.singles] + \
+                                 [basepair for basepair in self.basepairs for state in P[key[0]][basepair]]
+            tableDict['state'] = [state for pos in range(self.pos) for state in self.singles] + \
+                                 [state for basepair in self.basepairs for state in P[key[0]][basepair]]
+            tableDict['P-value'] = [P[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
+                                   [P[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                    P[key[0]][basepair]]
+            tableDict['corrected_P'] = [corrected_P[key[0]][pos][state] for pos in range(self.pos) for state in
+                                        self.singles] + \
+                                       [corrected_P[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                        P[key[0]][basepair]]
+            tableDict['height'] = [height[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
+                                  [height[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                   P[key[0]][basepair]]
+            tableDict['B-sample-size'] = [sum((logo_dic[key[0]].get([pos], state)).values()) for pos in range(self.pos)
+                                          for state in self.singles] + \
+                                         [sum((logo_dic[key[0]].get(basepair, state)).values()) for basepair in
+                                          self.basepairs for state in P[key[0]][basepair]]
+            tableDict['F-sample-size'] = [sum((logo_dic[key[1]].get([pos], state)).values()) for pos in range(self.pos)
+                                          for state in self.singles] + \
+                                         [sum((logo_dic[key[1]].get(basepair, state)).values()) for basepair in
+                                          self.basepairs for state in P[key[1]][basepair]]
             pandasTable = pd.DataFrame(tableDict)
-            for single in range(self.pos):
-                for state in P[key[0]][single]:
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'P-value'] = \
-                        P[key[0]][single][state]
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'height'] = \
-                        height[key[0]][single][state]
-                    state_counts1 = logo_dic[key[0]].get([single], state)
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'B-sample-size'] = sum(
-                        state_counts1.values())
-                    state_counts2 = logo_dic[key[1]].get([single], state)
-                    pandasTable.loc[
-                        (pandasTable['coord'] == single) & (pandasTable['state'] == state), 'F-sample-size'] = sum(
-                        state_counts2.values())
-
-            for basepair in self.basepairs:
-                for state in P[key[0]][basepair]:
-                    pandasTable.loc[
-                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'P-value'] = \
-                        P[key[0]][basepair][state]
-                    pandasTable.loc[
-                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'height'] = \
-                        height[key[0]][basepair][state]
-                    state_counts1 = logo_dic[key[0]].get(basepair, state)
-                    pandasTable.loc[
-                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'B-sample-size'] = sum(
-                        state_counts1.values())
-                    state_counts2 = logo_dic[key[1]].get(basepair, state)
-                    pandasTable.loc[
-                        (pandasTable['coord'] == basepair) & (pandasTable['state'] == state), 'F-sample-size'] = sum(
-                        state_counts2.values())
-
             filename = prefix + '_' + key[1] + '_' + key[0] + "_stats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')
 

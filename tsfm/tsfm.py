@@ -6,7 +6,6 @@ import itertools
 import tsfm.MolecularInformation as MolecularInformation
 from tsfm._version import __version__
 
-
 def main():
     # Setup parser
     parser = argparse.ArgumentParser(
@@ -305,10 +304,11 @@ def main():
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
                 kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldperms,
-                                                                       args.processes, args.correction, args.test)
+                                                                       args.processes)
+                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, args.correction)
 
                 print("Writing text output for KLD significance")
-                klddifference.write_pvalues(kld_pvalues, kld_infos, logo_dict_pair, "KLD")
+                klddifference.write_pvalues(kld_pvalues, kld_pvalues_corrected, kld_infos, logo_dict_pair, "KLD")
 
             if args.idperms:
                     print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
@@ -319,11 +319,10 @@ def main():
                     id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idperms,
                                                                         args.processes,
                                                                         args.exact,
-                                                                        args.entropy,
-                                                                        args.correction,
-                                                                        args.test)
+                                                                        args.entropy)
+                    id_pvalues_corrected = iddifference.addstats(id_pvalues, args.correction)
                     print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_infos, logo_dict_pair, "ID")
+                    iddifference.write_pvalues(id_pvalues, id_pvalues_corrected, id_infos, logo_dict_pair, "ID")
 
 if __name__ == "__main__":
     main()
