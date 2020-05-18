@@ -438,7 +438,7 @@ class FunctionLogoResults:
             self.info = info
             self.height = height
 
-    def add_stats(self, distribution, correction, inverse=False):
+    def add_stats(self, distribution, correction, test, nosingle, inverse=False):
         """
         Perform statisical testing and multiple test correction
         Calculates p-values and multiple testing corrected p-values for
@@ -451,15 +451,18 @@ class FunctionLogoResults:
                 distributions of information content of structural
                 features and functional class height.
             correction (:obj:`str`): Multiple test correction method.
+            test (:obj:`str`): Indicate statistical testing and multiple test correction of only stack height, only letter height, or both.
+            nosingle (:obj:`bool`): Indicate statistical testing and multiple test correction of basepair features only.
             inverse (:obj:`bool`): Produce statistical tests for
                 anti-determinates.
         """
         self.correction = correction
         if (inverse):
             self.inverse_p = distribution.stat_test(self.inverseInfo, self.inverseHeight,
-                                                    correction)
+                                                    correction, test, nosingle)
         else:
-            self.p = distribution.stat_test(self.info, self.height, correction)
+            self.p = distribution.stat_test(self.info, self.height, correction, test,
+                                            nosingle)
 
     def get(self, position, state):
         ret_counter = Counter()
@@ -732,7 +735,7 @@ class FunctionLogoDist:
         self.ssinfo_sorted_keys = sorted(self.singleinfodist.keys())
         self.ssheight_sorted_keys = sorted(self.singleheightdist.keys())
 
-    def stat_test(self, info, height, correction):
+    def stat_test(self, info, height, correction, test, nosingle):
         """
         Performs statistical tests and multiple test correction.
         Calculates a p-value using a right tail probability test on the
@@ -747,6 +750,8 @@ class FunctionLogoDist:
             correction (:obj:`str`): Method for multiple test correction. Any
                 method available in :class:`statsmodels.stats.multitest` is a
                 valid option
+            test (:obj:`str`): Indicate statistical testing and multiple test correction of only stack height, only letter height, or both.
+            nosingle (:obj:`bool`): Indicate statistical testing and multiple test correction of basepair features only.
         """
         P = defaultdict(lambda: defaultdict(float))
         P_corrected = defaultdict(lambda: defaultdict(float))
@@ -770,53 +775,128 @@ class FunctionLogoDist:
                         p[coord][pairtype][aa] = self.rtp(self.singleheightdist,
                                                           info[coord][pairtype] * height[coord][pairtype][aa],
                                                           self.ssheight_sorted_keys)
-        test_bp = []
-        test_ss = []
+        #choices=['stacks', 'letters', 'both'], dest="test") 
+        
+        test_bp_stack = []
+        test_ss_stack = []
+        test_bp_letter = []
+        test_ss_letter = []
+        
         bp_coords.sort()
         ss_coords.sort()
+        
+        #add stack p-values for multi test correction
         for coord in bp_coords:
             for pairtype in sorted(P[coord]):
-                test_bp.append(P[coord][pairtype])
+                test_bp_stack.append(P[coord][pairtype])
 
         for coord in ss_coords:
             for pairtype in sorted(P[coord]):
-                test_ss.append(P[coord][pairtype])
-
-        test_bp_results = smm.multipletests(test_bp, method=correction)[1].tolist()
-        test_ss_results = smm.multipletests(test_ss, method=correction)[1].tolist()
-
-        for coord in bp_coords:
-            for pairtype in sorted(P[coord]):
-                P_corrected[coord][pairtype] = test_bp_results.pop(0)
-
-        for coord in ss_coords:
-            for pairtype in sorted(P[coord]):
-                P_corrected[coord][pairtype] = test_ss_results.pop(0)
-
-        test_bp = []
-        test_ss = []
+                test_ss_stack.append(P[coord][pairtype])
+        
+        #add letter p-values for multi test correction
         for coord in bp_coords:
             for pairtype in sorted(p[coord]):
                 for aa in sorted(p[coord][pairtype]):
-                    test_bp.append(p[coord][pairtype][aa])
+                    test_bp_letter.append(p[coord][pairtype][aa])
 
         for coord in ss_coords:
             for pairtype in sorted(p[coord]):
                 for aa in sorted(p[coord][pairtype]):
-                    test_ss.append(p[coord][pairtype][aa])
+                    test_ss_letter.append(p[coord][pairtype][aa])
 
-        test_bp_results = smm.multipletests(test_bp, method=correction)[1].tolist()
-        test_ss_results = smm.multipletests(test_ss, method=correction)[1].tolist()
+        #choices=['stacks', 'letters', 'both'], dest="test")
+        if nosingle:
+            if test == "stacks":
+                test_bp_results = smm.multipletests(test_bp_stack, method=correction)[1].tolist()
+                for coord in bp_coords:
+                    for pairtype in sorted(P[coord]):
+                        P_corrected[coord][pairtype] = test_bp_results.pop(0)
+            elif test == "letters":
+                test_bp_results = smm.multipletests(test_bp_letter, method=correction)[1].tolist()
+                for coord in bp_coords:
+                    for pairtype in sorted(p[coord]):
+                        for aa in sorted(p[coord][pairtype]):
+                            p_corrected[coord][pairtype][aa] = test_bp_results.pop(0)
+            else:
+                test_bp_results = smm.multipletests(test_bp_stack + test_bp_letter,
+                                                    method=correction)[1].tolist()
+                for coord in bp_coords:
+                    for pairtype in sorted(P[coord]):
+                        P_corrected[coord][pairtype] = test_bp_results.pop(0)
+                for coord in bp_coords:
+                    for pairtype in sorted(p[coord]):
+                        for aa in sorted(p[coord][pairtype]):
+                            p_corrected[coord][pairtype][aa] = test_bp_results.pop(0)
+        else:
+            if test == "stacks":
+                test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack, 
+                                                      method=correction)[1].tolist()
+                for coord in bp_coords:
+                    for pairtype in sorted(P[coord]):
+                        P_corrected[coord][pairtype] = test_bpss_results.pop(0)
 
-        for coord in bp_coords:
-            for pairtype in sorted(p[coord]):
-                for aa in sorted(p[coord][pairtype]):
-                    p_corrected[coord][pairtype][aa] = test_bp_results.pop(0)
+                for coord in ss_coords:
+                    for pairtype in sorted(P[coord]):
+                        P_corrected[coord][pairtype] = test_bpss_results.pop(0)
 
-        for coord in ss_coords:
-            for pairtype in sorted(p[coord]):
-                for aa in sorted(p[coord][pairtype]):
-                    p_corrected[coord][pairtype][aa] = test_ss_results.pop(0)
+            elif test == "letters":
+                test_bpss_results = smm.multipletests(test_bp_letter + test_ss_letter,
+                                                      method=correction)[1].tolist()
+                for coord in bp_coords:
+                    for pairtype in sorted(p[coord]):
+                        for aa in sorted(p[coord][pairtype]):
+                            p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
+
+                for coord in ss_coords:
+                    for pairtype in sorted(p[coord]):
+                        for aa in sorted(p[coord][pairtype]):
+                            p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
+            else:
+                test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack + test_bp_letter + test_ss_letter,
+                                                    method=correction)[1].tolist()
+                for coord in bp_coords:
+                    for pairtype in sorted(P[coord]):
+                        P_corrected[coord][pairtype] = test_bpss_results.pop(0)
+
+                for coord in ss_coords:
+                    for pairtype in sorted(P[coord]):
+                        P_corrected[coord][pairtype] = test_bpss_results.pop(0)
+                
+                for coord in bp_coords:
+                    for pairtype in sorted(p[coord]):
+                        for aa in sorted(p[coord][pairtype]):
+                            p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
+
+                for coord in ss_coords:
+                    for pairtype in sorted(p[coord]):
+                        for aa in sorted(p[coord][pairtype]):
+                            p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
+        
+        #test_bp_results = smm.multipletests(test_bp_stack, method=correction)[1].tolist()
+        #test_ss_results = smm.multipletests(test_ss_stack, method=correction)[1].tolist()
+        #test_bp_results = smm.multipletests(test_bp_letter, method=correction)[1].tolist()
+        #test_ss_results = smm.multipletests(test_ss_letter, method=correction)[1].tolist()
+
+        #Assign corrected p-values for stack height
+        #for coord in bp_coords:
+        #    for pairtype in sorted(P[coord]):
+        #        P_corrected[coord][pairtype] = test_bp_results.pop(0)
+
+        #for coord in ss_coords:
+        #    for pairtype in sorted(P[coord]):
+        #        P_corrected[coord][pairtype] = test_ss_results.pop(0)
+
+        #Assign corrected p-values for letter height
+        #for coord in bp_coords:
+        #    for pairtype in sorted(p[coord]):
+        #        for aa in sorted(p[coord][pairtype]):
+        #            p_corrected[coord][pairtype][aa] = test_bp_results.pop(0)
+
+        #for coord in ss_coords:
+        #    for pairtype in sorted(p[coord]):
+        #        for aa in sorted(p[coord][pairtype]):
+        #            p_corrected[coord][pairtype][aa] = test_ss_results.pop(0)
 
         return {'P': P, 'p': p, "P_corrected": P_corrected, "p_corrected": p_corrected}
 
