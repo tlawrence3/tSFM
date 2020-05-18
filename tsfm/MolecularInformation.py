@@ -499,16 +499,23 @@ class FunctionLogoResults:
                     output_string += "\t{}\t{}\t{:05.3f}\t".format(pairtype, sum(self.get(coord, pairtype).values()),
                                                                    self.info[coord][pairtype])
                     if (self.p):
-                        output_string += "{:08.6f}".format(self.p['P'][coord][pairtype])
-                        output_string += "\t{:08.6f}".format(self.p['P_corrected'][coord][pairtype])
-
+                        if coord in self.p['P']:
+                            output_string += "{:08.6f}".format(self.p['P'][coord][pairtype])
+                            output_string += "\t{:08.6f}".format(self.p['P_corrected'][coord][pairtype])
+                        else:
+                            output_string += "NA"
+                            output_string += "\tNA"
+                            
                     output_string += "\t"
                     for aainfo in sorted(self.height[coord][pairtype].items(), key=itemgetter(1), reverse=True):
                         output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
-                            output_string += ":{:08.6f}".format(self.p['p'][coord][pairtype][aainfo[0].upper()])
-                            output_string += ":{:08.6f}".format(
-                                self.p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                            if coord in self.p['p']:
+                                output_string += ":{:08.6f}".format(self.p['p'][coord][pairtype][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                            else:
+                                output_string += ":NA"
+                                output_string += ":NA"
                         output_string += " "
 
                     print(output_string, file=file_handle)
@@ -522,16 +529,22 @@ class FunctionLogoResults:
                     output_string += "\t{}\t{}\t{:05.3f}\t".format(pairtype, sum(self.get(coord, pairtype).values()),
                                                                    self.inverseInfo[coord][pairtype])
                     if (self.p):
-                        output_string += "{:08.6f}".format(self.inverse_p['P'][coord][pairtype])
-                        output_string += "\t{:08.6f}".format(self.inverse_p['P_corrected'][coord][pairtype])
-
+                        if coord in self.inverse_p['P']:
+                            output_string += "{:08.6f}".format(self.inverse_p['P'][coord][pairtype])
+                            output_string += "\t{:08.6f}".format(self.inverse_p['P_corrected'][coord][pairtype])
+                        else:
+                            output_string += "NA"
+                            output_string += "\tNA"
                     output_string += "\t"
                     for aainfo in sorted(self.inverseHeight[coord][pairtype].items(), key=itemgetter(1), reverse=True):
                         output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
-                            output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][pairtype][aainfo[0].upper()])
-                            output_string += ":{:08.6f}".format(
-                                self.inverse_p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                            if coord in self.inverse_p['p']:
+                                output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][pairtype][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                            else:
+                                output_string += ":NA"
+                                output_string += ":NA"
                         output_string += " "
 
                     print(output_string, file=file_handle)
@@ -544,15 +557,23 @@ class FunctionLogoResults:
                                                                        sum(self.get([coord], base).values()),
                                                                        self.info[coord][base])
                     if (self.p):
-                        output_string += "\t{:08.6f}".format(self.p['P'][coord][base])
-                        output_string += "\t{:08.6f}".format(self.p['P_corrected'][coord][base])
+                        if coord in self.p['P']:
+                            output_string += "\t{:08.6f}".format(self.p['P'][coord][base])
+                            output_string += "\t{:08.6f}".format(self.p['P_corrected'][coord][base])
+                        else:
+                            output_string += "\tNA"
+                            output_string += "\tNA"
 
                     output_string += "\t"
                     for aainfo in sorted(self.height[coord][base].items(), key=itemgetter(1), reverse=True):
                         output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
-                            output_string += ":{:08.6f}".format(self.p['p'][coord][base][aainfo[0].upper()])
-                            output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][base][aainfo[0].upper()])
+                            if coord in self.p['p']:
+                                output_string += ":{:08.6f}".format(self.p['p'][coord][base][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][base][aainfo[0].upper()])
+                            else:
+                                output_string += ":NA"
+                                output_string += ":NA"
                         output_string += " "
 
                     print(output_string, file=file_handle)
@@ -566,16 +587,23 @@ class FunctionLogoResults:
                                                                         sum(self.get([coord], base).values()),
                                                                         self.inverseInfo[coord][base])
                     if (self.p):
-                        output_string += "\t{:08.6f}".format(self.inverse_p['P'][coord][base])
-                        output_string += "\t{:08.6f}".format(self.inverse_p['P_corrected'][coord][base])
+                        if coord in self.inverse_p['P']:
+                            output_string += "\t{:08.6f}".format(self.inverse_p['P'][coord][base])
+                            output_string += "\t{:08.6f}".format(self.inverse_p['P_corrected'][coord][base])
+                        else:
+                            output_string += "\tNA"
+                            output_string += "\tNA"
 
                     output_string += "\t"
                     for aainfo in sorted(self.inverseHeight[coord][base].items(), key=itemgetter(1), reverse=True):
                         output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
-                            output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][base][aainfo[0].upper()])
-                            output_string += ":{:08.6f}".format(
-                                self.inverse_p['p_corrected'][coord][base][aainfo[0].upper()])
+                            if coord in self.inverse_p['p']:
+                                output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][base][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][base][aainfo[0].upper()])
+                            else:
+                                output_string += ":NA"
+                                output_string += ":NA"
                         output_string += " "
 
                     print(output_string, file=file_handle)
