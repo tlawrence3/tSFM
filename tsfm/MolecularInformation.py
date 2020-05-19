@@ -1108,16 +1108,24 @@ class FunctionLogo:
         kind (:obj:`str`): secondary structure notation format.
     """
     
-    def __init__(self, struct_file, kind=None, exact_init=None, inverse_init=None, nosingle=None):
-        self.exact = []
-        self.inverse_exact = []
-        self.nosingle = nosingle
-        
-        if kind == "s":
-            self.basepairs = []
+    def __init__(self, struct_file, kind=None, exact_init=None, inverse_init=None):
+        if exact_init:
+            self.exact = exact_init
         else:
-            self.parse_struct(struct_file, kind)
-       
+            self.exact = []
+        if inverse_init:
+            self.inverse_exact = inverse_init
+        else:
+            self.inverse_exact = []
+        
+        if kind:
+            if kind == "s":
+                self.basepairs = []
+            else:
+                self.parse_struct(struct_file, kind)
+        else:
+            self.basepairs = struct_file
+        
         self.pos = 0
         self.sequences = []
         self.pairs = set()
