@@ -182,9 +182,10 @@ def main():
     if (args.permutations):
         print("Calculating p-values using {} multiple test correction".format(args.correction))
         for key in results:
-            results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test)
+            results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test, args.nosingle)
             if (args.inverse):
-                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test, inverse=True)
+                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test,
+                                       args.nosingle, inverse=True)
 
     for key in results:
         print("Writing text output for {}".format(key))
