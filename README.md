@@ -1,6 +1,15 @@
 [![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]()
 # Read the docs
 http://tsfm-trna-structure-function-mapper.readthedocs.io/en/latest/
+
+# Running tests
+```shell
+pip install pytest
+pip install -r requirements.txt
+python setup.py build_ext --inplace
+python -m pytest tests/
+```
+
 # Example command
 ```shell
 tsfm -vc struct_file.txt ferns/FERN Gnetidae/GNET -j
