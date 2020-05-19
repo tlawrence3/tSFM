@@ -94,19 +94,19 @@ def main():
     if (args.text):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text", None, args.nosingle)
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.text, "text", None, None, args.nosingle)
     elif (args.cove):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove", None, args.nosingle)
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.cove, "cove", None, None, args.nosingle)
     elif (args.infernal):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.infernal, "infernal", None, args.nosingle)
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(args.infernal, "infernal", None, None, args.nosingle)
     elif (args.single):
         for prefix in args.file_prefix:
             prefix_name = prefix.split("/")[-1]
-            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(None, "s", None, args.nosingle)
+            logo_dict[prefix_name] = MolecularInformation.FunctionLogo(None, "s", None, None, args.nosingle)
 
     for prefix in args.file_prefix:
         prefix_name = prefix.split("/")[-1]
