@@ -1108,7 +1108,7 @@ class FunctionLogo:
         kind (:obj:`str`): secondary structure notation format.
     """
     
-    def __init__(self, struct_file, kind=None, exact=none, nosingle=None):
+    def __init__(self, struct_file, kind=None, exact=None, nosingle=None):
         self.exact = []
         self.inverse_exact = []
         self.nosingle = nosingle
