@@ -1072,9 +1072,9 @@ class FunctionLogoDist:
             if (point <= keys_sorted[-1]):
                 for y in keys_sorted[i:]:
                     part += data[y]
-                return part / total
+                return (part + 1) / (total + 1)
             else:
-                return 0.0
+                return 1 / (total + 1)
         else:
             return 1.0
 
