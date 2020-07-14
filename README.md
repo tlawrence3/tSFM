@@ -1,8 +1,26 @@
-[![Travis](https://img.shields.io/travis/tlawrence3/tsfm.svg)]()
-# Read the docs
-http://tsfm-trna-structure-function-mapper.readthedocs.io/en/latest/
 
-# Running tests
+# Installation
+1. Download tSFM and example data using the below bash command or the zip link: 
+```bash
+git clone https://github.com/tlawrence3/tSFM.git
+```
+2. Change into the `tSFM` directory
+```bash
+cd tSFM
+```
+3. We recommend using [anaconda](https://www.anaconda.com/products/individual) and conda enviroments for installing and using tSFM. The following commands will create a conda environment with all the required packages and activate it.
+```bash
+conda create -n tSFM python=3.8 pandas numpy cython pytest-runner pytest scipy pasty mpmath statsmodels
+conda activate tSFM
+```
+4. Now we can install tSFM and run a basic test the installation with the below commands:
+```bash
+python setup.py install
+tSFM -h
+```
+
+# Running more extensive tests
+If you want to run more extensive testing that we utilize during development you can use the below commands:
 ```shell
 pip install pytest
 pip install -r requirements.txt
@@ -10,57 +28,7 @@ python setup.py build_ext --inplace
 python -m pytest tests/
 ```
 
-# Example command
-```shell
-tsfm -vc struct_file.txt ferns/FERN Gnetidae/GNET -j
-```
-This example command assumes you have the below directory structure and follow this file naming convention (`otuName_function.aln`) for sequence alignment files in clustal format:
-```shell
-.
-├── Gnetidae
-│   ├── GNET_A.aln
-│   ├── GNET_C.aln
-│   ├── GNET_D.aln
-│   ├── GNET_E.aln
-│   ├── GNET_F.aln
-│   ├── GNET_G.aln
-│   ├── GNET_H.aln
-│   ├── GNET_I.aln
-│   ├── GNET_J.aln
-│   ├── GNET_K.aln
-│   ├── GNET_L.aln
-│   ├── GNET_M.aln
-│   ├── GNET_N.aln
-│   ├── GNET_P.aln
-│   ├── GNET_Q.aln
-│   ├── GNET_R.aln
-│   ├── GNET_S.aln
-│   ├── GNET_T.aln
-│   ├── GNET_V.aln
-│   ├── GNET_W.aln
-│   ├── GNET_X.aln
-│   └── GNET_Y.aln
-└── ferns
-    ├── FERN_A.aln
-    ├── FERN_C.aln
-    ├── FERN_D.aln
-    ├── FERN_E.aln
-    ├── FERN_F.aln
-    ├── FERN_G.aln
-    ├── FERN_H.aln
-    ├── FERN_I.aln
-    ├── FERN_J.aln
-    ├── FERN_K.aln
-    ├── FERN_L.aln
-    ├── FERN_M.aln
-    ├── FERN_N.aln
-    ├── FERN_P.aln
-    ├── FERN_Q.aln
-    ├── FERN_R.aln
-    ├── FERN_S.aln
-    ├── FERN_T.aln
-    ├── FERN_V.aln
-    ├── FERN_W.aln
-    ├── FERN_X.aln
-    └── FERN_Y.aln
-```
+# Quickstart tutorial
+As a quick introduction to the functionality of of tSFM we will be utilizing the data from: 
+
+Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.
