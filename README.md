@@ -56,6 +56,18 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
       ```shell
       -c tRNA_L_skel_Leish.sites74.struct.cove
       ```
+      d. The below option indicates that we want graphic output of function logos. If we excluded this option, tSFM would only produce the text output file.
+      ```shell
+      --logo
+      ```
+      c. The `-p` option indicates the number of processor cores we want to utilize during the calculations. Below we have indicated we want to use 10 cores.
+      ```shell
+      -p 10
+      ```
+      e. Lastly, the below argument provides the path and prefix to the alignment files containing our tRNA sequences. For function/ID/KLD logos tSFM expects alignments partitioned into "taxa" by the prefix and functional class by the postfix. For example, in the `HOMO` directory, we have the alignement file `HOMO_A.aln`, which the prefix `HOMO` indicates the "taxa" and the postfix `_A` indicates the alignment file contains sequences for the Alanine functional class.  
+      ```shell
+      HOMO/HOMO
+      ```
 # Recreating the supplemental figure from the tSFM publication
 # Appendix 
 ## Structure file
