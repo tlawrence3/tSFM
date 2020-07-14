@@ -52,4 +52,10 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
       ```shell
       -x 5
       ```
+      c. The `-c` option provides the path to the file containing the secondary structure annotation in cove format. This is required for basepair function logos and can be provided in `inferenal`, `cove`, or `text` format. These format as described in below in Appendix section. 
+      ```shell
+      -c tRNA_L_skel_Leish.sites74.struct.cove
+      ```
 # Recreating the supplemental figure from the tSFM publication
+# Appendix 
+## Structure file
