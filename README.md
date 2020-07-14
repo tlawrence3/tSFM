@@ -68,6 +68,10 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
       ```shell
       HOMO/HOMO
       ```
+2. To avoid having to manually enter the command to calculate function logos for each of the parasite clades, we can use a bash loop. The below command will loop through each folder and produce function logos for each clade.
+```shell
+for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 $d${d%/}; done
+```
 # Recreating the supplemental figure from the tSFM publication
 # Appendix 
 ## Structure file
