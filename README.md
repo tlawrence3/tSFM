@@ -43,4 +43,9 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
    ```shell
    tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo HOMO/HOMO
    ```
+   Lets break this command down so we can understand the options   
+      1. 
+      ```shell
+      -e NSB
+      ```
 # Recreating the supplemental figure from the tSFM publication
