@@ -38,8 +38,9 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
    ```shell
    cd Kelly2020_data
    ```
-This directory contains all of the aligned tRNA sequences used for analysis in Kelly et al. 2020. To create single site and basepair function logos for the human tRNA data using the NSB entropy estimator we can use this command: 
-```shell
-tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo HOMO/HOMO
-```
+   This directory contains all of the aligned tRNA sequences used for analysis in Kelly et al. 2020.
+   1. To create single site and basepair function logos for the human tRNA data using the NSB entropy estimator we can use this command:
+   ```shell
+   tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo HOMO/HOMO
+   ```
 # Recreating the supplemental figure from the tSFM publication
