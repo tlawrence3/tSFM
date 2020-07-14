@@ -41,11 +41,15 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
    
    2. To create single site and basepair function logos for the human tRNA data using the NSB entropy estimator we can use this command:
    ```shell
-   tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo HOMO/HOMO
+   tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 HOMO/HOMO
    ```
    3. Lets break this command down so we can understand the options   
-      i. The below `-e` option sets the entropy estimator to NSB. This can also be set to `Miller` to use the Miller-Madow estimator.
+      a. The below `-e` option sets the entropy estimator to NSB. This can also be set to `Miller` to use the Miller-Madow estimator.
       ```shell
       -e NSB
+      ```
+      b. The `-x` option indicates the maximum sample size for the calculation of the exact entropy correction. Correction values can be feasibly calculated for sample sizes up to ~16.
+      ```shell
+      -x 5
       ```
 # Recreating the supplemental figure from the tSFM publication
