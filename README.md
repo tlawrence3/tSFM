@@ -74,8 +74,10 @@ for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo
 ```
 3. Recreating ID/KLD logos and data table for bubble plots for `HOMO` versus `MAJOR` 
 ```shell
-tsfm -c tRNA_L_skel_Leish.sites74.struct.txt -e Miller -x 5 --idlogo --kldlogo --bt MAJOR/MAJOR HOMO/HOMO
+tsfm -c tRNA_L_skel_Leish.sites74.struct.txt -e Miller -x 5 --idlogos --kldlogos --bt MAJOR/MAJOR HOMO/HOMO
 ```
+
+# Statistical significance testing
 # Recreating the supplemental figure from the tSFM publication
 # Appendix 
 ## Structure file
