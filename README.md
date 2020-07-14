@@ -32,3 +32,13 @@ python -m pytest tests/
 As a quick introduction to the functionality of of tSFM we will be utilizing the data from: 
 
 [Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.](https://doi.org/10.1371/journal.pntd.0007983)
+
+1. Lets move into the example data directory.
+```shell
+cd Kelly2020_data
+```
+This directory contains all of the aligned tRNA sequences used for analysis in Kelly et al. 2020. To create single site and basepair function logos for the human tRNA data using the NSB entropy estimator we can use this command: 
+```shell
+tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo HOMO/HOMO
+```
+# Recreating the supplemental figure from the tSFM publication
