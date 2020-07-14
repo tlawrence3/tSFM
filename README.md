@@ -34,16 +34,16 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
 [Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.](https://doi.org/10.1371/journal.pntd.0007983)
 
 1. Recreating the function logos for the human tRNA data. This directory contains all of the aligned tRNA sequences used for analysis in Kelly et al. 2020.
-   a. First we need to change into the example data directory
+   1. First we need to change into the example data directory
    ```shell
    cd Kelly2020_data
    ```
    
-   b. To create single site and basepair function logos for the human tRNA data using the NSB entropy estimator we can use this command:
+   2. To create single site and basepair function logos for the human tRNA data using the NSB entropy estimator we can use this command:
    ```shell
    tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo HOMO/HOMO
    ```
-   c. Lets break this command down so we can understand the options   
+   3. Lets break this command down so we can understand the options   
       i. The below `-e` option sets the entropy estimator to NSB. This can also be set to `Miller` to use the Miller-Madow estimator.
       ```shell
       -e NSB
