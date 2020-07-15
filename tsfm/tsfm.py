@@ -306,7 +306,7 @@ def main():
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
                 kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldperms,
                                                                        args.processes)
-                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, args.correction)
+                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction])
 
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, kld_pvalues_corrected, kld_infos, logo_dict_pair, "KLD")
@@ -321,7 +321,7 @@ def main():
                                                                         args.processes,
                                                                         args.exact,
                                                                         args.entropy)
-                    id_pvalues_corrected = iddifference.addstats(id_pvalues, args.correction)
+                    id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction])
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, id_pvalues_corrected, id_infos, logo_dict_pair, "ID")
 
