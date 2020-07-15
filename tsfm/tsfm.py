@@ -130,11 +130,11 @@ def main():
                 logo_dict[key].calculate_exact(args.exact, args.processes, inverse=True)
 
     # Perform function label swapping permutations and calculate entropy distribution from permutations
+    multitest_methods = {'bonferroni': 'b', 'sidak': 's', 'holm': 'h',
+                         'holm-sidak': 'hs', 'simes-hochberg': 'sh',
+                         'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
+                         'GBS': 'fdr_gbs'}
     if (args.permutations):
-        multitest_methods = {'bonferroni': 'b', 'sidak': 's', 'holm': 'h',
-                             'holm-sidak': 'hs', 'simes-hochberg': 'sh',
-                             'hommel': 'ho', 'BH': 'fdr_bh', 'BY': 'fdr_by',
-                             'GBS': 'fdr_gbs'}
         perm_dict = {}
         for key in logo_dict:
             print("Generating permuted alignment data for {}".format(key), file=sys.stderr)
