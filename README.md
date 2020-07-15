@@ -79,5 +79,9 @@ tsfm -c tRNA_L_skel_Leish.sites74.struct.txt -e Miller -x 5 --idlogos --kldlogos
 
 # Statistical significance testing
 # Recreating the supplemental figure from the tSFM publication
+```shell
+tsfm --kldperms 10000 --idperms 10000 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO ENRIETTII/ENRIETTII MAJOR/MAJOR
+```
+
 # Appendix 
 ## Structure file
