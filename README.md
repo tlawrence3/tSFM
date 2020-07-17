@@ -78,6 +78,42 @@ tsfm -c tRNA_L_skel_Leish.sites74.struct.txt -e Miller -x 5 --idlogos --kldlogos
 ```
 
 # Statistical significance testing
+
+1. To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
+```shell
+tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 100 HOMO/HOMO
+```
+   The `-T` option will set the significance test for only CIF stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter- heights. the default is for both.
+   ```shell
+   -T stacks 
+   ```
+   The `-P` option will set the number of permutations for significance test of CIFs to 100. 
+   ```shell
+   -P 100
+   ```
+
+2. To calculate the significance of KLD-values with 100 permutations for clade humans and clade MAJOR against each other we can use this command:
+```shell
+tsfm --kldperms 100 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 HOMO/HOMO MAJOR/MAJOR
+```
+   The `--kldperms` option will set the number of permutations to compute significance of Kullback-Leibler Divergences (KLD values) to 100
+   ```shell
+   --kldperms 100
+   ```
+
+3. To calculate the significance of ID-values for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations we can use this command:
+```shell
+tsfm --idperms 100 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
+```
+   The `--idperms` will set the number of permutations to compute significance of Information Differences (ID values) to 100
+   ```shell
+   --idperms 100
+   ```
+   The `--clade` option will contrast two clades MAJOR and ENRIETTII against HOMO
+   ```shell
+   --clade HOMO
+   ```
+
 # Recreating the supplemental figure from the tSFM publication
 ```shell
 tsfm --kldperms 10000 --idperms 10000 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO ENRIETTII/ENRIETTII MAJOR/MAJOR
