@@ -77,7 +77,7 @@ for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo
 tsfm -c tRNA_L_skel_Leish.sites74.struct.txt -e Miller -x 5 --idlogos --kldlogos --bt MAJOR/MAJOR HOMO/HOMO
 ```
 
-# Statistical significance testing
+## Statistical significance testing
 tSFM implements statisitical significance testing using permutation based null distributions and corrects multiple testing using FDR and FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
 1. To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
