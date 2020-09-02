@@ -48,7 +48,7 @@ def main():
     parser.add_argument("-P", "--permutations",
                         help="Calculate the significance of CIFs by a permutation test, with a number of permutations equal to PERMUTATIONS (an integer). Default is to not calculate significance of CIFs.",
                         type=int, default=0)
-    parser.add_argument("-C",
+    parser.add_argument("-C", "--correction"
                         help="Specify a method for multiple test correction for significance calculations: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH", default="BH", choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY','GBS'], dest="correction")   
     parser.add_argument("-T",
                         help="Test the significance of only CIF stack-heights, only CIF letter-heights, or both. Default is both.",
