@@ -115,7 +115,8 @@ tsfm --idperms 100 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade 
    --clade HOMO
    ```
 
-# Recreating the supplemental figure from the tSFM publication (Warning: this will take ~14 hours on 24 cores)
+# Recreating the supplemental figure from the tSFM publication
+Warning: this will take ~14 hours on 24 cores
 ```shell
 tsfm --kldperms 10000 --idperms 10000 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO ENRIETTII/ENRIETTII MAJOR/MAJOR
 ```
