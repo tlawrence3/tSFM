@@ -121,8 +121,7 @@ Warning: this will take ~14 hours on 24 cores
 tsfm --kldperms 10000 --idperms 10000 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO ENRIETTII/ENRIETTII MAJOR/MAJOR
 ```
 
-# Appendix
-## Command line options
+# Usage
 ```
 file_prefix             One or more paths/file-prefix strings corresponding to
                         sets of input files compiled for a single clade in
