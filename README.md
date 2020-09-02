@@ -123,7 +123,7 @@ tsfm --kldperms 10000 --idperms 10000 -c tRNA_L_skel_Leish.sites74.struct.cove -
 ## Structure file
 ## Command line options
 ```
-file_prefix           One or more paths/file-prefix strings corresponding to
+file_prefix             One or more paths/file-prefix strings corresponding to
                         sets of input files compiled for a single clade in
                         clustalW format. Input files should be named
                         <path>/<prefix>_<functional-class>.<extension>, where
@@ -176,7 +176,7 @@ optional arguments:
                         test, with a number of permutations equal to
                         PERMUTATIONS (an integer). Default is to not calculate
                         significance of CIFs.
-  -C {bonferroni,sidak,holm,holm-sidak,simes-hochberg,hommel,BH,BY,GBS}
+  -C, --correction {bonferroni,sidak,holm,holm-sidak,simes-hochberg,hommel,BH,BY,GBS}
                         Specify a method for multiple test correction for
                         significance calculations: bonferroni, sidak, holm,
                         holm-sidak, simes-hochberg, hommel, BH (Benjamini-
