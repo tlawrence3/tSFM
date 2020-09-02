@@ -119,5 +119,90 @@ tsfm --idperms 100 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade 
 tsfm --kldperms 10000 --idperms 10000 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO ENRIETTII/ENRIETTII MAJOR/MAJOR
 ```
 
-# Appendix 
+# Appendix
 ## Structure file
+## Command line options
+```
+file_prefix           One or more paths/file-prefix strings corresponding to
+                        sets of input files compiled for a single clade in
+                        clustalW format. Input files should be named
+                        <path>/<prefix>_<functional-class>.<extension>, where
+                        <functional_class> is a single letter
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -i INFERNAL, --infernal INFERNAL
+                        Use secondary structure file INFERNAL, required to
+                        calculate functional information of base-pair
+                        features, in Infernal format
+  -c COVE, --cove COVE  Use secondary structure file COVE, required to
+                        calculate functional information of base-pair
+                        features, in COVE format. Example: "#=CS >>>>>>>..>>>>
+                        ...........<<<<.>>>>>.......<<<<<.....>>>>>.... #=CS
+                        ...<<<<<<<<<<<<."
+  -t TEXT, --text TEXT  Use secondary structure file TEXT, required to
+                        calculate functional information of base-pair
+                        features, is in text format. Example:
+                        "A:0,72,1,71,2,70,3,69,4,68,5,67,6,66
+                        D:9,25,10,24,11,23,12,22
+                        C:27,43,28,42,29,41,30,40,31,39
+                        T:49,65,50,64,51,63,52,62,53,61"
+  -s, --single          Do not calculate functional information for paired
+                        features. Calculate for single-site features only.
+  -n, --nosingle        Do not calculate functional information for single-
+                        site features. Calculate for paired-site features
+                        only.
+  -V, --version         show program's version number and exit
+  -p PROCESSES, --processes PROCESSES
+                        Set the maximum number of concurrent processes.
+                        Default is the number of cores reported by the
+                        operating system.
+  -e {NSB,MM}, --entropy {NSB,MM}
+                        Use entropy estimator ENTROPY when conditional sample
+                        sizes exceed maximum for exact calculation. If value
+                        is "NSB", use Nemenman-Shafee-Bialek estimator. If
+                        value is "MM", use Miller-Madow estimator. Default is
+                        NSB
+  -x EXACT, --exact EXACT
+                        Maximum conditional sample size to exactly calculate
+                        entropy correction. Default = 5
+  -l, --logos           Visualize feature information using function/inverse
+                        function logos in extended postscript format.
+  -v, --inverse         Additionally calculate functional information for
+                        inverse features/logos (features under-represented in
+                        specific functional classes)
+  -P PERMUTATIONS, --permutations PERMUTATIONS
+                        Calculate the significance of CIFs by a permutation
+                        test, with a number of permutations equal to
+                        PERMUTATIONS (an integer). Default is to not calculate
+                        significance of CIFs.
+  -C {bonferroni,sidak,holm,holm-sidak,simes-hochberg,hommel,BH,BY,GBS}
+                        Specify a method for multiple test correction for
+                        significance calculations: bonferroni, sidak, holm,
+                        holm-sidak, simes-hochberg, hommel, BH (Benjamini-
+                        Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS
+                        (Gavrilov-Benjamini-Sarkar FDR). Default is BH
+  -T {stacks,letters,both}
+                        Test the significance of only CIF stack-heights, only
+                        CIF letter-heights, or both. Default is both.
+  -I, --idlogos         Compute Information Differece logos for each pair of
+                        clades
+  -K, --kldlogos        Compute Kullback-Liebler Divergence logos for each
+                        pair of clades
+  -B, --bubbles         Compute input table for structural bubble-plots (to be
+                        computed in R) like those appearing in Kelly et al.
+                        (2020).
+  --kldperms KLDPERMS   Set the number of permutations to compute significance
+                        of Kullback-Leibler Divergences. Default is to not
+                        calculate signifiance.
+  --idperms IDPERMS     Set the number of permutations to compute significance
+                        of Information Differences (SLOW). Default is to not
+                        calculate signifiance.
+  -J, --JSD             Produce pairwise distance matrices between function
+                        logos for different taxa based on Jensen-Shannon
+                        Divergences
+  --clade CLADE         Contrast clade CLADE against all others. CLADE should
+                        be one of the file-prefix strings passed as a required
+                        argument to the program, stripped of its path. Default
+                        is to compute contrasts for all pairs of clades.
+```
