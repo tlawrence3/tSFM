@@ -138,8 +138,7 @@ optional arguments:
   -c COVE, --cove COVE  Use secondary structure file COVE, required to
                         calculate functional information of base-pair
                         features, in COVE format. Example: 
-                        #=CS >>>>>>>..>>>>
-                        ...........<<<<.>>>>>.......<<<<<.....>>>>>....
+                        #=CS >>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....
                         #=CS ...<<<<<<<<<<<<.
   -t TEXT, --text TEXT  Use secondary structure file TEXT, required to
                         calculate functional information of base-pair
