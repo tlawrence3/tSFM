@@ -137,9 +137,10 @@ optional arguments:
                         features, in Infernal format
   -c COVE, --cove COVE  Use secondary structure file COVE, required to
                         calculate functional information of base-pair
-                        features, in COVE format. Example: "#=CS >>>>>>>..>>>>
-                        ...........<<<<.>>>>>.......<<<<<.....>>>>>.... #=CS
-                        ...<<<<<<<<<<<<."
+                        features, in COVE format. Example: 
+                        #=CS >>>>>>>..>>>>
+                        ...........<<<<.>>>>>.......<<<<<.....>>>>>....
+                        #=CS ...<<<<<<<<<<<<.
   -t TEXT, --text TEXT  Use secondary structure file TEXT, required to
                         calculate functional information of base-pair
                         features, is in text format. Example:
