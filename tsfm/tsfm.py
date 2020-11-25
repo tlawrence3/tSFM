@@ -73,6 +73,13 @@ def main():
     parser.add_argument("--clade", type=str,
                         help="Contrast clade CLADE against all others. CLADE should be one of the file-prefix strings passed as a required argument to the program, stripped of its path. Default is to compute contrasts for all pairs of clades.")
 
+    parser.add_argument("-m", "--pmethod", type=str, default="GPD",
+                        help="..... If value is \"GPD\", ..... If value is \"ECDF_pseudo\", ..... . If value is \"ECDF_pseudo\", .... Default is GPD",
+                        choices=['GPD', 'ECDF_pseudo','ECDF'])
+    parser.add_argument("--targetperms",
+                        help="Set the initial target permutation number. Default is 0.",
+                        type=int, default=0)
+
     args = parser.parse_args()
 
     if (args.single and args.nosingle):
@@ -304,12 +311,15 @@ def main():
                 single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                 klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                kld_pvalues = klddifference.calculate_kld_significance(logo_dict_pair, kld_infos, args.kldperms,
-                                                                       args.processes)
+                kld_pvalues, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = klddifference.calculate_kld_significance(
+                    logo_dict_pair, kld_infos, args.kldperms,
+                    args.processes, args.pmethod, args.targetperms)
                 kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction])
 
                 print("Writing text output for KLD significance")
-                klddifference.write_pvalues(kld_pvalues, kld_pvalues_corrected, kld_infos, logo_dict_pair, "KLD")
+                klddifference.write_pvalues(kld_pvalues, kld_pvalues_corrected, kld_infos, logo_dict_pair, "KLD",
+                                            permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic,
+                                            excnum_dic, ADtest_dic)
 
             if args.idperms:
                     print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
@@ -317,13 +327,16 @@ def main():
                     single = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
                     iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
                     logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                    id_pvalues = iddifference.calculate_id_significance(logo_dict_pair, id_infos, args.idperms,
-                                                                        args.processes,
-                                                                        args.exact,
-                                                                        args.entropy)
+                    id_pvalues, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = iddifference.calculate_id_significance(
+                        logo_dict_pair, id_infos, args.idperms,
+                        args.processes,
+                        args.exact,
+                        args.entropy, args.pmethod, args.targetperms)
                     id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction])
                     print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, id_pvalues_corrected, id_infos, logo_dict_pair, "ID")
+                    iddifference.write_pvalues(id_pvalues, id_pvalues_corrected, id_infos, logo_dict_pair, "ID",
+                                               permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic,
+                                               excnum_dic, ADtest_dic)
 
 if __name__ == "__main__":
     main()
