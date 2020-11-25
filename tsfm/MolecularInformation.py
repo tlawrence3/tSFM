@@ -23,6 +23,12 @@ import pandas as pd
 import tsfm.nsb_entropy as nb
 import tsfm.exact as exact
 
+from operator import truediv
+from scipy import stats
+from scipy.stats import genpareto
+from skgof import  ad_test
+from scipy.stats import norm
+
 class DistanceCalculator:
     """A `DistanceCalculator` object contains methods for calculating several pairwise distance metrics between function logos.
     Currently, a `DistanceCalculator` object can calculate pairwise distance using the square-root of the Jensen-Shannon
@@ -2192,17 +2198,36 @@ class FunctionLogoDifference:
 
     #  _______________________ KLD/ID logo significance calculations ___________________________________________________
 
-    def calculate_kld_significance(self, logo_dict, kld_infos, permute_num, proc):
+    def calculate_kld_significance(self, logo_dict, kld_infos, permute_num, proc, pmethod,targetperms):
 
-        pvalue_dic = {}
-        start = 0
+        pvalue = {}
+        permnum = {}
+        ptype = {}
+        gpd_shape = {}
+        gpd_scale = {}
+        gpd_exceedances_size = {}
+        gpd_ADtest = {}
+        b_freq_table = {}
+        f_freq_table = {}
+
+        start_single = 0
         start_pair = 0
-        end = 0
+        end_single = 0
         kld = {}
+
 
         for key in kld_infos.keys():
             kld[key] = defaultdict(defaultdict)
-            pvalue_dic[key] = defaultdict(lambda: defaultdict(float))
+            pvalue[key] = defaultdict(lambda: defaultdict(float))
+            permnum[key] = defaultdict(lambda: defaultdict(float))
+            ptype[key] = defaultdict(lambda: defaultdict(float))
+            b_freq_table[key] = defaultdict(lambda: defaultdict(float))
+            f_freq_table[key] = defaultdict(lambda: defaultdict(float))
+            gpd_shape[key] = defaultdict(lambda: defaultdict(float))
+            gpd_scale[key] = defaultdict(lambda: defaultdict(float))
+            gpd_exceedances_size[key] = defaultdict(lambda: defaultdict(float))
+            gpd_ADtest[key] = defaultdict(lambda: defaultdict(float))
+
             for single in range(self.pos):
                 for state in kld_infos[key][single]:
                     kld[key][single][state] = kld_infos[key][single][state]
@@ -2216,46 +2241,79 @@ class FunctionLogoDifference:
             for x in range(proc):
                 if x == 0:
                     end_pair = len(self.basepairs) // proc + len(self.basepairs) % proc
-                    end = self.pos // proc + self.pos % proc
-                    perm_jobs.append((list(range(start, end)), permute_num, logo_dict, kld, start_pair, end_pair))
+                    end_single = self.pos // proc + self.pos % proc
+                    perm_jobs.append((list(range(start_single, end_single)), permute_num, logo_dict, kld, start_pair, end_pair,pmethod,targetperms))
                 else:
                     start_pair = end_pair
                     end_pair = start_pair + len(self.basepairs) // proc
-                    start = end
-                    end = end + self.pos // proc
-                    perm_jobs.append((list(range(start, end)), permute_num, logo_dict, kld, start_pair, end_pair))
+                    start_single = end_single
+                    end_single = end_single + self.pos // proc
+                    perm_jobs.append((list(range(start_single, end_single)), permute_num, logo_dict, kld, start_pair, end_pair,pmethod,targetperms))
 
-            pvalues = pool.starmap(self.perm_kld_calc_pvalue, perm_jobs, 1)
+            significant_calc_outputs = pool.starmap(self.perm_kld_calc_pvalue, perm_jobs, 1)
 
-        for x in pvalues:
+        for x in significant_calc_outputs:
             for key in logo_dict.keys():
-                for single in x[key]:
-                    for state in x[key][single]:
-                        pvalue_dic[key][single][state] = x[key][single][state]
+                for single in x["pvalue"][key]:
+                    for state in x["pvalue"][key][single]:
+                        pvalue[key][single][state] = x["pvalue"][key][single][state]
+                        permnum[key][single][state] = x["permnum"][key][single][state]
+                        ptype[key][single][state] = x["ptype"][key][single][state]
+                        b_freq_table[key][single][state] = x["bt"][key][single][state]
+                        f_freq_table[key][single][state] = x["ft"][key][single][state]
+                        gpd_shape[key][single][state] = x["shape"][key][single][state]
+                        gpd_scale[key][single][state] = x["scale"][key][single][state]
+                        gpd_exceedances_size[key][single][state] = x["excnum"][key][single][state]
+                        gpd_ADtest[key][single][state] = x["ADtest"][key][single][state]
 
-        return pvalue_dic
 
-    def perm_kld_calc_pvalue(self, positions, permute_num, logo_dic, kld_infos, start_pair, end_pair):
 
+        return pvalue, permnum, ptype, b_freq_table, f_freq_table, gpd_shape, gpd_scale, gpd_exceedances_size, gpd_ADtest
+
+    def perm_kld_calc_pvalue(self, positions, permute_num, logo_dic, kld_infos, start_pair, end_pair,pmethod,targetperms):
+
+        significant_calc_outputs = {}
         pvalue = {}
+        permnum = {}
+        ptype = {}
+        gpd_shape = {}
+        gpd_scale = {}
+        gpd_exceedances_size = {}
+        gpd_ADtest = {}
+        b_freq_table = {}
+        f_freq_table = {}
+
         pairwise_combinations = itertools.permutations(logo_dic.keys(), 2)
         for pair in pairwise_combinations:
             pvalue[pair[0]] = defaultdict(defaultdict)
+            permnum[pair[0]] = defaultdict(defaultdict)
+            ptype[pair[0]] = defaultdict(defaultdict)
+            b_freq_table[pair[0]] = defaultdict(defaultdict)
+            f_freq_table[pair[0]] = defaultdict(defaultdict)
+            gpd_shape[pair[0]] = defaultdict(defaultdict)
+            gpd_scale[pair[0]] = defaultdict(defaultdict)
+            gpd_exceedances_size[pair[0]] = defaultdict(defaultdict)
+            gpd_ADtest[pair[0]] = defaultdict(defaultdict)
+
             for single in positions:
                 for state in self.singles:
+
                     state_counts_back = logo_dic[pair[0]].get([single], state)
                     state_counts_fore = logo_dic[pair[1]].get([single], state)
                     if sum(state_counts_back.values()) == 0 or sum(state_counts_fore.values()) == 0:
                         continue
-                    class_list = []
-                    for aaclass in state_counts_back.keys():
-                        class_list.extend(aaclass * state_counts_back[aaclass])
-                    for aaclass in state_counts_fore.keys():
-                        class_list.extend(aaclass * state_counts_fore[aaclass])
 
-                    perm_kld_list = self.calc_permuted_kld(permute_num, class_list, sum(state_counts_back.values()))
-                    pvalue[pair[0]][single][state] = self.calc_pvalue(perm_kld_list,
-                                                                      kld_infos[pair[0]][single][state])
+                    (
+                        pvalue[pair[0]][single][state],
+                        permnum[pair[0]][single][state],
+                        ptype[pair[0]][single][state],
+                        b_freq_table[pair[0]][single][state],
+                        f_freq_table[pair[0]][single][state],
+                        gpd_shape[pair[0]][single][state],
+                        gpd_scale[pair[0]][single][state],
+                        gpd_exceedances_size[pair[0]][single][state],
+                        gpd_ADtest[pair[0]][single][state],
+                    ) = self.calc_KLD_pvalue( permute_num,state_counts_back,state_counts_fore,sum(state_counts_back.values()),kld_infos[pair[0]][single][state],pmethod,targetperms)
 
             for basepair in self.basepairs[start_pair:end_pair]:
                 for state in kld_infos[pair[0]][basepair]:
@@ -2263,24 +2321,52 @@ class FunctionLogoDifference:
                     state_counts_fore = logo_dic[pair[1]].get(basepair, state)
                     if sum(state_counts_back.values()) == 0 or sum(state_counts_fore.values()) == 0:
                         continue
-                    class_list = []
-                    for aaclass in state_counts_back.keys():
-                        class_list.extend(aaclass * state_counts_back[aaclass])
-                    for aaclass in state_counts_fore.keys():
-                        class_list.extend(aaclass * state_counts_fore[aaclass])
 
-                    perm_kld_list = self.calc_permuted_kld(permute_num, class_list, sum(state_counts_back.values()))
+                    (
+                        pvalue[pair[0]][basepair][state],
+                        permnum[pair[0]][basepair][state],
+                        ptype[pair[0]][basepair][state],
+                        b_freq_table[pair[0]][basepair][state],
+                        f_freq_table[pair[0]][basepair][state],
+                        gpd_shape[pair[0]][basepair][state],
+                        gpd_scale[pair[0]][basepair][state],
+                        gpd_exceedances_size[pair[0]][basepair][state],
+                        gpd_ADtest[pair[0]][basepair][state],
+                    ) = self.calc_KLD_pvalue(permute_num,state_counts_back,state_counts_fore,sum(state_counts_back.values()),kld_infos[pair[0]][basepair][state],pmethod,targetperms)
 
-                    pvalue[pair[0]][basepair][state] = self.calc_pvalue(perm_kld_list,
-                                                                        kld_infos[pair[0]][basepair][state])
+        significant_calc_outputs["pvalue"]=pvalue
+        significant_calc_outputs["permnum"] = permnum
+        significant_calc_outputs["ptype"] = ptype
+        significant_calc_outputs["bt"] = b_freq_table
+        significant_calc_outputs["ft"] = f_freq_table
+        significant_calc_outputs["shape"] = gpd_shape
+        significant_calc_outputs["scale"] = gpd_scale
+        significant_calc_outputs["excnum"] = gpd_exceedances_size
+        significant_calc_outputs["ADtest"] = gpd_ADtest
+        return significant_calc_outputs
 
-        return pvalue
+    def calc_KLD_pvalue(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, pmethod,targetperms):
 
-    def calc_permuted_kld(self, numPerm, aaclasslist, back_size):
+        if pmethod == "ECDF_pseudo":
+            perm_kld_values = self.calc_permvalues_kld(maxPerm, class_counts_b, class_counts_f, back_size)
+            return self.calc_pecdf_with_pseudo(perm_kld_values,orig_kld,class_counts_b, class_counts_f)
+        if pmethod == "ECDF":
+            return self.calc_pecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld)
+        if pmethod == "GPD":
+            return self.calc_pgpd_ecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld,targetperms)
+
+    def calc_permvalues_kld(self, maxPerm, class_counts_b, class_counts_f, back_size):
+
+        aaclasslist = []
+
+        for aaclass in class_counts_b.keys():
+            aaclasslist.extend(aaclass * class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            aaclasslist.extend(aaclass * class_counts_f[aaclass])
 
         indices = []
         permKLDs = []
-        for p in range(numPerm):
+        for p in range(maxPerm):
             indices.append(self.shuffled(aaclasslist))
         for index in indices:
             permKLD = 0
@@ -2312,13 +2398,227 @@ class FunctionLogoDifference:
                     kld_post_dist_fore / kld_post_dist_back)
 
             permKLDs.append(permKLD)
-
         return permKLDs
 
-    def calc_pvalue(self, perm_infos, point):
+    def calc_pecdf_with_pseudo(self, perm_infos, point,class_counts_b, class_counts_f):
         count = sum(i >= point for i in perm_infos)
         P = (count + 1) / (len(perm_infos) + 1)
-        return P
+
+        b_aaclasstable = ""
+        f_aaclasstable = ""
+        for aaclass in class_counts_b.keys():
+            if class_counts_b[aaclass] != 0:
+                b_aaclasstable += aaclass
+                b_aaclasstable += str(class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            if class_counts_f[aaclass] != 0:
+                f_aaclasstable += aaclass
+                f_aaclasstable += str(class_counts_f[aaclass])
+
+        return P, len(perm_infos), "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None,None,None,None
+
+    def calc_pecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld):
+        b_aaclasstable = ""
+        f_aaclasstable= ""
+        aaclasslist = []
+
+        for aaclass in class_counts_b.keys():
+            aaclasslist.extend(aaclass * class_counts_b[aaclass])
+            if class_counts_b[aaclass] != 0:
+                b_aaclasstable += aaclass
+                b_aaclasstable += str(class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            aaclasslist.extend(aaclass * class_counts_f[aaclass])
+            if class_counts_f[aaclass] != 0:
+                f_aaclasstable += aaclass
+                f_aaclasstable += str(class_counts_f[aaclass])
+
+        permKLDs = []
+        permcount = 0
+
+        exceedances_count = 0
+        while permcount < maxPerm :
+            permcount = permcount + 1
+            shuffled_aa = self.shuffled(aaclasslist)
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+
+            for (i, aaclass) in enumerate(shuffled_aa):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            if len(p_state_counts_back.keys()) < 21 \
+                or len(p_state_counts_fore.keys()) < 21:
+                for t in self.functions:
+                    if t not in p_state_counts_back:
+                        p_state_counts_back[t] = 1
+                    else:
+                        p_state_counts_back[t] += 1
+
+                    if t not in p_state_counts_fore:
+                        p_state_counts_fore[t] = 1
+                    else:
+                        p_state_counts_fore[t] += 1
+
+            permKLD = 0
+            for p in self.functions:
+                kld_post_dist_back = p_state_counts_back[p] \
+                    / sum(p_state_counts_back.values())
+                kld_post_dist_fore = p_state_counts_fore[p] \
+                    / sum(p_state_counts_fore.values())
+                permKLD += kld_post_dist_fore * np.log2(kld_post_dist_fore
+                        / kld_post_dist_back)
+            permKLDs.append(permKLD)
+
+            if permKLD >= orig_kld:
+                exceedances_count = exceedances_count + 1
+
+            if exceedances_count >= 10:
+                P = exceedances_count / len(permKLDs)
+                return P, permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None,None,None,None
+
+        P = (exceedances_count + 1) / (len(permKLDs) + 1)
+        return P, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None,None,None,None
+
+    def calc_pgpd_ecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, target_permnum):
+        b_aaclasstable = ""
+        f_aaclasstable= ""
+        aaclasslist = []
+
+        for aaclass in class_counts_b.keys():
+            aaclasslist.extend(aaclass * class_counts_b[aaclass])
+            if class_counts_b[aaclass] != 0:
+                b_aaclasstable += aaclass
+                b_aaclasstable += str(class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            aaclasslist.extend(aaclass * class_counts_f[aaclass])
+            if class_counts_f[aaclass] != 0:
+                f_aaclasstable += aaclass
+                f_aaclasstable += str(class_counts_f[aaclass])
+
+        permKLDs = []
+        permcount = 0
+
+        exceedances_count = 0
+        while permcount < maxPerm :
+            permcount = permcount + 1
+            shuffled_aa = self.shuffled(aaclasslist)
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+
+            for (i, aaclass) in enumerate(shuffled_aa):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            if len(p_state_counts_back.keys()) < 21 \
+                or len(p_state_counts_fore.keys()) < 21:
+                for t in self.functions:
+                    if t not in p_state_counts_back:
+                        p_state_counts_back[t] = 1
+                    else:
+                        p_state_counts_back[t] += 1
+
+                    if t not in p_state_counts_fore:
+                        p_state_counts_fore[t] = 1
+                    else:
+                        p_state_counts_fore[t] += 1
+
+            permKLD = 0
+            for p in self.functions:
+                kld_post_dist_back = p_state_counts_back[p] \
+                    / sum(p_state_counts_back.values())
+                kld_post_dist_fore = p_state_counts_fore[p] \
+                    / sum(p_state_counts_fore.values())
+                permKLD += kld_post_dist_fore * np.log2(kld_post_dist_fore
+                        / kld_post_dist_back)
+            permKLDs.append(permKLD)
+
+            if permKLD >= orig_kld:
+                exceedances_count = exceedances_count + 1
+
+            if exceedances_count >= 10:
+                P = exceedances_count / len(permKLDs)
+                return P, permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None,None,None,None
+            else:
+
+                if permcount >= target_permnum:
+                    E = 250
+                    permKLDs_5p = list(map(lambda x: x ** 5, permKLDs))
+                    threshold = (sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[0] +
+                                sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
+                    permKLDs_5p_t = list(map(lambda x: x - threshold, permKLDs_5p))
+
+                    fit_gpd = self.check_fit_gpd(np.partition(permKLDs_5p_t, -E)[-E:])
+                    while fit_gpd is not True:
+                        E = E - 10
+                        if E < 10:
+                            break
+                        threshold = (sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[0] +
+                                     sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
+                        permKLDs_5p_t = list(map(lambda x: x - threshold, permKLDs_5p))
+                        fit_gpd = self.check_fit_gpd(np.partition(permKLDs_5p_t, -E)[-E:])
+
+                    if fit_gpd:
+                        shape, loc,  scale = genpareto.fit(np.partition(permKLDs_5p_t, -E)[-E:])
+
+                        gpd_pvalue = (1 - genpareto.cdf((orig_kld ** 5) - threshold, shape, loc, scale)) * E / permcount
+                        if gpd_pvalue == 0:
+                            target_permnum = min(target_permnum * 2, maxPerm)
+                            if permcount == maxPerm:
+                                P = (exceedances_count + 1) / (len(permKLDs) + 1)
+                                return P, permcount, "p_ecdf_with_pseudo (p_gpd=0)" , b_aaclasstable, f_aaclasstable, shape, scale, E, ad_test(np.partition(permKLDs_5p_t, -E)[-E:], genpareto(c=shape, scale=scale, loc=loc)).pvalue
+                            continue
+
+                        if self.check_criteria1(orig_kld ** 5, permKLDs_5p, gpd_pvalue):
+                            if self.check_criteria23(permKLDs_5p, gpd_pvalue):
+                                return gpd_pvalue, permcount, "p_gpd", b_aaclasstable, f_aaclasstable, shape, scale, E, ad_test(np.partition(permKLDs_5p_t, -E)[-E:], genpareto(c=shape, scale=scale, loc=loc)).pvalue
+                            else:
+                                target_permnum = min(target_permnum * 2, maxPerm)
+                        else:
+                            target_permnum = min(target_permnum * 2, maxPerm)
+                    else:
+                        target_permnum = min(target_permnum * 2, maxPerm)
+
+        P = (exceedances_count + 1) / (len(permKLDs) + 1)
+        return P, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None,None,None,None
+
+    def check_criteria1(self, orig_stat, permvalues,gpd_pvalue):
+
+        criteria1 = False
+        count_list = [sum(kld >= orig_stat for kld in permvalues[0:i]) for i in
+                      range(1, len(permvalues) + 1)]
+        p_ecdf_list = list(map(truediv, count_list, [i for i in range(1, len(permvalues) + 1)]))
+
+        if sum(abs(np.log10(p / gpd_pvalue)) > 0.1 * abs(np.log10(gpd_pvalue)) for p in p_ecdf_list[len(p_ecdf_list)//10:len(p_ecdf_list)] if
+               p != 0) == 0: # Criterion 1 is True
+            criteria1 = True
+
+        return criteria1
+
+    def check_criteria23(self, permvalues, gpd_pvalue):
+
+        criteria23 = False
+        std = gpd_pvalue * (1 - gpd_pvalue) / len(permvalues) # According to Formula 8 from the Knijnenburg paper
+
+        if np.log10(norm.ppf(0.75, loc=gpd_pvalue, scale=std)) <= 0.9 * np.log10(gpd_pvalue) and np.log10(
+             norm.ppf(0.25, loc=gpd_pvalue, scale=std)) >= 1.1 * np.log10(gpd_pvalue):
+            criteria23 = True
+
+        return criteria23
+
+    def check_fit_gpd(self, sample):
+
+        shape, loc, scale = genpareto.fit(sample)
+        #pip3 install scikit-gof
+        fit = False
+        if ad_test(sample, genpareto(c=shape, scale=scale, loc=loc)).pvalue >= 0.05:
+            fit = True
+
+        return fit
 
     def shuffled(self, items, pieces=2):
         random.seed(int.from_bytes(os.urandom(4), byteorder='little'))
@@ -2333,16 +2633,34 @@ class FunctionLogoDifference:
             permutedList.extend(sublists[i])
         return permutedList
 
-    def calculate_id_significance(self, logo_dict, id_infos, permute_num, proc, max, method):
-        pvalue_dic = {}
-        start = 0
-        start_pair = 0
-        end = 0
-        id = {}
+    def calculate_id_significance(self, logo_dict, id_infos, permute_num, proc, max, entropy, pmethod, targetperms):
 
+        pvalue = {}
+        permnum = {}
+        ptype = {}
+        gpd_shape = {}
+        gpd_scale = {}
+        gpd_exceedances_size = {}
+        gpd_ADtest = {}
+        b_freq_table = {}
+        f_freq_table = {}
+
+        start_single = 0
+        start_pair = 0
+        end_single = 0
+        id = {}
         for key in id_infos.keys():
             id[key] = defaultdict(defaultdict)
-            pvalue_dic[key] = defaultdict(lambda: defaultdict(float))
+            pvalue[key] = defaultdict(lambda: defaultdict(float))
+            permnum[key] = defaultdict(lambda: defaultdict(float))
+            ptype[key] = defaultdict(lambda: defaultdict(float))
+            b_freq_table[key] = defaultdict(lambda: defaultdict(float))
+            f_freq_table[key] = defaultdict(lambda: defaultdict(float))
+            gpd_shape[key] = defaultdict(lambda: defaultdict(float))
+            gpd_scale[key] = defaultdict(lambda: defaultdict(float))
+            gpd_exceedances_size[key] = defaultdict(lambda: defaultdict(float))
+            gpd_ADtest[key] = defaultdict(lambda: defaultdict(float))
+
             for single in range(self.pos):
                 for state in id_infos[key][single]:
                     id[key][single][state] = id_infos[key][single][state]
@@ -2355,32 +2673,58 @@ class FunctionLogoDifference:
             for x in range(proc):
                 if x == 0:
                     end_pair = len(self.basepairs) // proc + len(self.basepairs) % proc
-                    end = self.pos // proc + self.pos % proc
+                    end_single = self.pos // proc + self.pos % proc
                     perm_jobs.append(
-                        (list(range(start, end)), permute_num, logo_dict, id, start_pair, end_pair, max, method))
+                        (list(range(start_single, end_single)), permute_num, logo_dict, id, start_pair, end_pair, max, entropy,pmethod,targetperms))
                 else:
                     start_pair = end_pair
                     end_pair = start_pair + len(self.basepairs) // proc
-                    start = end
-                    end = end + self.pos // proc
+                    start_single = end_single
+                    end_single = end_single + self.pos // proc
                     perm_jobs.append(
-                        (list(range(start, end)), permute_num, logo_dict, id, start_pair, end_pair, max, method))
-            pvalues = pool.starmap(self.cal_perm_id_pvalue, perm_jobs, 1)
+                        (list(range(start_single, end_single)), permute_num, logo_dict, id, start_pair, end_pair, max, entropy,pmethod,targetperms))
+            significant_calc_outputs = pool.starmap(self.cal_perm_id_pvalue, perm_jobs, 1)
 
-        for x in pvalues:
+        for x in significant_calc_outputs:
             for key in logo_dict.keys():
-                for single in x[key]:
-                    for state in x[key][single]:
-                        pvalue_dic[key][single][state] = x[key][single][state]
+                for single in x["pvalue"][key]:
+                    for state in x["pvalue"][key][single]:
+                        pvalue[key][single][state] = x["pvalue"][key][single][state]
+                        permnum[key][single][state] = x["permnum"][key][single][state]
+                        ptype[key][single][state] = x["ptype"][key][single][state]
+                        b_freq_table[key][single][state] = x["bt"][key][single][state]
+                        f_freq_table[key][single][state] = x["ft"][key][single][state]
+                        gpd_shape[key][single][state] = x["shape"][key][single][state]
+                        gpd_scale[key][single][state] = x["scale"][key][single][state]
+                        gpd_exceedances_size[key][single][state] = x["excnum"][key][single][state]
+                        gpd_ADtest[key][single][state] = x["ADtest"][key][single][state]
 
-        return pvalue_dic
+        return pvalue, permnum, ptype, b_freq_table, f_freq_table, gpd_shape, gpd_scale, gpd_exceedances_size, gpd_ADtest
 
-    def cal_perm_id_pvalue(self, positions, permute_num, logo_dic, id_infos, start_pair, end_pair, max, method):
+    def cal_perm_id_pvalue(self, positions, permute_num, logo_dic, id_infos, start_pair, end_pair, max, entropy, pmethod,targetperms):
 
+        significant_calc_outputs = {}
         pvalue = {}
+        permnum = {}
+        ptype = {}
+        gpd_shape = {}
+        gpd_scale = {}
+        gpd_exceedances_size = {}
+        gpd_ADtest = {}
+        b_freq_table = {}
+        f_freq_table = {}
         pairwise_combinations = itertools.permutations(logo_dic.keys(), 2)
         for pair in pairwise_combinations:
             pvalue[pair[0]] = defaultdict(defaultdict)
+            permnum[pair[0]] = defaultdict(defaultdict)
+            ptype[pair[0]] = defaultdict(defaultdict)
+            b_freq_table[pair[0]] = defaultdict(defaultdict)
+            f_freq_table[pair[0]] = defaultdict(defaultdict)
+            gpd_shape[pair[0]] = defaultdict(defaultdict)
+            gpd_scale[pair[0]] = defaultdict(defaultdict)
+            gpd_exceedances_size[pair[0]] = defaultdict(defaultdict)
+            gpd_ADtest[pair[0]] = defaultdict(defaultdict)
+
             for single in positions:
                 for state in self.singles:
                     state_counts_back = logo_dic[pair[0]].get([single], state)
@@ -2388,20 +2732,43 @@ class FunctionLogoDifference:
                     if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
                         continue
 
-                    if method == "NSB":
-                        perm_id_list = self.calculate_perm_entropy_NSB(permute_num, state_counts_back,
-                                                                       state_counts_fore,
-                                                                       sum(state_counts_back.values()),
-                                                                       logo_dic[pair[0]].functions,
-                                                                       logo_dic[pair[1]].functions, max)
+                    if entropy == "NSB":
+                        (
+                            pvalue[pair[0]][single][state],
+                            permnum[pair[0]][single][state],
+                            ptype[pair[0]][single][state],
+                            b_freq_table[pair[0]][single][state],
+                            f_freq_table[pair[0]][single][state],
+                            gpd_shape[pair[0]][single][state],
+                            gpd_scale[pair[0]][single][state],
+                            gpd_exceedances_size[pair[0]][single][state],
+                            gpd_ADtest[pair[0]][single][state],
+                        ) = self.calc_ID_pvalue_NSB(permute_num, state_counts_back,
+                                                                                 state_counts_fore,
+                                                                                 sum(state_counts_back.values()),
+                                                                                 logo_dic[pair[0]].functions,
+                                                                                 logo_dic[pair[1]].functions, max,
+                                                                                 id_infos[pair[0]][single][state],pmethod,targetperms)
 
-                    if method == "MM":
-                        perm_id_list = self.calculate_perm_entropy_MM(permute_num, state_counts_back, state_counts_fore,
-                                                                      sum(state_counts_back.values()),
-                                                                      logo_dic[pair[0]].functions,
-                                                                      logo_dic[pair[1]].functions, max)
-                    pvalue[pair[0]][single][state] = self.calc_pvalue(perm_id_list,
-                                                                      id_infos[pair[0]][single][state])
+
+                    if entropy == "MM":
+                        (
+                            pvalue[pair[0]][single][state],
+                            permnum[pair[0]][single][state],
+                            ptype[pair[0]][single][state],
+                            b_freq_table[pair[0]][single][state],
+                            f_freq_table[pair[0]][single][state],
+                            gpd_shape[pair[0]][single][state],
+                            gpd_scale[pair[0]][single][state],
+                            gpd_exceedances_size[pair[0]][single][state],
+                            gpd_ADtest[pair[0]][single][state],
+                        ) = self.calc_ID_pvalue_MM(permute_num, state_counts_back,
+                                                                                 state_counts_fore,
+                                                                                 sum(state_counts_back.values()),
+                                                                                 logo_dic[pair[0]].functions,
+                                                                                 logo_dic[pair[1]].functions, max,
+                                                                                 id_infos[pair[0]][single][state],pmethod,targetperms)
+
 
             for basepair in self.basepairs[start_pair:end_pair]:
                 for state in id_infos[pair[0]][basepair]:
@@ -2410,24 +2777,69 @@ class FunctionLogoDifference:
                     if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
                         continue
 
-                    if method == "NSB":
-                        perm_id_list = self.calculate_perm_entropy_NSB(permute_num, state_counts_back,
-                                                                       state_counts_fore,
-                                                                       sum(state_counts_back.values()),
-                                                                       logo_dic[pair[0]].functions,
-                                                                       logo_dic[pair[1]].functions, max)
-                    if method == "MM":
-                        perm_id_list = self.calculate_perm_entropy_MM(permute_num, state_counts_back, state_counts_fore,
-                                                                      sum(state_counts_back.values()),
-                                                                      logo_dic[pair[0]].functions,
-                                                                      logo_dic[pair[1]].functions, max)
+                    if entropy == "NSB":
+                        (
+                            pvalue[pair[0]][basepair][state],
+                            permnum[pair[0]][basepair][state],
+                            ptype[pair[0]][basepair][state],
+                            b_freq_table[pair[0]][basepair][state],
+                            f_freq_table[pair[0]][basepair][state],
+                            gpd_shape[pair[0]][basepair][state],
+                            gpd_scale[pair[0]][basepair][state],
+                            gpd_exceedances_size[pair[0]][basepair][state],
+                            gpd_ADtest[pair[0]][basepair][state],
+                        ) = self.calc_ID_pvalue_NSB(permute_num, state_counts_back,
+                                                                                 state_counts_fore,
+                                                                                 sum(state_counts_back.values()),
+                                                                                 logo_dic[pair[0]].functions,
+                                                                                 logo_dic[pair[1]].functions, max,
+                                                                                 id_infos[pair[0]][basepair][state],pmethod,targetperms)
 
-                    pvalue[pair[0]][basepair][state] = self.calc_pvalue(perm_id_list,
-                                                                        id_infos[pair[0]][basepair][state])
+                    if entropy == "MM":
+                        (
+                            pvalue[pair[0]][basepair][state],
+                            permnum[pair[0]][basepair][state],
+                            ptype[pair[0]][basepair][state],
+                            b_freq_table[pair[0]][basepair][state],
+                            f_freq_table[pair[0]][basepair][state],
+                            gpd_shape[pair[0]][basepair][state],
+                            gpd_scale[pair[0]][basepair][state],
+                            gpd_exceedances_size[pair[0]][basepair][state],
+                            gpd_ADtest[pair[0]][basepair][state],
+                        ) = self.calc_ID_pvalue_MM(permute_num, state_counts_back,
+                                                                                state_counts_fore,
+                                                                                sum(state_counts_back.values()),
+                                                                                logo_dic[pair[0]].functions,
+                                                                                logo_dic[pair[1]].functions, max,
+                                                                                id_infos[pair[0]][basepair][state],pmethod,targetperms)
 
-        return pvalue
 
-    def calculate_perm_entropy_NSB(self, numPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+        significant_calc_outputs["pvalue"] = pvalue
+        significant_calc_outputs["permnum"] = permnum
+        significant_calc_outputs["ptype"] = ptype
+        significant_calc_outputs["bt"] = b_freq_table
+        significant_calc_outputs["ft"] = f_freq_table
+        significant_calc_outputs["shape"] = gpd_shape
+        significant_calc_outputs["scale"] = gpd_scale
+        significant_calc_outputs["excnum"] = gpd_exceedances_size
+        significant_calc_outputs["ADtest"] = gpd_ADtest
+        return significant_calc_outputs
+
+    def calc_ID_pvalue_NSB(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id,pmethod, targetperms):
+
+        if orig_id == 0:
+            return 1,None,None,None,None,None,None,None,None
+        if pmethod == "ECDF_pseudo":
+            perm_id_nsb_values = self.calc_permvalues_id_nsb(maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions, max)
+            return self.calc_pecdf_with_pseudo(perm_id_nsb_values,orig_id,class_counts_b, class_counts_f)
+        if pmethod == "ECDF":
+            return self.calc_pecdf_id_nsb(maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id)
+        if pmethod == "GPD":
+            return self.calc_pgpd_ecdf_id_nsb( maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id,targetperms)
+    def calc_permvalues_id_nsb(self, numPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
                                    max):
 
         class_list = []
@@ -2504,8 +2916,251 @@ class FunctionLogoDifference:
             permIDs.append(id_info)
 
         return permIDs
+    def calc_pecdf_id_nsb(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id):
+        b_aaclasstable = ""
+        f_aaclasstable = ""
+        aaclasslist = []
+        for aaclass in class_counts_b.keys():
+            aaclasslist.extend(aaclass * class_counts_b[aaclass])
+            if class_counts_b[aaclass] != 0:
+                b_aaclasstable += aaclass
+                b_aaclasstable += str(class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            aaclasslist.extend(aaclass * class_counts_f[aaclass])
+            if class_counts_f[aaclass] != 0:
+                f_aaclasstable += aaclass
+                f_aaclasstable += str(class_counts_f[aaclass])
 
-    def calculate_perm_entropy_MM(self, numPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+        permIDs = []
+        permcount = 0
+
+        exceedances_count = 0
+        while permcount <= maxPerm:
+            permcount = permcount + 1
+
+            shuffled_aa = self.shuffled(aaclasslist)
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+            for (i, aaclass) in enumerate(shuffled_aa):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            exact = self.calculate_perm_exact(max, f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore))
+            # calculate info for the Foreground _______________________________________________________________________
+            functions_array = np.array(
+                list((f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore)).values()))
+
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_fore.values()) + [0] * (len(f_functions) - len(p_state_counts_fore)))
+
+            if sum(p_state_counts_fore.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_fore.values()) - 1]
+                fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                    nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            else:
+                expected_bg_entropy = bg_entropy
+                fg_entropy = nb.S(nb.make_nxkx(nsb_array, nsb_array.size), nsb_array.sum(), nsb_array.size)
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_fore = 0
+            else:
+                info_fore = expected_bg_entropy - fg_entropy
+
+            # calculate info for the Background _______________________________________________________________________
+            exact = self.calculate_perm_exact(max, b_functions - Counter(class_counts_b) + Counter(p_state_counts_back))
+            functions_array = np.array(
+                list((b_functions - Counter(class_counts_b) + Counter(p_state_counts_back)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_back.values()) + [0] * (len(b_functions) - len(p_state_counts_back)))
+            if sum(p_state_counts_back.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_back.values()) - 1]
+                fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                    nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            else:
+                expected_bg_entropy = bg_entropy
+                fg_entropy = nb.S(nb.make_nxkx(nsb_array, nsb_array.size), nsb_array.sum(), nsb_array.size)
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_back = 0
+            else:
+                info_back = expected_bg_entropy - fg_entropy
+
+            id_info = info_fore - info_back
+            if id_info < 0:
+                id_info = 0
+            permIDs.append(id_info)
+
+
+            if id_info >= orig_id:
+                exceedances_count = exceedances_count + 1
+
+            if exceedances_count >= 10:
+                P = exceedances_count / len(permIDs)
+                return P, permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+
+        P = (exceedances_count + 1) / (len(permIDs) + 1)
+        return P, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+    def calc_pgpd_ecdf_id_nsb(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id,target_permnum):
+        b_aaclasstable = ""
+        f_aaclasstable = ""
+        aaclasslist = []
+        for aaclass in class_counts_b.keys():
+            aaclasslist.extend(aaclass * class_counts_b[aaclass])
+            if class_counts_b[aaclass] != 0:
+                b_aaclasstable += aaclass
+                b_aaclasstable += str(class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            aaclasslist.extend(aaclass * class_counts_f[aaclass])
+            if class_counts_f[aaclass] != 0:
+                f_aaclasstable += aaclass
+                f_aaclasstable += str(class_counts_f[aaclass])
+
+        permIDs = []
+        permcount = 0
+
+        exceedances_count = 0
+        while permcount <= maxPerm:
+            permcount = permcount + 1
+
+            shuffled_aa = self.shuffled(aaclasslist)
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+            for (i, aaclass) in enumerate(shuffled_aa):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            exact = self.calculate_perm_exact(max, f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore))
+            # calculate info for the Foreground _______________________________________________________________________
+            functions_array = np.array(
+                list((f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore)).values()))
+
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_fore.values()) + [0] * (len(f_functions) - len(p_state_counts_fore)))
+
+            if sum(p_state_counts_fore.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_fore.values()) - 1]
+                fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                    nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            else:
+                expected_bg_entropy = bg_entropy
+                fg_entropy = nb.S(nb.make_nxkx(nsb_array, nsb_array.size), nsb_array.sum(), nsb_array.size)
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_fore = 0
+            else:
+                info_fore = expected_bg_entropy - fg_entropy
+
+            # calculate info for the Background _______________________________________________________________________
+            exact = self.calculate_perm_exact(max, b_functions - Counter(class_counts_b) + Counter(p_state_counts_back))
+            functions_array = np.array(
+                list((b_functions - Counter(class_counts_b) + Counter(p_state_counts_back)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_back.values()) + [0] * (len(b_functions) - len(p_state_counts_back)))
+            if sum(p_state_counts_back.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_back.values()) - 1]
+                fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                    nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            else:
+                expected_bg_entropy = bg_entropy
+                fg_entropy = nb.S(nb.make_nxkx(nsb_array, nsb_array.size), nsb_array.sum(), nsb_array.size)
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_back = 0
+            else:
+                info_back = expected_bg_entropy - fg_entropy
+
+            id_info = info_fore - info_back
+            if id_info < 0:
+                id_info = 0
+            permIDs.append(id_info)
+
+
+            if id_info >= orig_id:
+                exceedances_count = exceedances_count + 1
+
+            if exceedances_count >= 10:
+                P = exceedances_count / len(permIDs)
+                return P, permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+            else:
+                if permcount >= target_permnum:
+                    E = 250
+                    permIDs_5p = list(map(lambda x: x ** 5, permIDs))
+                    threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
+                                sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
+                    permIDs_5p_t = list(map(lambda x: x - threshold, permIDs_5p))
+
+                    fit_gpd = self.check_fit_gpd(np.partition(permIDs_5p_t, -E)[-E:])
+                    while fit_gpd is not True:
+                        E = E - 10
+                        if E < 10:
+                            break
+                        threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
+                                     sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
+                        permIDs_5p_t = list(map(lambda x: x - threshold, permIDs_5p))
+                        fit_gpd = self.check_fit_gpd(np.partition(permIDs_5p_t, -E)[-E:])
+
+                    if fit_gpd:
+                        shape, loc, scale = genpareto.fit(np.partition(permIDs_5p_t, -E)[-E:])
+
+                        gpd_pvalue = (1 - genpareto.cdf((orig_id ** 5) - threshold, shape, loc, scale)) * E / permcount
+                        if gpd_pvalue == 0:
+                            target_permnum = min(target_permnum * 2, maxPerm)
+                            if permcount == maxPerm:
+                                P = (exceedances_count + 1) / (len(permIDs) + 1)
+                                return P, permcount, "p_ecdf_with_pseudo (p_gpd=0)", b_aaclasstable, f_aaclasstable, shape, scale, E, ad_test(
+                                    np.partition(permIDs_5p_t, -E)[-E:], genpareto(c=shape, scale=scale, loc=loc)).pvalue
+                            continue
+
+                        if self.check_criteria1(orig_id ** 5, permIDs_5p, gpd_pvalue):
+                            if self.check_criteria23(permIDs_5p, gpd_pvalue):
+                                return gpd_pvalue, permcount, "p_gpd", b_aaclasstable, f_aaclasstable, shape, scale, E, ad_test(
+                                    np.partition(permIDs_5p_t, -E)[-E:], genpareto(c=shape, scale=scale, loc=loc)).pvalue
+                            else:
+                                target_permnum = min(target_permnum * 2, maxPerm)
+                        else:
+                            target_permnum = min(target_permnum * 2, maxPerm)
+                    else:
+                        target_permnum = min(target_permnum * 2, maxPerm)
+
+        P = (exceedances_count + 1) / (len(permIDs) + 1)
+        return P, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+    def calc_ID_pvalue_MM(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                          max, orig_id, pmethod,targetperms):
+
+        if orig_id == 0:
+            return 1, None, None, None, None, None, None, None, None
+        if pmethod == "ECDF_pseudo":
+            perm_id_mm_values = self.calc_permvalues_id_mm(maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions, max)
+            return self.calc_pecdf_with_pseudo(perm_id_mm_values,orig_id,class_counts_b, class_counts_f)
+        if pmethod == "ECDF":
+            return self.calc_pecdf_id_mm(maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id)
+        if pmethod == "GPD":
+            return self.calc_pgpd_ecdf_id_mm( maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id,targetperms)
+    def calc_permvalues_id_mm(self, numPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
                                   max):
 
         class_list = []
@@ -2581,6 +3236,235 @@ class FunctionLogoDifference:
             permIDs.append(id_info)
 
         return permIDs
+    def calc_pecdf_id_mm(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id):
+        b_aaclasstable = ""
+        f_aaclasstable = ""
+        aaclasslist = []
+        for aaclass in class_counts_b.keys():
+            aaclasslist.extend(aaclass * class_counts_b[aaclass])
+            if class_counts_b[aaclass] != 0:
+                b_aaclasstable += aaclass
+                b_aaclasstable += str(class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            aaclasslist.extend(aaclass * class_counts_f[aaclass])
+            if class_counts_f[aaclass] != 0:
+                f_aaclasstable += aaclass
+                f_aaclasstable += str(class_counts_f[aaclass])
+
+        permIDs = []
+        permcount = 0
+
+        exceedances_count = 0
+        while permcount <= maxPerm:
+            permcount = permcount + 1
+
+            shuffled_aa = self.shuffled(aaclasslist)
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+            for (i, aaclass) in enumerate(shuffled_aa):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            exact = self.calculate_perm_exact(max, f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore))
+
+            # calculate the info for the fore ________________________________________________________________________
+            functions_array = np.array(
+                list((f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_fore.values()) + [0] * (len(f_functions) - len(p_state_counts_fore)))
+            fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            if sum(p_state_counts_fore.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_fore.values()) - 1]
+            else:
+                expected_bg_entropy = self.approx_expect(bg_entropy, len(f_functions),
+                                                         sum(p_state_counts_fore.values()))
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_fore = 0
+            else:
+                info_fore = expected_bg_entropy - fg_entropy
+
+            # calculate the info for the back ________________________________________________________________________
+            exact = self.calculate_perm_exact(max, b_functions - Counter(class_counts_b) + Counter(p_state_counts_back))
+            functions_array = np.array(
+                list((b_functions - Counter(class_counts_b) + Counter(p_state_counts_back)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_back.values()) + [0] * (len(b_functions) - len(p_state_counts_back)))
+            fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            if sum(p_state_counts_back.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_back.values()) - 1]
+            else:
+                expected_bg_entropy = self.approx_expect(bg_entropy, len(b_functions),
+                                                         sum(p_state_counts_back.values()))
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_back = 0
+            else:
+                info_back = expected_bg_entropy - fg_entropy
+
+            id_info = info_fore - info_back
+            if id_info < 0:
+                id_info = 0
+            permIDs.append(id_info)
+
+            if id_info >= orig_id:
+                exceedances_count = exceedances_count + 1
+
+            if exceedances_count >= 10:
+                P = exceedances_count / len(permIDs)
+                return P, permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+
+        P = (exceedances_count + 1) / (len(permIDs) + 1)
+        return P, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+    def calc_pgpd_ecdf_id_mm(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
+                                   max, orig_id,target_permnum):
+        b_aaclasstable = ""
+        f_aaclasstable = ""
+        aaclasslist = []
+        for aaclass in class_counts_b.keys():
+            aaclasslist.extend(aaclass * class_counts_b[aaclass])
+            if class_counts_b[aaclass] != 0:
+                b_aaclasstable += aaclass
+                b_aaclasstable += str(class_counts_b[aaclass])
+        for aaclass in class_counts_f.keys():
+            aaclasslist.extend(aaclass * class_counts_f[aaclass])
+            if class_counts_f[aaclass] != 0:
+                f_aaclasstable += aaclass
+                f_aaclasstable += str(class_counts_f[aaclass])
+
+        permIDs = []
+        permcount = 0
+
+        exceedances_count = 0
+        while permcount <= maxPerm:
+            permcount = permcount + 1
+
+            shuffled_aa = self.shuffled(aaclasslist)
+            p_state_counts_back = Counter()
+            p_state_counts_fore = Counter()
+            for (i, aaclass) in enumerate(shuffled_aa):
+                if i < back_size:
+                    p_state_counts_back[aaclass] += 1
+                else:
+                    p_state_counts_fore[aaclass] += 1
+
+            exact = self.calculate_perm_exact(max, f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore))
+
+            # calculate the info for the fore ________________________________________________________________________
+            functions_array = np.array(
+                list((f_functions - Counter(class_counts_f) + Counter(p_state_counts_fore)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_fore.values()) + [0] * (len(f_functions) - len(p_state_counts_fore)))
+            fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            if sum(p_state_counts_fore.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_fore.values()) - 1]
+            else:
+                expected_bg_entropy = self.approx_expect(bg_entropy, len(f_functions),
+                                                         sum(p_state_counts_fore.values()))
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_fore = 0
+            else:
+                info_fore = expected_bg_entropy - fg_entropy
+
+            # calculate the info for the back ________________________________________________________________________
+            exact = self.calculate_perm_exact(max, b_functions - Counter(class_counts_b) + Counter(p_state_counts_back))
+            functions_array = np.array(
+                list((b_functions - Counter(class_counts_b) + Counter(p_state_counts_back)).values()))
+            bg_entropy = -np.sum(
+                (functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()) * np.log2(
+                    functions_array[functions_array != 0] / functions_array[functions_array != 0].sum()))
+
+            nsb_array = np.array(
+                list(p_state_counts_back.values()) + [0] * (len(b_functions) - len(p_state_counts_back)))
+            fg_entropy = -np.sum((nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()) * np.log2(
+                nsb_array[nsb_array != 0] / nsb_array[nsb_array != 0].sum()))
+            if sum(p_state_counts_back.values()) <= len(exact):
+                expected_bg_entropy = exact[sum(p_state_counts_back.values()) - 1]
+            else:
+                expected_bg_entropy = self.approx_expect(bg_entropy, len(b_functions),
+                                                         sum(p_state_counts_back.values()))
+
+            if (expected_bg_entropy - fg_entropy) < 0:
+                info_back = 0
+            else:
+                info_back = expected_bg_entropy - fg_entropy
+
+            id_info = info_fore - info_back
+            if id_info < 0:
+                id_info = 0
+            permIDs.append(id_info)
+
+            if id_info >= orig_id:
+                exceedances_count = exceedances_count + 1
+
+            if exceedances_count >= 10:
+                P = exceedances_count / len(permIDs)
+                return P, permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+            else:
+                if permcount >= target_permnum:
+                    E = 250
+                    permIDs_5p = list(map(lambda x: x ** 5, permIDs))
+                    threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
+                                 sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
+                    permIDs_5p_t = list(map(lambda x: x - threshold, permIDs_5p))
+
+                    fit_gpd = self.check_fit_gpd(np.partition(permIDs_5p_t, -E)[-E:])
+                    while fit_gpd is not True:
+                        E = E - 10
+                        if E < 10:
+                            break
+                        threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
+                                     sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
+                        permIDs_5p_t = list(map(lambda x: x - threshold, permIDs_5p))
+                        fit_gpd = self.check_fit_gpd(np.partition(permIDs_5p_t, -E)[-E:])
+
+                    if fit_gpd:
+                        shape, loc, scale = genpareto.fit(np.partition(permIDs_5p_t, -E)[-E:])
+
+                        gpd_pvalue = (1 - genpareto.cdf((orig_id ** 5) - threshold, shape, loc,
+                                                        scale)) * E / permcount
+                        if gpd_pvalue == 0:
+                            target_permnum = min(target_permnum * 2, maxPerm)
+                            if permcount == maxPerm:
+                                P = (exceedances_count + 1) / (len(permIDs) + 1)
+                                return P, permcount, "p_ecdf_with_pseudo (p_gpd=0)", b_aaclasstable, f_aaclasstable, shape, scale, E, ad_test(
+                                    np.partition(permIDs_5p_t, -E)[-E:],
+                                    genpareto(c=shape, scale=scale, loc=loc)).pvalue
+                            continue
+
+                        if self.check_criteria1(orig_id ** 5, permIDs_5p, gpd_pvalue):
+                            if self.check_criteria23(permIDs_5p, gpd_pvalue):
+                                return gpd_pvalue, permcount, "p_gpd", b_aaclasstable, f_aaclasstable, shape, scale, E, ad_test(
+                                    np.partition(permIDs_5p_t, -E)[-E:],
+                                    genpareto(c=shape, scale=scale, loc=loc)).pvalue
+                            else:
+                                target_permnum = min(target_permnum * 2, maxPerm)
+                        else:
+                            target_permnum = min(target_permnum * 2, maxPerm)
+                    else:
+                        target_permnum = min(target_permnum * 2, maxPerm)
+
+        P = (exceedances_count + 1) / (len(permIDs) + 1)
+        return P, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
     def calculate_perm_exact(self, n, functions):
         exact_list = []
@@ -2632,9 +3516,9 @@ class FunctionLogoDifference:
 
         return P_corrected
 
-    def write_pvalues(self, P, corrected_P, height, logo_dic, prefix):
+    def write_pvalues(self, P, corrected_P, height, logo_dic, prefix, permnum, ptype, bt, ft,shape,scale,excnum, ADtest):
         tableDict = {}
-        nameSet = ["coord", "state", "P-value", "corrected_P", "height", "B-sample-size", "F-sample-size"]
+        nameSet = ["coord", "state", "P-value", "significance", "height", "B-sample-size", "F-sample-size", "permnum", "Pmethodtype", "bt", "ft","shape","scale","excnum","ADtest"]
         for name in nameSet:
             tableDict[name] = np.zeros(self.pos * len(self.singles) + len(self.basepairs) * len(self.pairs), )
 
@@ -2647,7 +3531,7 @@ class FunctionLogoDifference:
             tableDict['P-value'] = [P[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
                                    [P[key[0]][basepair][state] for basepair in self.basepairs for state in
                                     P[key[0]][basepair]]
-            tableDict['corrected_P'] = [corrected_P[key[0]][pos][state] for pos in range(self.pos) for state in
+            tableDict['significance'] = [corrected_P[key[0]][pos][state] for pos in range(self.pos) for state in
                                         self.singles] + \
                                        [corrected_P[key[0]][basepair][state] for basepair in self.basepairs for state in
                                         P[key[0]][basepair]]
@@ -2662,6 +3546,38 @@ class FunctionLogoDifference:
                                           for state in self.singles] + \
                                          [sum((logo_dic[key[1]].get(basepair, state)).values()) for basepair in
                                           self.basepairs for state in P[key[1]][basepair]]
+            tableDict['permnum'] = [permnum[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
+                                   [permnum[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                    permnum[key[0]][basepair]]
+            tableDict['Pmethodtype'] = [ptype[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
+                                   [ptype[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                    ptype[key[0]][basepair]]
+
+            tableDict['bt'] = [bt[key[0]][pos][state] for pos in range(self.pos) for state in
+                                        self.singles] + \
+                                       [bt[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                        bt[key[0]][basepair]]
+
+            tableDict['ft'] = [ft[key[0]][pos][state] for pos in range(self.pos) for state in
+                                        self.singles] + \
+                                       [ft[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                        ft[key[0]][basepair]]
+            tableDict['shape'] = [shape[key[0]][pos][state] for pos in range(self.pos) for state in
+                               self.singles] + \
+                              [shape[key[0]][basepair][state] for basepair in self.basepairs for state in
+                               shape[key[0]][basepair]]
+            tableDict['scale'] = [scale[key[0]][pos][state] for pos in range(self.pos) for state in
+                               self.singles] + \
+                              [scale[key[0]][basepair][state] for basepair in self.basepairs for state in
+                               scale[key[0]][basepair]]
+            tableDict['excnum'] = [excnum[key[0]][pos][state] for pos in range(self.pos) for state in
+                                  self.singles] + \
+                                 [excnum[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                  excnum[key[0]][basepair]]
+            tableDict['ADtest'] = [ADtest[key[0]][pos][state] for pos in range(self.pos) for state in
+                                   self.singles] + \
+                                  [ADtest[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                   ADtest[key[0]][basepair]]
             pandasTable = pd.DataFrame(tableDict)
             filename = prefix + '_' + key[1] + '_' + key[0] + "_stats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')
