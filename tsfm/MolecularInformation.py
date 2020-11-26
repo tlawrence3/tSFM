@@ -2406,14 +2406,10 @@ class FunctionLogoDifference:
 
         b_aaclasstable = ""
         f_aaclasstable = ""
-        for aaclass in class_counts_b.keys():
-            if class_counts_b[aaclass] != 0:
-                b_aaclasstable += aaclass
-                b_aaclasstable += str(class_counts_b[aaclass])
-        for aaclass in class_counts_f.keys():
-            if class_counts_f[aaclass] != 0:
-                f_aaclasstable += aaclass
-                f_aaclasstable += str(class_counts_f[aaclass])
+        for letter, count in sorted(class_counts_b.items()):
+            b_aaclasstable += letter + str(count)
+        for letter, count in sorted(class_counts_f.items()):
+            f_aaclasstable += letter + str(count)
 
         return P, len(perm_infos), "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None,None,None,None
 
@@ -2422,16 +2418,12 @@ class FunctionLogoDifference:
         f_aaclasstable= ""
         aaclasslist = []
 
-        for aaclass in class_counts_b.keys():
-            aaclasslist.extend(aaclass * class_counts_b[aaclass])
-            if class_counts_b[aaclass] != 0:
-                b_aaclasstable += aaclass
-                b_aaclasstable += str(class_counts_b[aaclass])
-        for aaclass in class_counts_f.keys():
-            aaclasslist.extend(aaclass * class_counts_f[aaclass])
-            if class_counts_f[aaclass] != 0:
-                f_aaclasstable += aaclass
-                f_aaclasstable += str(class_counts_f[aaclass])
+        for letter, count in sorted(class_counts_b.items()):
+            b_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
+        for letter, count in sorted(class_counts_f.items()):
+            f_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
 
         permKLDs = []
         permcount = 0
@@ -2487,16 +2479,12 @@ class FunctionLogoDifference:
         f_aaclasstable= ""
         aaclasslist = []
 
-        for aaclass in class_counts_b.keys():
-            aaclasslist.extend(aaclass * class_counts_b[aaclass])
-            if class_counts_b[aaclass] != 0:
-                b_aaclasstable += aaclass
-                b_aaclasstable += str(class_counts_b[aaclass])
-        for aaclass in class_counts_f.keys():
-            aaclasslist.extend(aaclass * class_counts_f[aaclass])
-            if class_counts_f[aaclass] != 0:
-                f_aaclasstable += aaclass
-                f_aaclasstable += str(class_counts_f[aaclass])
+        for letter, count in sorted(class_counts_b.items()):
+            b_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
+        for letter, count in sorted(class_counts_f.items()):
+            f_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
 
         permKLDs = []
         permcount = 0
@@ -2921,16 +2909,12 @@ class FunctionLogoDifference:
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
-        for aaclass in class_counts_b.keys():
-            aaclasslist.extend(aaclass * class_counts_b[aaclass])
-            if class_counts_b[aaclass] != 0:
-                b_aaclasstable += aaclass
-                b_aaclasstable += str(class_counts_b[aaclass])
-        for aaclass in class_counts_f.keys():
-            aaclasslist.extend(aaclass * class_counts_f[aaclass])
-            if class_counts_f[aaclass] != 0:
-                f_aaclasstable += aaclass
-                f_aaclasstable += str(class_counts_f[aaclass])
+        for letter, count in sorted(class_counts_b.items()):
+            b_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
+        for letter, count in sorted(class_counts_f.items()):
+            f_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
 
         permIDs = []
         permcount = 0
@@ -3016,16 +3000,12 @@ class FunctionLogoDifference:
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
-        for aaclass in class_counts_b.keys():
-            aaclasslist.extend(aaclass * class_counts_b[aaclass])
-            if class_counts_b[aaclass] != 0:
-                b_aaclasstable += aaclass
-                b_aaclasstable += str(class_counts_b[aaclass])
-        for aaclass in class_counts_f.keys():
-            aaclasslist.extend(aaclass * class_counts_f[aaclass])
-            if class_counts_f[aaclass] != 0:
-                f_aaclasstable += aaclass
-                f_aaclasstable += str(class_counts_f[aaclass])
+        for letter, count in sorted(class_counts_b.items()):
+            b_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
+        for letter, count in sorted(class_counts_f.items()):
+            f_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
 
         permIDs = []
         permcount = 0
@@ -3241,16 +3221,12 @@ class FunctionLogoDifference:
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
-        for aaclass in class_counts_b.keys():
-            aaclasslist.extend(aaclass * class_counts_b[aaclass])
-            if class_counts_b[aaclass] != 0:
-                b_aaclasstable += aaclass
-                b_aaclasstable += str(class_counts_b[aaclass])
-        for aaclass in class_counts_f.keys():
-            aaclasslist.extend(aaclass * class_counts_f[aaclass])
-            if class_counts_f[aaclass] != 0:
-                f_aaclasstable += aaclass
-                f_aaclasstable += str(class_counts_f[aaclass])
+        for letter, count in sorted(class_counts_b.items()):
+            b_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
+        for letter, count in sorted(class_counts_f.items()):
+            f_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
 
         permIDs = []
         permcount = 0
@@ -3334,16 +3310,12 @@ class FunctionLogoDifference:
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
-        for aaclass in class_counts_b.keys():
-            aaclasslist.extend(aaclass * class_counts_b[aaclass])
-            if class_counts_b[aaclass] != 0:
-                b_aaclasstable += aaclass
-                b_aaclasstable += str(class_counts_b[aaclass])
-        for aaclass in class_counts_f.keys():
-            aaclasslist.extend(aaclass * class_counts_f[aaclass])
-            if class_counts_f[aaclass] != 0:
-                f_aaclasstable += aaclass
-                f_aaclasstable += str(class_counts_f[aaclass])
+        for letter, count in sorted(class_counts_b.items()):
+            b_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
+        for letter, count in sorted(class_counts_f.items()):
+            f_aaclasstable += letter + str(count)
+            aaclasslist.extend(letter * count)
 
         permIDs = []
         permcount = 0
