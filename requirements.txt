@@ -7,3 +7,4 @@ pandas
 patsy
 mpmath
 statsmodels
+scikit-gof
