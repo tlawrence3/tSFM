@@ -2601,12 +2601,12 @@ class FunctionLogoDifference:
         u, d, v = np.linalg.svd(INV_MIF, full_matrices=True)
 
         d1 = d[0]
-        Xi01 = shape - norm.ppf(np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d1)
-        Xi02 = shape + norm.ppf(np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d1)
+        Xi01 = shape - norm.ppf(1 - np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d1)
+        Xi02 = shape + norm.ppf(1 - np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d1)
 
         d2 = d[1]
-        sigma01 = scale - norm.ppf(np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d2)
-        sigma02 = scale + norm.ppf(np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d2)
+        sigma01 = scale - norm.ppf(1 - np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d2)
+        sigma02 = scale + norm.ppf(1 - np.sqrt(alpha) / 2, loc=0, scale=1) * np.sqrt(d2)
 
         xi1_sigma1 = np.matmul(v, [Xi01 - shape, sigma01 - scale]) + [shape, scale]
         xi1 = xi1_sigma1[0]
@@ -2617,15 +2617,15 @@ class FunctionLogoDifference:
         sigma2 = xi2_sigma2[1]
 
         Pr_CI = [
-            min((1 - genpareto.cdf(orig_stat, xi1, 0, sigma1)) * len(Zi) / permcount,
-                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma1)) * len(Zi) / permcount,
-                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma2)) * len(Zi) / permcount,
-                (1 - genpareto.cdf(orig_stat, xi1, 0, sigma2)) * len(Zi) / permcount)
+            min((1 - genpareto.cdf(orig_stat, xi1, 0, sigma1)),
+                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma1)),
+                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma2)),
+                (1 - genpareto.cdf(orig_stat, xi1, 0, sigma2)))
             ,
-            max((1 - genpareto.cdf(orig_stat, xi1, 0, sigma1)) * len(Zi) / permcount,
-                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma1)) * len(Zi) / permcount,
-                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma2)) * len(Zi) / permcount,
-                (1 - genpareto.cdf(orig_stat, xi1, 0, sigma2)) * len(Zi) / permcount)
+            max((1 - genpareto.cdf(orig_stat, xi1, 0, sigma1)),
+                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma1)),
+                (1 - genpareto.cdf(orig_stat, xi2, 0, sigma2)),
+                (1 - genpareto.cdf(orig_stat, xi1, 0, sigma2)))
         ]
 
         Pnr_CI = [
@@ -2995,7 +2995,7 @@ class FunctionLogoDifference:
         permcount = 0
 
         exceedances_count = 0
-        while permcount <= maxPerm:
+        while permcount < maxPerm:
             permcount = permcount + 1
 
             shuffled_aa = self.shuffled(aaclasslist)
@@ -3090,7 +3090,7 @@ class FunctionLogoDifference:
         permcount = 0
 
         exceedances_count = 0
-        while permcount <= maxPerm:
+        while permcount < maxPerm:
             permcount = permcount + 1
 
             shuffled_aa = self.shuffled(aaclasslist)
@@ -3312,7 +3312,7 @@ class FunctionLogoDifference:
         permcount = 0
 
         exceedances_count = 0
-        while permcount <= maxPerm:
+        while permcount < maxPerm:
             permcount = permcount + 1
 
             shuffled_aa = self.shuffled(aaclasslist)
@@ -3404,7 +3404,7 @@ class FunctionLogoDifference:
         permcount = 0
 
         exceedances_count = 0
-        while permcount <= maxPerm:
+        while permcount < maxPerm:
             permcount = permcount + 1
 
             shuffled_aa = self.shuffled(aaclasslist)
@@ -3638,3 +3638,4 @@ class FunctionLogoDifference:
             pandasTable = pd.DataFrame(tableDict)
             filename = prefix + '_' + key[1] + '_' + key[0] + "_stats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')
+
