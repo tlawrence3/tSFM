@@ -3559,7 +3559,7 @@ class FunctionLogoDifference:
     def approx_expect(self, H, k, N):
         return H - ((k - 1) / ((mt.log(4)) * N))
 
-    def addstats(self, pvalues, correction,singles):
+    def addstats(self, pvalues, correction,singles,nosingle):
 
         P_corrected = {}
         for key in pvalues.keys():
@@ -3583,8 +3583,28 @@ class FunctionLogoDifference:
                     for state in sorted(pvalues[key][coord]):
                         P_corrected[key][coord][state] = test_ss_results.pop(0)
 
+            if nosingle:
+                P_corrected[key] = defaultdict(lambda: defaultdict(float))
+                bp_coords = []
+                for coord in pvalues[key]:
+                    if ("," in str(coord)):
+                        bp_coords.append(coord)
 
-            else:
+                test_bp = []
+                bp_coords.sort()
+
+                for coord in bp_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        test_bp.append(pvalues[key][coord][state])
+
+                test_bp_results = smm.multipletests(test_bp, method=correction)[1].tolist()
+
+                for coord in bp_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        P_corrected[key][coord][state] = test_bp_results.pop(0)
+
+
+            if nosingle is not True and single is not True:
                 P_corrected[key] = defaultdict(lambda: defaultdict(float))
                 bp_coords = []
                 ss_coords = []
