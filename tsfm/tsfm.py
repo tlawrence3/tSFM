@@ -77,8 +77,8 @@ def main():
                         help="Set the p-value calculation method. If value is \"GPD\", small p-values will be estimated with Generalized Pareto Distribution and the rest will be calculated with ECDF method. If value is \"ECDF_pseudo\", all the p-values will be calculated using pseudo-count. If value is \"ECDF\", p-value will be calculated using the empirical method without pseudo-count, unless number of original-stat-exceedances is less than 10 with maximum number of permutation. Default is GPD",
                         choices=['GPD', 'ECDF_pseudo','ECDF'])
     parser.add_argument("--targetperms",
-                        help="Set the initial number of permutations at which GPD-pvalue will be initially calculated. Default is 0.",
-                        type=int, default=0)
+                        help="Set the initial number of permutations at which GPD-pvalue will be initially calculated. Default is 500. If using the default targetperms, idperms or kldperms need to be at least 500.",
+                        type=int, default=500)
     parser.add_argument("--alpha",
                         help="Set the significance level to compute the confidence interval of pvalues. Default is 0.05",
                         type=float, default= 0.05)
@@ -317,7 +317,7 @@ def main():
                 kld_pvalues, CI_lower, CI_upper, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = klddifference.calculate_kld_significance(
                     logo_dict_pair, kld_infos, args.kldperms,
                     args.processes, args.pmethod, args.targetperms, args.alpha)
-                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction])
+                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction],args.single)
 
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, CI_lower, CI_upper, kld_pvalues_corrected, kld_infos,
@@ -335,7 +335,7 @@ def main():
                         args.processes,
                         args.exact,
                         args.entropy, args.pmethod, args.targetperms, args.alpha)
-                    id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction])
+                    id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction],args.single)
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, CI_lower, CI_upper, id_pvalues_corrected, id_infos,
                                                logo_dict_pair, "ID", permnum_dic, pmethodtype_dic, bt_dic, ft_dic,
