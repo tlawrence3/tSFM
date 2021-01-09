@@ -3610,7 +3610,7 @@ class FunctionLogoDifference:
                                  [height[key[0]][basepair][state] for basepair in self.basepairs for state in
                                    P[key[0]][basepair]]
 
-            tableDict['"Sample-Sz-Back'] = [sum((logo_dic[key[0]].get([pos], state)).values()) for pos in range(self.pos)
+            tableDict['Sample-Sz-Back'] = [sum((logo_dic[key[0]].get([pos], state)).values()) for pos in range(self.pos)
                                           for state in self.singles] + \
                                          [sum((logo_dic[key[0]].get(basepair, state)).values()) for basepair in
                                           self.basepairs for state in P[key[0]][basepair]]
@@ -3672,7 +3672,8 @@ class FunctionLogoDifference:
                                self.singles] + \
                               [ft[key[0]][basepair][state] for basepair in self.basepairs for state in
                                ft[key[0]][basepair]]
-            
+
+
             pandasTable = pd.DataFrame(tableDict)
             filename = prefix + '_' + key[1] + '_' + key[0] + "_sigstats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')
