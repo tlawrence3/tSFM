@@ -8,11 +8,19 @@ git clone https://github.com/tlawrence3/tSFM.git
 ```bash
 cd tSFM
 ```
-3. We recommend using [anaconda](https://www.anaconda.com/products/individual) and conda enviroments for installing and using tSFM. The following commands will create a conda environment with all the required packages and activate it.
+3. We recommend using
+[anaconda](https://www.anaconda.com/products/individual) and conda
+enviroments for installing and using tSFM. The following commands will
+create a conda environment with all the required packages and activate
+it. The last two commands install scikit-gof from its github repo
+including two unmerged pull requests to fix installation errors and a
+runtime warning. scikit-gof implements the Anderson-Darling Test used
+in the Peaks-over-Threshold-GPD based p-value estimator.
 ```bash
 conda create -n tSFM python=3.8 pandas numpy cython pytest-runner pytest scipy patsy mpmath statsmodels
 conda activate tSFM
 pip install git+https://github.com/wrwrwr/scikit-gof.git@952674f186c70077deb703b3ea39ee9bdd58a0aa
+pip install git+https://github.com/wrwrwr/scikit-gof.git@b441372ecdbe110313720eea45d7e4833a279b24
 ```
 4. Now we can install tSFM and run a basic test the installation with the below commands:
 ```bash

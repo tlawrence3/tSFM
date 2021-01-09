@@ -2198,7 +2198,7 @@ class FunctionLogoDifference:
 
     #  _______________________ KLD/ID logo significance calculations ___________________________________________________
 
-    def calculate_kld_significance(self, logo_dict, kld_infos, permute_num, proc, pmethod, targetperms, alpha):
+    def calculate_kld_significance(self, logo_dict, kld_infos, permute_num, proc, pmethod, exceedances, targetperms, peaks, alpha):
 
         pvalue = {}
         CI_lower = {}
@@ -2246,14 +2246,14 @@ class FunctionLogoDifference:
                     end_pair = len(self.basepairs) // proc + len(self.basepairs) % proc
                     end_single = self.pos // proc + self.pos % proc
                     perm_jobs.append((list(range(start_single, end_single)), permute_num, logo_dict, kld, start_pair,
-                                      end_pair, pmethod, targetperms, alpha))
+                                      end_pair, pmethod, exceedances, targetperms, peaks, alpha))
                 else:
                     start_pair = end_pair
                     end_pair = start_pair + len(self.basepairs) // proc
                     start_single = end_single
                     end_single = end_single + self.pos // proc
                     perm_jobs.append((list(range(start_single, end_single)), permute_num, logo_dict, kld, start_pair,
-                                      end_pair, pmethod, targetperms, alpha))
+                                      end_pair, pmethod, exceedances, targetperms, peaks, alpha))
 
             significant_calc_outputs = pool.starmap(self.perm_kld_calc_pvalue, perm_jobs, 1)
 
@@ -2275,8 +2275,7 @@ class FunctionLogoDifference:
 
         return pvalue, CI_lower, CI_upper, permnum, ptype, b_freq_table, f_freq_table, gpd_shape, gpd_scale, gpd_exceedances_size, gpd_ADtest
 
-    def perm_kld_calc_pvalue(self, positions, permute_num, logo_dic, kld_infos, start_pair, end_pair, pmethod,
-                             targetperms, alpha):
+    def perm_kld_calc_pvalue(self, positions, permute_num, logo_dic, kld_infos, start_pair, end_pair, pmethod, exceedances, targetperms, peaks, alpha):
 
         significant_calc_outputs = {}
         pvalue = {}
@@ -2327,7 +2326,7 @@ class FunctionLogoDifference:
                         gpd_ADtest[pair[0]][single][state],
                     ) = self.calc_KLD_pvalue(permute_num, state_counts_back, state_counts_fore,
                                              sum(state_counts_back.values()), kld_infos[pair[0]][single][state],
-                                             pmethod, targetperms, alpha)
+                                             pmethod, exceedances, targetperms, peaks, alpha)
 
             for basepair in self.basepairs[start_pair:end_pair]:
                 for state in kld_infos[pair[0]][basepair]:
@@ -2350,7 +2349,7 @@ class FunctionLogoDifference:
                         gpd_ADtest[pair[0]][basepair][state],
                     ) = self.calc_KLD_pvalue(permute_num, state_counts_back, state_counts_fore,
                                              sum(state_counts_back.values()), kld_infos[pair[0]][basepair][state],
-                                             pmethod, targetperms, alpha)
+                                             pmethod, exceedances, targetperms, peaks, alpha)
 
         significant_calc_outputs["pvalue"] = pvalue
         significant_calc_outputs["CI_lower"] = CI_lower
@@ -2365,17 +2364,15 @@ class FunctionLogoDifference:
         significant_calc_outputs["ADtest"] = gpd_ADtest
         return significant_calc_outputs
 
-    def calc_KLD_pvalue(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, pmethod, targetperms,
-                        alpha):
+    def calc_KLD_pvalue(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, pmethod, exceedances, targetperms, peaks, alpha):
 
         if pmethod == "ECDF_pseudo":
             perm_kld_values = self.calc_permvalues_kld(maxPerm, class_counts_b, class_counts_f, back_size)
             return self.calc_pecdf_with_pseudo(perm_kld_values, orig_kld, class_counts_b, class_counts_f)
         if pmethod == "ECDF":
-            return self.calc_pecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, alpha)
+            return self.calc_pecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, alpha)
         if pmethod == "GPD":
-            return self.calc_pgpd_ecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, targetperms,
-                                           alpha)
+            return self.calc_pgpd_ecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, targetperms, peaks, alpha)
 
     def calc_permvalues_kld(self, maxPerm, class_counts_b, class_counts_f, back_size):
 
@@ -2436,7 +2433,7 @@ class FunctionLogoDifference:
         return P, None, None, len(
             perm_infos), "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
-    def calc_pecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, alpha):
+    def calc_pecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -2490,17 +2487,17 @@ class FunctionLogoDifference:
             if permKLD >= orig_kld:
                 exceedances_count = exceedances_count + 1
 
-            if exceedances_count >= 10:
+            if exceedances_count >= exceedances:
                 P = exceedances_count / len(permKLDs)
                 P_CI = [norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount),
                         norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount)]
                 return P, P_CI[0], P_CI[
-                    1], permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+                    1], permcount, "p_ecdf", b_aaclasstable, f_aaclasstable, None, None, None, None
 
         P = (exceedances_count + 1) / (len(permKLDs) + 1)
         return P, None, None, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
-    def calc_pgpd_ecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, target_permnum, alpha):
+    def calc_pgpd_ecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, targetperms, peaks, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -2554,16 +2551,16 @@ class FunctionLogoDifference:
             if permKLD >= orig_kld:
                 exceedances_count = exceedances_count + 1
 
-            if exceedances_count == 10:
+            if exceedances_count == exceedances:
                 P = exceedances_count / permcount
                 P_CI = [norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount),
                         norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount)]
                 return P, P_CI[0], P_CI[
-                    1], permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+                    1], permcount, "p_ecdf", b_aaclasstable, f_aaclasstable, None, None, None, None
             else:
 
-                if permcount >= target_permnum:
-                    E = min(250, permcount // 3)
+                if permcount >= targetperms:
+                    E = min(peaks, permcount // 3)
                     permKLDs_5p = list(map(lambda x: x ** 5, permKLDs))
                     threshold = (sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[0] +
                                  sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
@@ -2584,7 +2581,7 @@ class FunctionLogoDifference:
                         gpd_pvalue = (1 - genpareto.cdf((orig_kld ** 5) - threshold, shape, loc, scale)) * E / permcount
 
                         if gpd_pvalue == 0:
-                            target_permnum = min(target_permnum * 2, maxPerm)
+                            targetperms = min(targetperms * 2, maxPerm)
                             if permcount == maxPerm:
                                 P = (exceedances_count + 1) / (len(permKLDs) + 1)
 
@@ -2600,7 +2597,7 @@ class FunctionLogoDifference:
                             np.partition(permKLDs_5p_t, -E)[-E:], genpareto(c=shape, scale=scale, loc=loc)).pvalue
 
                     else:
-                        target_permnum = min(target_permnum * 2, maxPerm)
+                        targetperms = min(targetperms * 2, maxPerm)
 
         P = (exceedances_count + 1) / (len(permKLDs) + 1)
 
@@ -2688,8 +2685,7 @@ class FunctionLogoDifference:
             permutedList.extend(sublists[i])
         return permutedList
 
-    def calculate_id_significance(self, logo_dict, id_infos, permute_num, proc, max, entropy, pmethod, targetperms,
-                                  alpha):
+    def calculate_id_significance(self, logo_dict, id_infos, permute_num, proc, max, entropy, pmethod, exceedances, targetperms, peaks, alpha):
 
         pvalue = {}
         CI_lower = {}
@@ -2744,7 +2740,7 @@ class FunctionLogoDifference:
                     end_single = end_single + self.pos // proc
                     perm_jobs.append(
                         (list(range(start_single, end_single)), permute_num, logo_dict, id, start_pair, end_pair, max,
-                         entropy, pmethod, targetperms, alpha))
+                         entropy, pmethod, exceedances, targetperms, peaks, alpha))
             significant_calc_outputs = pool.starmap(self.cal_perm_id_pvalue, perm_jobs, 1)
 
         for x in significant_calc_outputs:
@@ -2766,7 +2762,7 @@ class FunctionLogoDifference:
         return pvalue, CI_lower, CI_upper, permnum, ptype, b_freq_table, f_freq_table, gpd_shape, gpd_scale, gpd_exceedances_size, gpd_ADtest
 
     def cal_perm_id_pvalue(self, positions, permute_num, logo_dic, id_infos, start_pair, end_pair, max, entropy,
-                           pmethod, targetperms, alpha):
+                           pmethod, exceedances, targetperms, peaks, alpha):
 
         significant_calc_outputs = {}
         pvalue = {}
@@ -2819,7 +2815,7 @@ class FunctionLogoDifference:
                                                     sum(state_counts_back.values()),
                                                     logo_dic[pair[0]].functions,
                                                     logo_dic[pair[1]].functions, max,
-                                                    id_infos[pair[0]][single][state], pmethod, targetperms, alpha)
+                                                    id_infos[pair[0]][single][state], pmethod, exceedances, targetperms, peaks, alpha)
 
                     if entropy == "MM":
                         (
@@ -2839,7 +2835,7 @@ class FunctionLogoDifference:
                                                    sum(state_counts_back.values()),
                                                    logo_dic[pair[0]].functions,
                                                    logo_dic[pair[1]].functions, max,
-                                                   id_infos[pair[0]][single][state], pmethod, targetperms, alpha)
+                                                   id_infos[pair[0]][single][state], pmethod, exceedances, targetperms, peaks, alpha)
 
             for basepair in self.basepairs[start_pair:end_pair]:
                 for state in id_infos[pair[0]][basepair]:
@@ -2866,7 +2862,7 @@ class FunctionLogoDifference:
                                                     sum(state_counts_back.values()),
                                                     logo_dic[pair[0]].functions,
                                                     logo_dic[pair[1]].functions, max,
-                                                    id_infos[pair[0]][basepair][state], pmethod, targetperms, alpha)
+                                                    id_infos[pair[0]][basepair][state], pmethod, exceedances, targetperms, peaks, alpha)
 
                     if entropy == "MM":
                         (
@@ -2886,7 +2882,7 @@ class FunctionLogoDifference:
                                                    sum(state_counts_back.values()),
                                                    logo_dic[pair[0]].functions,
                                                    logo_dic[pair[1]].functions, max,
-                                                   id_infos[pair[0]][basepair][state], pmethod, targetperms, alpha)
+                                                   id_infos[pair[0]][basepair][state], pmethod, exceedances, targetperms, peaks, alpha)
 
         significant_calc_outputs["pvalue"] = pvalue
         significant_calc_outputs["CI_lower"] = CI_lower
@@ -2902,7 +2898,7 @@ class FunctionLogoDifference:
         return significant_calc_outputs
 
     def calc_ID_pvalue_NSB(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                           max, orig_id, pmethod, targetperms, alpha):
+                           max, orig_id,  pmethod, exceedances, targetperms, peaks, alpha):
 
         if orig_id == 0:
             return 1, None, None, None, None, None, None, None, None, None, None
@@ -2912,11 +2908,11 @@ class FunctionLogoDifference:
             return self.calc_pecdf_with_pseudo(perm_id_nsb_values, orig_id, class_counts_b, class_counts_f)
         if pmethod == "ECDF":
             return self.calc_pecdf_id_nsb(maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                                          max, orig_id, alpha)
+                                          max, orig_id, exceedances, alpha)
         if pmethod == "GPD":
             return self.calc_pgpd_ecdf_id_nsb(maxPerm, class_counts_b, class_counts_f, back_size, b_functions,
                                               f_functions,
-                                              max, orig_id, targetperms, alpha)
+                                              max, orig_id, exceedances, targetperms, peaks, alpha)
 
     def calc_permvalues_id_nsb(self, numPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
                                max):
@@ -2997,7 +2993,7 @@ class FunctionLogoDifference:
         return permIDs
 
     def calc_pecdf_id_nsb(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                          max, orig_id, alpha):
+                          max, orig_id, exceedances, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -3080,19 +3076,19 @@ class FunctionLogoDifference:
             if id_info >= orig_id:
                 exceedances_count = exceedances_count + 1
 
-            if exceedances_count >= 10:
+            if exceedances_count >= exceedances:
                 P = exceedances_count / len(permIDs)
                 P_CI = [norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount),
                         norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount)]
                 return P, P_CI[0], P_CI[
-                    1], permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+                    1], permcount, "p_ecdf", b_aaclasstable, f_aaclasstable, None, None, None, None
 
         P = (exceedances_count + 1) / (len(permIDs) + 1)
 
         return P, None, None, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
     def calc_pgpd_ecdf_id_nsb(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                              max, orig_id, target_permnum, alpha):
+                              max, orig_id, exceedances, targetperms, peaks, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -3175,15 +3171,15 @@ class FunctionLogoDifference:
             if id_info >= orig_id:
                 exceedances_count = exceedances_count + 1
 
-            if exceedances_count == 10:
+            if exceedances_count == exceedances:
                 P = exceedances_count / len(permIDs)
                 P_CI = [norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount),
                         norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount)]
                 return P, P_CI[0], P_CI[
-                    1], permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+                    1], permcount, "p_ecdf", b_aaclasstable, f_aaclasstable, None, None, None, None
             else:
-                if permcount >= target_permnum:
-                    E = min(250, permcount // 3)
+                if permcount >= targetperms:
+                    E = min(peaks, permcount // 3)
                     permIDs_5p = list(map(lambda x: x ** 5, permIDs))
                     threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
                                  sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
@@ -3204,7 +3200,7 @@ class FunctionLogoDifference:
                         gpd_pvalue = (1 - genpareto.cdf((orig_id ** 5) - threshold, shape, loc, scale)) * E / permcount
 
                         if gpd_pvalue == 0:
-                            target_permnum = min(target_permnum * 2, maxPerm)
+                            targetperms = min(targetperms * 2, maxPerm)
                             if permcount == maxPerm:
                                 P = (exceedances_count + 1) / (len(permIDs) + 1)
 
@@ -3220,14 +3216,14 @@ class FunctionLogoDifference:
                             np.partition(permIDs_5p_t, -E)[-E:], genpareto(c=shape, scale=scale, loc=loc)).pvalue
 
                     else:
-                        target_permnum = min(target_permnum * 2, maxPerm)
+                        targetperms = min(targetperms * 2, maxPerm)
 
         P = (exceedances_count + 1) / (len(permIDs) + 1)
 
         return P, None, None, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
     def calc_ID_pvalue_MM(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                          max, orig_id, pmethod, targetperms, alpha):
+                          max, orig_id, pmethod,  exceedances, targetperms, peaks, alpha):
 
         if orig_id == 0:
             return 1, None, None, None, None, None, None, None, None, None, None
@@ -3237,11 +3233,11 @@ class FunctionLogoDifference:
             return self.calc_pecdf_with_pseudo(perm_id_mm_values, orig_id, class_counts_b, class_counts_f)
         if pmethod == "ECDF":
             return self.calc_pecdf_id_mm(maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                                         max, orig_id, alpha)
+                                         max, orig_id, exceedances, alpha)
         if pmethod == "GPD":
             return self.calc_pgpd_ecdf_id_mm(maxPerm, class_counts_b, class_counts_f, back_size, b_functions,
                                              f_functions,
-                                             max, orig_id, targetperms, alpha)
+                                             max, orig_id,  exceedances, targetperms, peaks, alpha)
 
     def calc_permvalues_id_mm(self, numPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
                               max):
@@ -3321,7 +3317,7 @@ class FunctionLogoDifference:
         return permIDs
 
     def calc_pecdf_id_mm(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                         max, orig_id, alpha):
+                         max, orig_id, exceedances, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -3403,18 +3399,18 @@ class FunctionLogoDifference:
             if id_info >= orig_id:
                 exceedances_count = exceedances_count + 1
 
-            if exceedances_count >= 10:
+            if exceedances_count >= exceedances:
                 P = exceedances_count / len(permIDs)
                 P_CI = [norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount),
                         norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount)]
                 return P, P_CI[0], P_CI[
-                    1], permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+                    1], permcount, "p_ecdf", b_aaclasstable, f_aaclasstable, None, None, None, None
 
         P = (exceedances_count + 1) / (len(permIDs) + 1)
         return P, None, None, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
     def calc_pgpd_ecdf_id_mm(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                             max, orig_id, target_permnum, alpha):
+                             max, orig_id,  exceedances, targetperms, peaks, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -3496,15 +3492,15 @@ class FunctionLogoDifference:
             if id_info >= orig_id:
                 exceedances_count = exceedances_count + 1
 
-            if exceedances_count == 10:
+            if exceedances_count == exceedances:
                 P = exceedances_count / len(permIDs)
                 P_CI = [norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount),
                         norm.ppf(1 - alpha / 2, loc=0, scale=1) * np.sqrt(P * (1 - P) / permcount)]
                 return P, P_CI[0], P_CI[
-                    1], permcount, "p_ecdf_without_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
+                    1], permcount, "p_ecdf", b_aaclasstable, f_aaclasstable, None, None, None, None
             else:
-                if permcount >= target_permnum:
-                    E = min(250, permcount // 3)
+                if permcount >= targetperms:
+                    E = min(peaks, permcount // 3)
                     permIDs_5p = list(map(lambda x: x ** 5, permIDs))
                     threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
                                  sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
@@ -3525,7 +3521,7 @@ class FunctionLogoDifference:
                         gpd_pvalue = (1 - genpareto.cdf((orig_id ** 5) - threshold, shape, loc, scale)) * E / permcount
 
                         if gpd_pvalue == 0:
-                            target_permnum = min(target_permnum * 2, maxPerm)
+                            targetperms = min(targetperms * 2, maxPerm)
                             if permcount == maxPerm:
                                 P = (exceedances_count + 1) / (len(permIDs) + 1)
 
@@ -3541,7 +3537,7 @@ class FunctionLogoDifference:
                             np.partition(permIDs_5p_t, -E)[-E:], genpareto(c=shape, scale=scale, loc=loc)).pvalue
 
                     else:
-                        target_permnum = min(target_permnum * 2, maxPerm)
+                        targetperms = min(targetperms * 2, maxPerm)
 
         P = (exceedances_count + 1) / (len(permIDs) + 1)
 
@@ -3599,77 +3595,86 @@ class FunctionLogoDifference:
     def write_pvalues(self, P, CI_lower, CI_upper, corrected_P, height, logo_dic, prefix, permnum, ptype, bt, ft, shape,
                       scale, excnum, ADtest):
         tableDict = {}
-        nameSet = ["coord", "state", "P-value", "CI.lower", "CI.upper", "significance", "height", "B-sample-size",
-                   "F-sample-size", "permnum", "Pmethodtype", "bt", "ft", "shape", "scale", "excnum", "ADtest"]
+        nameSet = ["Coord", "State", "Statistic", "Sample-Sz-Back", "Sample-Sz-Fore", "P-value", "CI.Lower", "CI.Upper", "Adjusted-P", "Permutations", "P-Val-Method", "GPD-shape", "GPD-scale", "Peaks", "ADtest-P-val", "Freqs-Back", "Freqs-Fore"]
         for name in nameSet:
             tableDict[name] = np.zeros(self.pos * len(self.singles) + len(self.basepairs) * len(self.pairs), )
 
         pairwise_combinations = itertools.permutations(P.keys(), 2)
         for key in pairwise_combinations:
-            tableDict['coord'] = [pos for pos in range(self.pos) for state in self.singles] + \
+            tableDict['Coord'] = [pos for pos in range(self.pos) for state in self.singles] + \
                                  [basepair for basepair in self.basepairs for state in P[key[0]][basepair]]
-            tableDict['state'] = [state for pos in range(self.pos) for state in self.singles] + \
+            tableDict['State'] = [state for pos in range(self.pos) for state in self.singles] + \
                                  [state for basepair in self.basepairs for state in P[key[0]][basepair]]
+
+            tableDict['Statistic'] = [height[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
+                                 [height[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                   P[key[0]][basepair]]
+
+            tableDict['"Sample-Sz-Back'] = [sum((logo_dic[key[0]].get([pos], state)).values()) for pos in range(self.pos)
+                                          for state in self.singles] + \
+                                         [sum((logo_dic[key[0]].get(basepair, state)).values()) for basepair in
+                                          self.basepairs for state in P[key[0]][basepair]]
+
+            tableDict['Sample-Sz-Fore'] = [sum((logo_dic[key[1]].get([pos], state)).values()) for pos in range(self.pos)
+                                          for state in self.singles] + \
+                                         [sum((logo_dic[key[1]].get(basepair, state)).values()) for basepair in
+                                          self.basepairs for state in P[key[1]][basepair]]
+            
             tableDict['P-value'] = [P[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
                                    [P[key[0]][basepair][state] for basepair in self.basepairs for state in
                                     P[key[0]][basepair]]
-            tableDict['CI.lower'] = [CI_lower[key[0]][pos][state] for pos in range(self.pos) for state in
+   
+
+            tableDict['CI.Lower'] = [CI_lower[key[0]][pos][state] for pos in range(self.pos) for state in
                                      self.singles] + \
                                     [CI_lower[key[0]][basepair][state] for basepair in self.basepairs for state in
                                      CI_lower[key[0]][basepair]]
-            tableDict['CI.upper'] = [CI_upper[key[0]][pos][state] for pos in range(self.pos) for state in
+            tableDict['CI.Upper'] = [CI_upper[key[0]][pos][state] for pos in range(self.pos) for state in
                                      self.singles] + \
                                     [CI_upper[key[0]][basepair][state] for basepair in self.basepairs for state in
                                      CI_upper[key[0]][basepair]]
-            tableDict['significance'] = [corrected_P[key[0]][pos][state] for pos in range(self.pos) for state in
+            tableDict['Adjusted-P'] = [corrected_P[key[0]][pos][state] for pos in range(self.pos) for state in
                                          self.singles] + \
                                         [corrected_P[key[0]][basepair][state] for basepair in self.basepairs for state
                                          in
                                          P[key[0]][basepair]]
-            tableDict['height'] = [height[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
-                                  [height[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                   P[key[0]][basepair]]
-            tableDict['B-sample-size'] = [sum((logo_dic[key[0]].get([pos], state)).values()) for pos in range(self.pos)
-                                          for state in self.singles] + \
-                                         [sum((logo_dic[key[0]].get(basepair, state)).values()) for basepair in
-                                          self.basepairs for state in P[key[0]][basepair]]
-            tableDict['F-sample-size'] = [sum((logo_dic[key[1]].get([pos], state)).values()) for pos in range(self.pos)
-                                          for state in self.singles] + \
-                                         [sum((logo_dic[key[1]].get(basepair, state)).values()) for basepair in
-                                          self.basepairs for state in P[key[1]][basepair]]
-            tableDict['permnum'] = [permnum[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
+            tableDict['Permutations'] = [permnum[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
                                    [permnum[key[0]][basepair][state] for basepair in self.basepairs for state in
                                     permnum[key[0]][basepair]]
-            tableDict['Pmethodtype'] = [ptype[key[0]][pos][state] for pos in range(self.pos) for state in
+            tableDict['P-Val-Method'] = [ptype[key[0]][pos][state] for pos in range(self.pos) for state in
                                         self.singles] + \
                                        [ptype[key[0]][basepair][state] for basepair in self.basepairs for state in
                                         ptype[key[0]][basepair]]
+            tableDict['GPD-shape'] = [shape[key[0]][pos][state] for pos in range(self.pos) for state in
+                                  self.singles] + \
+                                 [shape[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                  shape[key[0]][basepair]]
 
-            tableDict['bt'] = [bt[key[0]][pos][state] for pos in range(self.pos) for state in
+            tableDict['GPD-scale'] = [scale[key[0]][pos][state] for pos in range(self.pos) for state in
+                                  self.singles] + \
+                                 [scale[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                  scale[key[0]][basepair]]
+     
+            tableDict['Peaks'] = [excnum[key[0]][pos][state] for pos in range(self.pos) for state in
+                                   self.singles] + \
+                                  [excnum[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                   excnum[key[0]][basepair]]
+            tableDict['ADtest-P-val'] = [ADtest[key[0]][pos][state] for pos in range(self.pos) for state in
+                                   self.singles] + \
+                                  [ADtest[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                   ADtest[key[0]][basepair]]
+            tableDict['Freqs-Back'] = [bt[key[0]][pos][state] for pos in range(self.pos) for state in
                                self.singles] + \
                               [bt[key[0]][basepair][state] for basepair in self.basepairs for state in
                                bt[key[0]][basepair]]
 
-            tableDict['ft'] = [ft[key[0]][pos][state] for pos in range(self.pos) for state in
+            tableDict['Freqs-Fore'] = [ft[key[0]][pos][state] for pos in range(self.pos) for state in
                                self.singles] + \
                               [ft[key[0]][basepair][state] for basepair in self.basepairs for state in
                                ft[key[0]][basepair]]
-            tableDict['shape'] = [shape[key[0]][pos][state] for pos in range(self.pos) for state in
-                                  self.singles] + \
-                                 [shape[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                  shape[key[0]][basepair]]
-            tableDict['scale'] = [scale[key[0]][pos][state] for pos in range(self.pos) for state in
-                                  self.singles] + \
-                                 [scale[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                  scale[key[0]][basepair]]
-            tableDict['excnum'] = [excnum[key[0]][pos][state] for pos in range(self.pos) for state in
-                                   self.singles] + \
-                                  [excnum[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                   excnum[key[0]][basepair]]
-            tableDict['ADtest'] = [ADtest[key[0]][pos][state] for pos in range(self.pos) for state in
-                                   self.singles] + \
-                                  [ADtest[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                   ADtest[key[0]][basepair]]
+            
             pandasTable = pd.DataFrame(tableDict)
-            filename = prefix + '_' + key[1] + '_' + key[0] + "_stats.txt"
+            filename = prefix + '_' + key[1] + '_' + key[0] + "_sigstats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')
+
+      

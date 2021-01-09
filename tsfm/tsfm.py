@@ -10,7 +10,7 @@ def main():
     # Setup parser
     parser = argparse.ArgumentParser(
         description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergences for tRNAs or other RNA families.",
-        epilog="Please cite Lawrence et al. (2020) tSFM: tRNA Structure-Function Mapper.")
+        epilog="Please cite Lawrence et al. (2021) tSFM: tRNA Structure-Function Mapper.")
     # Required arguments
     parser.add_argument("file_prefix",
                         help="One or more paths/file-prefix strings corresponding to sets of input files compiled for a single clade in clustalW format. Input files should be named <path>/<prefix>_<functional-class>.<extension>, where <functional_class> is a single letter",
@@ -62,10 +62,10 @@ def main():
                         help='Compute input table for structural bubble-plots (to be computed in R) like those appearing in Kelly et al. (2020).',
                         action="store_true")
     parser.add_argument("--kldperms",
-                        help="Set the number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.",
+                        help="Set the maximum number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.",
                         type=int, default=0)
     parser.add_argument("--idperms",
-                        help="Set the number of permutations to compute significance of Information Differences (SLOW). Default is to not calculate signifiance.",
+                        help="Set the maximum number of permutations to compute significance of Information Differences (SLOW). Default is to not calculate signifiance.",
                         type=int, default=0)
     parser.add_argument("-J", "--JSD",
                         help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergences",
@@ -74,11 +74,17 @@ def main():
                         help="Contrast clade CLADE against all others. CLADE should be one of the file-prefix strings passed as a required argument to the program, stripped of its path. Default is to compute contrasts for all pairs of clades.")
 
     parser.add_argument("-m", "--pmethod", type=str, default="GPD",
-                        help="Set the p-value calculation method. If value is \"GPD\", small p-values will be estimated with Generalized Pareto Distribution and the rest will be calculated with ECDF method. If value is \"ECDF_pseudo\", all the p-values will be calculated using pseudo-count. If value is \"ECDF\", p-value will be calculated using the empirical method without pseudo-count, unless number of original-stat-exceedances is less than 10 with maximum number of permutation. Default is GPD",
+                        help="Set the p-value calculation algorithm. If value is \"GPD\", p-values for large divergences will be estimated by the Peaks-over-Threshold method based on the Generalized Pareto Distribution, those for small divergences with E exceedances (default 10) will be calculated as a binomial proportion (ECDF method) and p-values for divergences that can't be estimated by either of those methods will be estimated as a binomial proportion with pseudo-counts (ECDF_pseudo method). If value is \"ECDF\", all p-values will be calculated by ECDF method or ECDF_pseudo method. If value is \"ECDF_pseudo\", all the p-values will be calculated using ECDF_pseudo method. Default is GPD",
                         choices=['GPD', 'ECDF_pseudo','ECDF'])
     parser.add_argument("--targetperms",
-                        help="Set the initial number of permutations at which GPD-pvalue will be initially calculated. Default is 0.",
-                        type=int, default=0)
+                        help="Set the initial target number of permutations at which GPD-pvalue will be initially calculated. Default is 500.",
+                        type=int, default=500)
+    parser.add_argument("--exceedances",
+                        help="Set the number of exceedances for which ECDF-based p-values will be calculated without pseudo-counts. Default is 10.",
+                        type=int, default=10)
+    parser.add_argument("--peaks",
+                        help="Set the number of Peaks-over-Threshold to use to initially estimate GPD. The actual value used will be the minimum of this value and one-third of permutations. Default is 250.",
+                        type=int, default=250)
     parser.add_argument("--alpha",
                         help="Set the significance level to compute the confidence interval of pvalues. Default is 0.05",
                         type=float, default= 0.05)
@@ -316,7 +322,7 @@ def main():
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
                 kld_pvalues, CI_lower, CI_upper, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = klddifference.calculate_kld_significance(
                     logo_dict_pair, kld_infos, args.kldperms,
-                    args.processes, args.pmethod, args.targetperms, args.alpha)
+                    args.processes, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha)
                 kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction])
 
                 print("Writing text output for KLD significance")
@@ -334,7 +340,7 @@ def main():
                         logo_dict_pair, id_infos, args.idperms,
                         args.processes,
                         args.exact,
-                        args.entropy, args.pmethod, args.targetperms, args.alpha)
+                        args.entropy, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha)
                     id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction])
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, CI_lower, CI_upper, id_pvalues_corrected, id_infos,
