@@ -10,22 +10,14 @@ cd tSFM
 ```
 3. We recommend using [anaconda](https://www.anaconda.com/products/individual) and conda enviroments for installing and using tSFM. The following commands will create a conda environment with all the required packages and activate it.
 ```bash
-conda create -n tSFM python=3.8 pandas numpy cython pytest-runner pytest scipy patsy mpmath statsmodels scikit-gof
+conda create -n tSFM python=3.8 pandas numpy cython pytest-runner pytest scipy patsy mpmath statsmodels
 conda activate tSFM
+pip install git+https://github.com/wrwrwr/scikit-gof.git@952674f186c70077deb703b3ea39ee9bdd58a0aa
 ```
 4. Now we can install tSFM and run a basic test the installation with the below commands:
 ```bash
 python setup.py install
 tsfm -h
-```
-
-# Running more extensive tests
-If you want to run more extensive testing that we utilize during development you can use the below commands:
-```shell
-pip install pytest
-pip install -r requirements.txt
-python setup.py build_ext --inplace
-python -m pytest tests/
 ```
 
 # Quickstart tutorial
