@@ -22,7 +22,7 @@ import statsmodels.stats.multitest as smm
 import pandas as pd
 import tsfm.nsb_entropy as nb
 import tsfm.exact as exact
-
+import warnings
 from operator import truediv
 from scipy import stats
 from scipy.stats import genpareto
@@ -2565,7 +2565,7 @@ class FunctionLogoDifference:
                     threshold = (sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[0] +
                                  sorted(np.partition(permKLDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
                     permKLDs_5p_t = list(map(lambda x: x - threshold, permKLDs_5p))
-
+                    warnings.filterwarnings("ignore")
                     fit_gpd = self.check_fit_gpd(np.partition(permKLDs_5p_t, -E)[-E:])
                     while fit_gpd is not True:
                         E = E - 10
@@ -3184,7 +3184,7 @@ class FunctionLogoDifference:
                     threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
                                  sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
                     permIDs_5p_t = list(map(lambda x: x - threshold, permIDs_5p))
-
+                    warnings.filterwarnings("ignore")
                     fit_gpd = self.check_fit_gpd(np.partition(permIDs_5p_t, -E)[-E:])
                     while fit_gpd is not True:
                         E = E - 10
@@ -3505,7 +3505,7 @@ class FunctionLogoDifference:
                     threshold = (sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[0] +
                                  sorted(np.partition(permIDs_5p, -(E + 1))[-(E + 1):])[1]) / 2
                     permIDs_5p_t = list(map(lambda x: x - threshold, permIDs_5p))
-
+                    warnings.filterwarnings("ignore")
                     fit_gpd = self.check_fit_gpd(np.partition(permIDs_5p_t, -E)[-E:])
                     while fit_gpd is not True:
                         E = E - 10
@@ -3555,40 +3555,83 @@ class FunctionLogoDifference:
     def approx_expect(self, H, k, N):
         return H - ((k - 1) / ((mt.log(4)) * N))
 
-    def addstats(self, pvalues, correction):
+    def addstats(self, pvalues, correction,singles,nosingle):
+
         P_corrected = {}
         for key in pvalues.keys():
-            P_corrected[key] = defaultdict(lambda: defaultdict(float))
-            bp_coords = []
-            ss_coords = []
-            for coord in pvalues[key]:
-                if ("," in str(coord)):
-                    bp_coords.append(coord)
-                else:
-                    ss_coords.append(coord)
+            if singles:
+                P_corrected[key] = defaultdict(lambda: defaultdict(float))
+                ss_coords = []
+                for coord in pvalues[key]:
+                    if ("," not in str(coord)):
+                        ss_coords.append(coord)
 
-            test_ss = []
-            test_bp = []
-            ss_coords.sort()
-            bp_coords.sort()
-            for coord in ss_coords:
-                for state in sorted(pvalues[key][coord]):
-                    test_ss.append(pvalues[key][coord][state])
+                test_ss = []
+                ss_coords.sort()
+                for coord in ss_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        test_ss.append(pvalues[key][coord][state])
 
-            for coord in bp_coords:
-                for state in sorted(pvalues[key][coord]):
-                    test_bp.append(pvalues[key][coord][state])
 
-            test_bp_results = smm.multipletests(test_bp, method=correction)[1].tolist()
-            test_ss_results = smm.multipletests(test_ss, method=correction)[1].tolist()
+                test_ss_results = smm.multipletests(test_ss, method=correction)[1].tolist()
 
-            for coord in ss_coords:
-                for state in sorted(pvalues[key][coord]):
-                    P_corrected[key][coord][state] = test_ss_results.pop(0)
+                for coord in ss_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        P_corrected[key][coord][state] = test_ss_results.pop(0)
 
-            for coord in bp_coords:
-                for state in sorted(pvalues[key][coord]):
-                    P_corrected[key][coord][state] = test_bp_results.pop(0)
+            if nosingle:
+                P_corrected[key] = defaultdict(lambda: defaultdict(float))
+                bp_coords = []
+                for coord in pvalues[key]:
+                    if ("," in str(coord)):
+                        bp_coords.append(coord)
+
+                test_bp = []
+                bp_coords.sort()
+
+                for coord in bp_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        test_bp.append(pvalues[key][coord][state])
+
+                test_bp_results = smm.multipletests(test_bp, method=correction)[1].tolist()
+
+                for coord in bp_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        P_corrected[key][coord][state] = test_bp_results.pop(0)
+
+
+            if nosingle is not True and single is not True:
+                P_corrected[key] = defaultdict(lambda: defaultdict(float))
+                bp_coords = []
+                ss_coords = []
+                for coord in pvalues[key]:
+                    if ("," in str(coord)):
+                        bp_coords.append(coord)
+                    else:
+                        ss_coords.append(coord)
+
+                test_ss = []
+                test_bp = []
+                ss_coords.sort()
+                bp_coords.sort()
+                for coord in ss_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        test_ss.append(pvalues[key][coord][state])
+
+                for coord in bp_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        test_bp.append(pvalues[key][coord][state])
+
+                test_bp_results = smm.multipletests(test_bp, method=correction)[1].tolist()
+                test_ss_results = smm.multipletests(test_ss, method=correction)[1].tolist()
+
+                for coord in ss_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        P_corrected[key][coord][state] = test_ss_results.pop(0)
+
+                for coord in bp_coords:
+                    for state in sorted(pvalues[key][coord]):
+                        P_corrected[key][coord][state] = test_bp_results.pop(0)
 
         return P_corrected
 

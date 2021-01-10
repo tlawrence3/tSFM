@@ -326,9 +326,7 @@ def main():
                 kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction])
 
                 print("Writing text output for KLD significance")
-                klddifference.write_pvalues(kld_pvalues, CI_lower, CI_upper, kld_pvalues_corrected, kld_infos,
-                                            logo_dict_pair, "KLD", permnum_dic, pmethodtype_dic, bt_dic, ft_dic,
-                                            shape_dic, scale_dic, excnum_dic, ADtest_dic)
+                klddifference.write_pvalues(kld_pvalues, CI_lower, CI_upper, kld_pvalues_corrected, kld_infos, logo_dict_pair, "KLD",permnum_dic, pmethodtype_dic, bt_dic,ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic )
 
             if args.idperms:
                     print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
@@ -343,9 +341,7 @@ def main():
                         args.entropy, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha)
                     id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction])
                     print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, CI_lower, CI_upper, id_pvalues_corrected, id_infos,
-                                               logo_dict_pair, "ID", permnum_dic, pmethodtype_dic, bt_dic, ft_dic,
-                                               shape_dic, scale_dic, excnum_dic, ADtest_dic)
+                    iddifference.write_pvalues(id_pvalues, CI_lower, CI_upper, id_pvalues_corrected, id_infos, logo_dict_pair, "ID",permnum_dic, pmethodtype_dic, bt_dic,ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic)
 
 if __name__ == "__main__":
     main()
