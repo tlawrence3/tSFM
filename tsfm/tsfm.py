@@ -31,6 +31,7 @@ def main():
     # Options
     parser.add_argument("-n", "--nosingle", action="store_true",
                        help="Do not calculate functional information for single-site features. Calculate for paired-site features only.")
+    
     parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
     parser.add_argument("-p", "--processes", type=int, default=os.cpu_count(),
                         help="Set the maximum number of concurrent processes. Default is the number of cores reported by the operating system.")
@@ -50,13 +51,13 @@ def main():
                         type=int, default=0)
     parser.add_argument("-C", "--correction",
                         help="Specify a method for multiple test correction for significance calculations: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH", default="BH", choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY','GBS'], dest="correction")   
-    parser.add_argument("-T",
+    parser.add_argument("-T", "--test",
                         help="Test the significance of only CIF stack-heights, only CIF letter-heights, or both. Default is both.",
-                        default="both",
+                        default="stacks",
                         choices=['stacks', 'letters', 'both'], dest="test") 
-    parser.add_argument("-I", "--idlogos", help='Compute Information Differece logos for each pair of clades',
+    parser.add_argument("-I", "--idlogos", help='Compute Information Differece statistics and logos for each pair of clades',
                         action="store_true")
-    parser.add_argument("-K", "--kldlogos", help='Compute Kullback-Liebler Divergence logos for each pair of clades',
+    parser.add_argument("-K", "--kldlogos", help='Compute Kullback-Liebler Divergence statistics and logos for each pair of clades',
                         action="store_true")
     parser.add_argument("-B", "--bubbles",
                         help='Compute input table for structural bubble-plots (to be computed in R) like those appearing in Kelly et al. (2020).',
@@ -74,7 +75,7 @@ def main():
                         help="Contrast clade CLADE against all others. CLADE should be one of the file-prefix strings passed as a required argument to the program, stripped of its path. Default is to compute contrasts for all pairs of clades.")
 
     parser.add_argument("-m", "--pmethod", type=str, default="GPD",
-                        help="Set the p-value calculation algorithm. If value is \"GPD\", p-values for large divergences will be estimated by the Peaks-over-Threshold method based on the Generalized Pareto Distribution, those for small divergences with E exceedances (default 10) will be calculated as a binomial proportion (ECDF method) and p-values for divergences that can't be estimated by either of those methods will be estimated as a binomial proportion with pseudo-counts (ECDF_pseudo method). If value is \"ECDF\", all p-values will be calculated by ECDF method or ECDF_pseudo method. If value is \"ECDF_pseudo\", all the p-values will be calculated using ECDF_pseudo method. Default is GPD",
+                        help="Set the p-value calculation algorithm for KLD/ID CIF Divergence significance calculations. If value is \"GPD\", p-values for large divergences will be estimated by the Peaks-over-Threshold method based on the Generalized Pareto Distribution, those for small divergences with E exceedances (default 10) will be calculated as a binomial proportion (ECDF method) and p-values for divergences that can't be estimated by either of those methods will be estimated as a binomial proportion with pseudo-counts (ECDF_pseudo method). If value is \"ECDF\", all p-values will be calculated by ECDF method or ECDF_pseudo method. If value is \"ECDF_pseudo\", all the p-values will be calculated using ECDF_pseudo method. Default is GPD",
                         choices=['GPD', 'ECDF_pseudo','ECDF'])
     parser.add_argument("--targetperms",
                         help="Set the initial target number of permutations at which GPD-pvalue will be initially calculated. Default is 500.",
@@ -93,7 +94,14 @@ def main():
 
     if (args.single and args.nosingle):
         sys.exit("Options --single and --nosingle are incompatible.")
-    
+
+    if (args.single):
+        features = "singles"
+    elif (args.nosingle):
+        features = "pairs"
+    else:
+        features = "both"
+        
     # initialize dictionary that contains all datasets labeled by the file prefix
     logo_dict = {}
 
@@ -198,10 +206,9 @@ def main():
     if (args.permutations):
         print("Calculating p-values using {} multiple test correction".format(args.correction))
         for key in results:
-            results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test, args.nosingle)
+            results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test, features)
             if (args.inverse):
-                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test,
-                                       args.nosingle, inverse=True)
+                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test, features, inverse=True)
 
     for key in results:
         print("Writing text output for {}".format(key))
