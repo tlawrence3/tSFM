@@ -26,7 +26,7 @@ import warnings
 from operator import truediv
 from scipy import stats
 from scipy.stats import genpareto
-from skgof import  ad_test
+from tsfm import  ad_test
 from scipy.stats import norm
 
 class DistanceCalculator:
