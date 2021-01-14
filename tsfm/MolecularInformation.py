@@ -800,9 +800,9 @@ class FunctionLogoDist:
 
         for coord in info:
             for pairtype in info[coord]: 
-                if "," in str(coord) and features == "pairs" or features == "both":
+                if "," in str(coord) and (features == "pairs" or features == "both"):
                     bp_coords.append(coord)
-                    if test == "stack" or test == "both":
+                    if test == "stacks" or test == "both":
                         P[coord][pairtype] = self.rtp(self.bpinfodist, info[coord][pairtype], self.bpinfo_sorted_keys)
                     if test == "letters" or test == "both":
                         for aa in height[coord][pairtype]:
@@ -810,15 +810,17 @@ class FunctionLogoDist:
                             
                 elif features == "singles" or features == "both":
                     ss_coords.append(coord)
-                    P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype], self.ssinfo_sorted_keys)
-                    for aa in height[coord][pairtype]:
-                        p[coord][pairtype][aa] = self.rtp(self.singleheightdist,
+                    if test == "stacks" or test == "both":
+                        P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype], self.ssinfo_sorted_keys)
+                    if test == "letters" or test == "both":
+                        for aa in height[coord][pairtype]:
+                            p[coord][pairtype][aa] = self.rtp(self.singleheightdist,
                                                           info[coord][pairtype] * height[coord][pairtype][aa],
                                                           self.ssheight_sorted_keys)
 
  
  
-        if test == "stack" or test == "both":
+        if test == "stacks" or test == "both":
             if features == "pairs" or features == "both":
                 bp_coords.sort()
                 for coord in bp_coords:
@@ -843,10 +845,9 @@ class FunctionLogoDist:
                         for aa in sorted(p[coord][pairtype]):
                             test_ss_letter.append(p[coord][pairtype][aa])
 
-        test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack + test_bp_letter + test_ss_letter,
-                                            method=correction)[1].tolist()
+        test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack + test_bp_letter + test_ss_letter, method=correction)[1].tolist()
 
-        if test == "stack" or test == "both":
+        if test == "stacks" or test == "both":
             if features == "pairs" or features == "both":
                 for coord in bp_coords:
                     for pairtype in sorted(P[coord]):
