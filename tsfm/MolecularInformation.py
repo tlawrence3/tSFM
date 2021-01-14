@@ -458,7 +458,7 @@ class FunctionLogoResults:
                 features and functional class height.
             correction (:obj:`str`): Multiple test correction method.
             test (:obj:`str`): Indicate statistical testing and multiple test correction of only stack height, only letter height, or both.
-            nosingle (:obj:`bool`): Indicate statistical testing and multiple test correction of basepair features only.
+            nosingle (:obj:`str`): Indicate statistical testing and multiple test correction of basepair features only.
             inverse (:obj:`bool`): Produce statistical tests for
                 anti-determinates.
         """
@@ -768,10 +768,10 @@ class FunctionLogoDist:
         self.bpheight_sorted_keys = sorted(self.bpheightdist.keys())
         self.ssinfo_sorted_keys = sorted(self.singleinfodist.keys())
         self.ssheight_sorted_keys = sorted(self.singleheightdist.keys())
-
+          
     def stat_test(self, info, height, correction, test, features):
         """
-        Performs statistical tests and multiple test correction for function and inverse function logos.
+        Performs statistical tests and multiple test correction.
         Calculates a p-value using a right tail probability test on the
         instance's discrete probability distributions. Methods for multiple test
         correction are provided by :class:`statsmodels.stats.multitest`. This
@@ -785,211 +785,91 @@ class FunctionLogoDist:
                 method available in :class:`statsmodels.stats.multitest` is a
                 valid option
             test (:obj:`str`): Indicate statistical testing and multiple test correction of only stack height, only letter height, or both.
-            features (:obj:`str`): Indicate statistical testing and multiple test correction of single-site features only, paired-site only, or both
+            features (:obj:`str`): Indicate statistical testing and multiple test correction of basepair features only, single sites only or both.
         """
-        stack_p            = defaultdict(lambda: defaultdict(float))
-        stack_p_corrected  = defaultdict(lambda: defaultdict(float))
-        letter_p           = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-        letter_p_corrected = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        P = defaultdict(lambda: defaultdict(float))
+        P_corrected = defaultdict(lambda: defaultdict(float))
+        p = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
+        p_corrected = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
         bp_coords = []
         ss_coords = []
         test_bp_stack = []
         test_ss_stack = []
         test_bp_letter = []
         test_ss_letter = []
-        
-        if test == "stacks":
-            for coord in info:
-                for pairtype in info[coord]:
-                    if ("," in str(coord)):
-                        bp_coords.append(coord)
+
+        for coord in info:
+            for pairtype in info[coord]: 
+                if "," in str(coord) and features == "pairs" or features == "both":
+                    bp_coords.append(coord)
+                    if test == "stack" or test == "both":
                         P[coord][pairtype] = self.rtp(self.bpinfodist, info[coord][pairtype], self.bpinfo_sorted_keys)
-
-            bp_coords.sort()
-            for coord in bp_coords:
-                for pairtype in sorted(P[coord]):
-                    test_bp_stack.append(P[coord][pairtype])
-
-            test_bp_results = smm.multipletests(test_bp_stack, method=correction)[1].tolist()
-            for coord in bp_coords:
-                for pairtype in sorted(P[coord]):
-                    P_corrected[coord][pairtype] = test_bp_results.pop(0)
-
-        elif test == "letters":
-            for coord in info:
-                for pairtype in info[coord]:
-                    if ("," in str(coord)):
-                        bp_coords.append(coord)
+                    if test == "letters" or test == "both":
                         for aa in height[coord][pairtype]:
-                            p[coord][pairtype][aa] = self.rtp(self.bpheightdist,
-                                                            info[coord][pairtype] * height[coord][pairtype][aa],
-                                                            self.bpheight_sorted_keys)
+                            p[coord][pairtype][aa] = self.rtp(self.bpheightdist,info[coord][pairtype] * height[coord][pairtype][aa],self.bpheight_sorted_keys)
+                            
+                elif features == "singles" or features == "both":
+                    ss_coords.append(coord)
+                    P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype], self.ssinfo_sorted_keys)
+                    for aa in height[coord][pairtype]:
+                        p[coord][pairtype][aa] = self.rtp(self.singleheightdist,
+                                                          info[coord][pairtype] * height[coord][pairtype][aa],
+                                                          self.ssheight_sorted_keys)
 
-            bp_coords.sort()
-            for coord in bp_coords:
-                for pairtype in sorted(p[coord]):
-                    for aa in sorted(p[coord][pairtype]):
-                        test_bp_letter.append(p[coord][pairtype][aa])
-
-            test_bp_results = smm.multipletests(test_bp_letter, method=correction)[1].tolist()
-            for coord in bp_coords:
-                for pairtype in sorted(p[coord]):
-                    for aa in sorted(p[coord][pairtype]):
-                        p_corrected[coord][pairtype][aa] = test_bp_results.pop(0)
-       else:
-           for coord in info:
-               for pairtype in info[coord]:
-                   if ("," in str(coord)):
-                       bp_coords.append(coord)
-                       P[coord][pairtype] = self.rtp(self.bpinfodist, info[coord][pairtype],
-                                                         self.bpinfo_sorted_keys)
-                       for aa in height[coord][pairtype]:
-                           p[coord][pairtype][aa] = self.rtp(self.bpheightdist,
-                                                                 info[coord][pairtype] * height[coord][pairtype][aa],
-                                                                 self.bpheight_sorted_keys)
-                
-                            bp_coords.sort()
+ 
+ 
+        if test == "stack" or test == "both":
+            if features == "pairs" or features == "both":
+                bp_coords.sort()
                 for coord in bp_coords:
                     for pairtype in sorted(P[coord]):
                         test_bp_stack.append(P[coord][pairtype])
+            if features == "singles" or features == "both":
+                ss_coords.sort()
+                for coord in ss_coords:
+                    for pairtype in sorted(P[coord]):
+                        test_ss_stack.append(P[coord][pairtype])
+                        
+        if test == "letters" or test == "both":
+            if features == "pairs" or features == "both":                  
                 for coord in bp_coords:
                     for pairtype in sorted(p[coord]):
                         for aa in sorted(p[coord][pairtype]):
                             test_bp_letter.append(p[coord][pairtype][aa])
                             
-                test_bp_results = smm.multipletests(test_bp_stack + test_bp_letter,
-                                                    method=correction)[1].tolist()
-                
-                for coord in bp_coords:
-                    for pairtype in sorted(P[coord]):
-                        P_corrected[coord][pairtype] = test_bp_results.pop(0)
-                for coord in bp_coords:
-                    for pairtype in sorted(p[coord]):
-                        for aa in sorted(p[coord][pairtype]):
-                            p_corrected[coord][pairtype][aa] = test_bp_results.pop(0)
-        else:
-            if test == "stacks":
-                for coord in info:
-                    for pairtype in info[coord]:
-                        if ("," in str(coord)):
-                            bp_coords.append(coord)
-                            P[coord][pairtype] = self.rtp(self.bpinfodist, info[coord][pairtype], self.bpinfo_sorted_keys)
-                        else:
-                            ss_coords.append(coord)
-                            P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype], self.ssinfo_sorted_keys)
-                
-                bp_coords.sort()
-                ss_coords.sort()
-                for coord in bp_coords:
-                    for pairtype in sorted(P[coord]):
-                        test_bp_stack.append(P[coord][pairtype])
-                for coord in ss_coords:
-                    for pairtype in sorted(P[coord]):
-                        test_ss_stack.append(P[coord][pairtype])
-                
-                test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack, 
-                                                      method=correction)[1].tolist()
-                for coord in bp_coords:
-                    for pairtype in sorted(P[coord]):
-                        P_corrected[coord][pairtype] = test_bpss_results.pop(0)
-
-                for coord in ss_coords:
-                    for pairtype in sorted(P[coord]):
-                        P_corrected[coord][pairtype] = test_bpss_results.pop(0)
-
-            elif test == "letters":
-                for coord in info:
-                    for pairtype in info[coord]:
-                        if ("," in str(coord)):
-                            bp_coords.append(coord)
-                            for aa in height[coord][pairtype]:
-                                p[coord][pairtype][aa] = self.rtp(self.bpheightdist,
-                                                                  info[coord][pairtype] * height[coord][pairtype][aa],
-                                                                  self.bpheight_sorted_keys)
-                        else:
-                            ss_coords.append(coord)
-                            for aa in height[coord][pairtype]:
-                                p[coord][pairtype][aa] = self.rtp(self.singleheightdist,
-                                                                  info[coord][pairtype] * height[coord][pairtype][aa],
-                                                                  self.ssheight_sorted_keys)
-                
-                bp_coords.sort()
-                ss_coords.sort()
-                for coord in bp_coords:
-                    for pairtype in sorted(p[coord]):
-                        for aa in sorted(p[coord][pairtype]):
-                            test_bp_letter.append(p[coord][pairtype][aa])
+            if features == "singles" or features == "both":
                 for coord in ss_coords:
                     for pairtype in sorted(p[coord]):
                         for aa in sorted(p[coord][pairtype]):
                             test_ss_letter.append(p[coord][pairtype][aa])
-                
-                test_bpss_results = smm.multipletests(test_bp_letter + test_ss_letter,
-                                                      method=correction)[1].tolist()
-                for coord in bp_coords:
-                    for pairtype in sorted(p[coord]):
-                        for aa in sorted(p[coord][pairtype]):
-                            p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
 
-                for coord in ss_coords:
-                    for pairtype in sorted(p[coord]):
-                        for aa in sorted(p[coord][pairtype]):
-                            p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
-            else:
-                for coord in info:
-                    for pairtype in info[coord]:
-                        if ("," in str(coord)):
-                            bp_coords.append(coord)
-                            P[coord][pairtype] = self.rtp(self.bpinfodist, info[coord][pairtype], self.bpinfo_sorted_keys)
-                            for aa in height[coord][pairtype]:
-                                p[coord][pairtype][aa] = self.rtp(self.bpheightdist,
-                                                                  info[coord][pairtype] * height[coord][pairtype][aa],
-                                                                  self.bpheight_sorted_keys)
-                        else:
-                            ss_coords.append(coord)
-                            P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype], self.ssinfo_sorted_keys)
-                            for aa in height[coord][pairtype]:
-                                p[coord][pairtype][aa] = self.rtp(self.singleheightdist,
-                                                                  info[coord][pairtype] * height[coord][pairtype][aa],
-                                                                  self.ssheight_sorted_keys)
-                
-                bp_coords.sort()
-                ss_coords.sort()
-                for coord in bp_coords:
-                    for pairtype in sorted(P[coord]):
-                        test_bp_stack.append(P[coord][pairtype])
-                for coord in ss_coords:
-                    for pairtype in sorted(P[coord]):
-                        test_ss_stack.append(P[coord][pairtype])
-                for coord in bp_coords:
-                    for pairtype in sorted(p[coord]):
-                        for aa in sorted(p[coord][pairtype]):
-                            test_bp_letter.append(p[coord][pairtype][aa])
-                for coord in ss_coords:
-                    for pairtype in sorted(p[coord]):
-                        for aa in sorted(p[coord][pairtype]):
-                            test_ss_letter.append(p[coord][pairtype][aa])
-                
-                test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack + test_bp_letter + test_ss_letter,
-                                                    method=correction)[1].tolist()
+        test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack + test_bp_letter + test_ss_letter,
+                                            method=correction)[1].tolist()
+
+        if test == "stack" or test == "both":
+            if features == "pairs" or features == "both":
                 for coord in bp_coords:
                     for pairtype in sorted(P[coord]):
                         P_corrected[coord][pairtype] = test_bpss_results.pop(0)
-
+                        
+            if features == "singles" or features == "both":
                 for coord in ss_coords:
                     for pairtype in sorted(P[coord]):
                         P_corrected[coord][pairtype] = test_bpss_results.pop(0)
-                
+
+        if test == "letters" or test == "both":
+            if features == "pairs" or features == "both":
                 for coord in bp_coords:
                     for pairtype in sorted(p[coord]):
                         for aa in sorted(p[coord][pairtype]):
                             p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
 
+            if features == "singles" or features == "both":             
                 for coord in ss_coords:
                     for pairtype in sorted(p[coord]):
                         for aa in sorted(p[coord][pairtype]):
                             p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
-        
+
 
         return {'P': P, 'p': p, "P_corrected": P_corrected, "p_corrected": p_corrected}
 
@@ -3478,13 +3358,13 @@ class FunctionLogoDifference:
     def approx_expect(self, H, k, N):
         return H - ((k - 1) / ((mt.log(4)) * N))
 
-    def addstats(self, pvalues, correction, single, nosingle):
+    def addstats(self, pvalues, correction, features):
 
         P_corrected = {}
         for key in pvalues.keys():
             P_corrected[key] = defaultdict(lambda: defaultdict(float))
 
-            if single or nosingle is not True:
+            if features == "singles" or features == "both":
                 ss_coords = []
                 for coord in pvalues[key]:
                     if ("," not in str(coord)):
@@ -3503,8 +3383,7 @@ class FunctionLogoDifference:
                     for state in sorted(pvalues[key][coord]):
                         P_corrected[key][coord][state] = test_ss_results.pop(0)
 
-            if nosingle or single is not True:
-                P_corrected[key] = defaultdict(lambda: defaultdict(float))
+            if features == "pairs" or features == "both":
                 bp_coords = []
                 for coord in pvalues[key]:
                     if ("," in str(coord)):
@@ -3526,8 +3405,7 @@ class FunctionLogoDifference:
 
         return P_corrected
 
-    def write_pvalues(self, P, CI_lower, CI_upper, corrected_P, height, logo_dic, prefix, permnum, ptype, bt, ft, shape,
-                      scale, excnum, ADtest):
+    def write_pvalues(self, P, CI_lower, CI_upper, corrected_P, height, logo_dic, prefix, permnum, ptype, bt, ft, shape, scale, excnum, ADtest):
         tableDict = {}
         nameSet = ["Coord", "State", "Statistic", "Sample-Sz-Back", "Sample-Sz-Fore", "P-value", "CI.Lower", "CI.Upper", "Adjusted-P", "Permutations", "P-Val-Method", "GPD-shape", "GPD-scale", "Peaks", "ADtest-P-val", "Freqs-Back", "Freqs-Fore"]
         for name in nameSet:

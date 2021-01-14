@@ -26,9 +26,10 @@ def main():
     group.add_argument("-s", "--single", action="store_true",
                        help="Do not calculate functional information for paired features. Calculate for single-site features only.")
 
+
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
-    # Options
+    
     parser.add_argument("-n", "--nosingle", action="store_true",
                        help="Do not calculate functional information for single-site features. Calculate for paired-site features only.")
     
@@ -206,9 +207,9 @@ def main():
     if (args.permutations):
         print("Calculating p-values using {} multiple test correction".format(args.correction))
         for key in results:
-            results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test, features)
+            results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test, args.nosingle)
             if (args.inverse):
-                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test, features, inverse=True)
+                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test, args.nosingle, inverse=True)
 
     for key in results:
         print("Writing text output for {}".format(key))
@@ -330,7 +331,7 @@ def main():
                 kld_pvalues, CI_lower, CI_upper, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = klddifference.calculate_kld_significance(
                     logo_dict_pair, kld_infos, args.kldperms,
                     args.processes, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha)
-                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction],args.single,args.nosingle)
+                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction],features) 
 
                 print("Writing text output for KLD significance")
                 klddifference.write_pvalues(kld_pvalues, CI_lower, CI_upper, kld_pvalues_corrected, kld_infos, logo_dict_pair, "KLD",permnum_dic, pmethodtype_dic, bt_dic,ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic )
@@ -346,7 +347,7 @@ def main():
                         args.processes,
                         args.exact,
                         args.entropy, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha)
-                    id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction],args.single,args.nosingle)
+                    id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction],features)
                     print("Writing text output for ID significance")
                     iddifference.write_pvalues(id_pvalues, CI_lower, CI_upper, id_pvalues_corrected, id_infos, logo_dict_pair, "ID",permnum_dic, pmethodtype_dic, bt_dic,ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic)
 
