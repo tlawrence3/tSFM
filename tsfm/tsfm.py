@@ -26,13 +26,11 @@ def main():
     group.add_argument("-s", "--single", action="store_true",
                        help="Do not calculate functional information for paired features. Calculate for single-site features only (such as for protein or DNA element families).")
 
-
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
-    
     parser.add_argument("-n", "--nosingle", action="store_true",
-                       help="Do not calculate functional information for single-site features. Calculate for paired-site features only (RNA families).")
-    
+                        help="Do not calculate functional information for single-site features. Calculate for paired-site features only (RNA families).")
+
     parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
     parser.add_argument("-p", "--processes", type=int, default=os.cpu_count(),
                         help="Set the maximum number of concurrent processes. Default is the number of cores reported by the operating system.")
@@ -51,14 +49,19 @@ def main():
                         help="Calculate the significance of CIFs by a permutation test, with a number of permutations equal to PERMUTATIONS (an integer). Default is to not calculate significance of CIFs.",
                         type=int, default=0)
     parser.add_argument("-C", "--correction",
-                        help="Specify a method for multiple test correction for significance calculations: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH", default="BH", choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY','GBS'], dest="correction")   
+                        help="Specify a method for multiple test correction for significance calculations: bonferroni, sidak, holm, holm-sidak, simes-hochberg, hommel, BH (Benjamini-Hochberg FDR), BY (Benjamini-Yekutieli FDR) or GBS (Gavrilov-Benjamini-Sarkar FDR). Default is BH",
+                        default="BH",
+                        choices=['bonferroni', 'sidak', 'holm', 'holm-sidak', 'simes-hochberg', 'hommel', 'BH', 'BY',
+                                 'GBS'], dest="correction")
     parser.add_argument("-T", "--test",
                         help="Test the significance of only CIF stack-heights, only CIF letter-heights, or both. Default is both.",
                         default="stacks",
-                        choices=['stacks', 'letters', 'both'], dest="test") 
-    parser.add_argument("-I", "--idlogos", help='Compute Information Differece statistics and logos for each pair of clades',
+                        choices=['stacks', 'letters', 'both'], dest="test")
+    parser.add_argument("-I", "--idlogos",
+                        help='Compute Information Differece statistics and logos for each pair of clades',
                         action="store_true")
-    parser.add_argument("-K", "--kldlogos", help='Compute Kullback-Liebler Divergence statistics and logos for each pair of clades',
+    parser.add_argument("-K", "--kldlogos",
+                        help='Compute Kullback-Liebler Divergence statistics and logos for each pair of clades',
                         action="store_true")
     parser.add_argument("-B", "--bubbles",
                         help='Compute input table for structural bubble-plots (to be computed in R) like those appearing in Kelly et al. (2020).',
@@ -77,7 +80,7 @@ def main():
 
     parser.add_argument("-m", "--pmethod", type=str, default="GPD",
                         help="Set the p-value calculation algorithm for KLD/ID CIF Divergence significance calculations. If value is \"GPD\", p-values for large divergences will be estimated by the Peaks-over-Threshold method based on the Generalized Pareto Distribution, those for small divergences with E exceedances (default 10) will be calculated as a binomial proportion (ECDF method) and p-values for divergences that can't be estimated by either of those methods will be estimated as a binomial proportion with pseudo-counts (ECDF_pseudo method). If value is \"ECDF\", all p-values will be calculated by ECDF method or ECDF_pseudo method. If value is \"ECDF_pseudo\", all the p-values will be calculated using ECDF_pseudo method. Default is GPD",
-                        choices=['GPD', 'ECDF_pseudo','ECDF'])
+                        choices=['GPD', 'ECDF_pseudo', 'ECDF'])
     parser.add_argument("--targetperms",
                         help="Set the initial target number of permutations at which GPD-pvalue will be initially calculated. Default is 500.",
                         type=int, default=500)
@@ -89,7 +92,7 @@ def main():
                         type=int, default=250)
     parser.add_argument("--alpha",
                         help="Set the significance level to compute the confidence interval of pvalues. Default is 0.05",
-                        type=float, default= 0.05)
+                        type=float, default=0.05)
 
     args = parser.parse_args()
 
@@ -102,7 +105,7 @@ def main():
         features = "pairs"
     else:
         features = "both"
-        
+
     # initialize dictionary that contains all datasets labeled by the file prefix
     logo_dict = {}
 
@@ -138,12 +141,12 @@ def main():
         logo_dict[prefix_name].parse_sequences(prefix)
 
     if (args.clade and args.clade not in logo_dict.keys()):
-        sys.exit("tsfm: Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
+        sys.exit(
+            "tsfm: Argument to option --clade must be identical to one of the file-prefix arguments to the program, stripped of its path.")
 
     if (args.bubbles and not args.clade):
-        sys.exit("tsfm: Option --bubbles requires designation of a specific clade to contrast against using option --clade.")
-        
-        
+        sys.exit(
+            "tsfm: Option --bubbles requires designation of a specific clade to contrast against using option --clade.")
 
     # Calculate exact method sample size correction
     if (args.exact):
@@ -209,7 +212,8 @@ def main():
         for key in results:
             results[key].add_stats(perm_dict[key], multitest_methods[args.correction], args.test, features)
             if (args.inverse):
-                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test, features, inverse=True)
+                results[key].add_stats(perm_inverse_dict[key], multitest_methods[args.correction], args.test, features,
+                                       inverse=True)
 
     for key in results:
         print("Writing text output for {}".format(key))
@@ -258,8 +262,8 @@ def main():
 
                 results_prob_dist[pair[0]] = {}
                 results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]][
-                    'prior'] = difference.calculate_prob_dist_pseudocounts(logo_dict[pair[0]], logo_dict[pair[1]])
-                post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]])
+                    'prior'] = difference.calculate_prob_dist_pseudocounts(logo_dict[pair[0]], logo_dict[pair[1]],features)
+                post_nopseudo[pair[0]] = difference.calculate_prob_dist_nopseudocounts(logo_dict[pair[0]],features)
             kld_height_dic = {}  # KLDs are saved with the background key
             ratios_dic = {}  # ratios are saved with the background key
             id_height_dic = {}  # IDs are saved with background key
@@ -274,14 +278,14 @@ def main():
                 ratios_dic[pair[0]] = difference.calculate_ratios(back_prior=results_prob_dist[pair[0]]['prior'],
                                                                   fore_prior=results_prob_dist[pair[1]]['prior'],
                                                                   back_post=results_prob_dist[pair[0]]['post'],
-                                                                  nopseudo_post_fore=post_nopseudo[pair[1]])
+                                                                  nopseudo_post_fore=post_nopseudo[pair[1]],features = features)
                 if args.kldlogos or args.bubbles or args.kldperms:
                     kld_info, kld_height = difference.calculate_kld(logo_dict, key_back=pair[0], key_fore=pair[1],
                                                                     back_prior=results_prob_dist[pair[0]]['prior'],
                                                                     fore_prior=results_prob_dist[pair[1]]['prior'],
                                                                     back_post=results_prob_dist[pair[0]]['post'],
                                                                     fore_post=results_prob_dist[pair[1]]['post'],
-                                                                    ratios=ratios_dic[pair[0]])
+                                                                    ratios=ratios_dic[pair[0]],features = features)
                     if args.kldlogos:
                         print("Writing KLD logos for", cpair[0], "and", cpair[1])
                         logoprefix = "KLDlogo"
@@ -293,8 +297,8 @@ def main():
 
                 if args.idlogos or args.bubbles or args.idperms:
                     id_info = difference.calculate_logoID_infos(info_b=info_height_dic[pair[0]]['info'],
-                                                                info_f=info_height_dic[pair[1]]['info'])
-                    id_height = difference.calculate_logoID_heights(info=id_info, ratios=ratios_dic[pair[0]])
+                                                                info_f=info_height_dic[pair[1]]['info'], features = features)
+                    id_height = difference.calculate_logoID_heights(info=id_info, ratios=ratios_dic[pair[0]], features = features)
                     id_height_dic[pair[0]] = {"id": id_info, "height": id_height}
 
                     if args.idlogos:
@@ -321,7 +325,7 @@ def main():
                                                   back_idlogo_height=id_height_dic[pair[1]]['height'],
                                                   kld_info=kld_height_dic[pair[0]]['kld'],
                                                   kld_height=kld_height_dic[pair[0]]['height'],
-                                                  fore=pair[1],back=pair[0])
+                                                  fore=pair[1], back=pair[0])
             if args.kldperms:
                 print("Calculating significance of KLDs between", cpair[0], "and", cpair[1])
                 pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
@@ -330,26 +334,32 @@ def main():
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
                 kld_pvalues, CI_lower, CI_upper, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = klddifference.calculate_kld_significance(
                     logo_dict_pair, kld_infos, args.kldperms,
-                    args.processes, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha)
-                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction],features) 
+                    args.processes, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha, features)
+                kld_pvalues_corrected = klddifference.addstats(kld_pvalues, multitest_methods[args.correction],
+                                                               features)
 
                 print("Writing text output for KLD significance")
-                klddifference.write_pvalues(kld_pvalues, CI_lower, CI_upper, kld_pvalues_corrected, kld_infos, logo_dict_pair, "KLD",permnum_dic, pmethodtype_dic, bt_dic,ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic )
+                klddifference.write_pvalues(kld_pvalues, CI_lower, CI_upper, kld_pvalues_corrected, kld_infos,
+                                            logo_dict_pair, "KLD", permnum_dic, pmethodtype_dic, bt_dic, ft_dic,
+                                            shape_dic, scale_dic, excnum_dic, ADtest_dic)
 
             if args.idperms:
-                    print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
-                    pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
-                    singles = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
-                    iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, singles)
-                    logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
-                    id_pvalues, CI_lower, CI_upper, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = iddifference.calculate_id_significance(
-                        logo_dict_pair, id_infos, args.idperms,
-                        args.processes,
-                        args.exact,
-                        args.entropy, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha)
-                    id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction],features)
-                    print("Writing text output for ID significance")
-                    iddifference.write_pvalues(id_pvalues, CI_lower, CI_upper, id_pvalues_corrected, id_infos, logo_dict_pair, "ID",permnum_dic, pmethodtype_dic, bt_dic,ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic)
+                print("Calculating significance of IDs between", cpair[0], "and", cpair[1])
+                pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
+                singles = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
+                iddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepairs, singles)
+                logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
+                id_pvalues, CI_lower, CI_upper, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = iddifference.calculate_id_significance(
+                    logo_dict_pair, id_infos, args.idperms,
+                    args.processes,
+                    args.exact,
+                    args.entropy, args.pmethod, args.exceedances, args.targetperms, args.peaks, args.alpha, features)
+                id_pvalues_corrected = iddifference.addstats(id_pvalues, multitest_methods[args.correction], features)
+                print("Writing text output for ID significance")
+                iddifference.write_pvalues(id_pvalues, CI_lower, CI_upper, id_pvalues_corrected, id_infos,
+                                           logo_dict_pair, "ID", permnum_dic, pmethodtype_dic, bt_dic, ft_dic,
+                                           shape_dic, scale_dic, excnum_dic, ADtest_dic)
+
 
 if __name__ == "__main__":
     main()
