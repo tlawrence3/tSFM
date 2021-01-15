@@ -9,7 +9,7 @@ from tsfm._version import __version__
 def main():
     # Setup parser
     parser = argparse.ArgumentParser(
-        description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergences for tRNAs or other RNA families.",
+        description="tSFM (tRNA Structure-Function Mapper) calculates functional Class-Informative Features (CIFs) and their evolutionary divergences for tRNAs as well as other RNA, protein or gene/element families.",
         epilog="Please cite Lawrence et al. (2021) tSFM: tRNA Structure-Function Mapper.")
     # Required arguments
     parser.add_argument("file_prefix",
@@ -18,20 +18,20 @@ def main():
 
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-i", "--infernal", type=argparse.FileType("r"),
-                       help="Use secondary structure file INFERNAL, required to calculate functional information of base-pair features, in Infernal format")
+                       help="Use secondary structure file INFERNAL, required to calculate functional information of RNA base-pair features, in Infernal format")
     group.add_argument("-c", "--cove", type=argparse.FileType("r"),
-                       help="Use secondary structure file COVE, required to calculate functional information of base-pair features, in COVE format. Example: \"#=CS  >>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....\n#=CS      ...<<<<<<<<<<<<.\"")
+                       help="Use secondary structure file COVE, required to calculate functional information of RNA base-pair features, in COVE format. Example: \"#=CS  >>>>>>>..>>>>...........<<<<.>>>>>.......<<<<<.....>>>>>....\n#=CS      ...<<<<<<<<<<<<.\"")
     group.add_argument("-t", "--text", type=argparse.FileType("r"),
-                       help="Use secondary structure file TEXT, required to calculate functional information of base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
+                       help="Use secondary structure file TEXT, required to calculate functional information of RNA base-pair features, is in text format. Example: \"A:0,72,1,71,2,70,3,69,4,68,5,67,6,66\nD:9,25,10,24,11,23,12,22\nC:27,43,28,42,29,41,30,40,31,39\nT:49,65,50,64,51,63,52,62,53,61\"")
     group.add_argument("-s", "--single", action="store_true",
-                       help="Do not calculate functional information for paired features. Calculate for single-site features only.")
+                       help="Do not calculate functional information for paired features. Calculate for single-site features only (such as for protein or DNA element families).")
 
 
     # group.add_argument("-f", "--file",     action="store_true", help="Read in previous results from file ")
 
     
     parser.add_argument("-n", "--nosingle", action="store_true",
-                       help="Do not calculate functional information for single-site features. Calculate for paired-site features only.")
+                       help="Do not calculate functional information for single-site features. Calculate for paired-site features only (RNA families).")
     
     parser.add_argument('-V', '--version', action='version', version="%(prog)s v{}".format(__version__))
     parser.add_argument("-p", "--processes", type=int, default=os.cpu_count(),
@@ -63,6 +63,8 @@ def main():
     parser.add_argument("-B", "--bubbles",
                         help='Compute input table for structural bubble-plots (to be computed in R) like those appearing in Kelly et al. (2020).',
                         action="store_true")
+    parser.add_argument("--clade", type=str,
+                        help="Contrast clade CLADE against all others. CLADE should be one of the file-prefix strings passed as a required argument to the program, stripped of its path. Default is to compute contrasts for all pairs of clades.")
     parser.add_argument("--kldperms",
                         help="Set the maximum number of permutations to compute significance of Kullback-Leibler Divergences. Default is to not calculate signifiance.",
                         type=int, default=0)
@@ -72,8 +74,6 @@ def main():
     parser.add_argument("-J", "--JSD",
                         help="Produce pairwise distance matrices between function logos for different taxa based on Jensen-Shannon Divergences",
                         action="store_true")
-    parser.add_argument("--clade", type=str,
-                        help="Contrast clade CLADE against all others. CLADE should be one of the file-prefix strings passed as a required argument to the program, stripped of its path. Default is to compute contrasts for all pairs of clades.")
 
     parser.add_argument("-m", "--pmethod", type=str, default="GPD",
                         help="Set the p-value calculation algorithm for KLD/ID CIF Divergence significance calculations. If value is \"GPD\", p-values for large divergences will be estimated by the Peaks-over-Threshold method based on the Generalized Pareto Distribution, those for small divergences with E exceedances (default 10) will be calculated as a binomial proportion (ECDF method) and p-values for divergences that can't be estimated by either of those methods will be estimated as a binomial proportion with pseudo-counts (ECDF_pseudo method). If value is \"ECDF\", all p-values will be calculated by ECDF method or ECDF_pseudo method. If value is \"ECDF_pseudo\", all the p-values will be calculated using ECDF_pseudo method. Default is GPD",
@@ -236,9 +236,9 @@ def main():
 
         # Initializing variables of class FunctionLogoDifference  __________________________________________________
         pos = results[list(logo_dict.keys())[0]].pos
-        basepair = results[list(logo_dict.keys())[0]].basepairs
+        basepairs = results[list(logo_dict.keys())[0]].basepairs
         types = logo_dict[list(logo_dict.keys())[0]].functions
-        # Variables pairs and single will be initialized later for each pair of clades separately __________________
+        # Variables pairs and singles will be initialized later for each pair of clades separately __________________
 
         results_prob_dist = {}
         post_nopseudo = {}
@@ -253,8 +253,8 @@ def main():
             pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
-                single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
-                difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+                singles = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
+                difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepairs, singles)
 
                 results_prob_dist[pair[0]] = {}
                 results_prob_dist[pair[0]]['post'], results_prob_dist[pair[0]][
@@ -268,8 +268,8 @@ def main():
             pairwise_permutation = itertools.permutations(list(cpair), 2)
             for pair in pairwise_permutation:
                 pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
-                single = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
-                difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, single)
+                singles = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
+                difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepairs, singles)
 
                 ratios_dic[pair[0]] = difference.calculate_ratios(back_prior=results_prob_dist[pair[0]]['prior'],
                                                                   fore_prior=results_prob_dist[pair[1]]['prior'],
@@ -311,7 +311,7 @@ def main():
                     # pair[0] is background
                     pairs = list(set(logo_dict[pair[0]].pairs) & set(logo_dict[pair[1]].pairs))
                     singles = list(set(logo_dict[pair[0]].singles) & set(logo_dict[pair[1]].singles))
-                    difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, singles)
+                    difference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepairs, singles)
 
                     difference.func_ID_KLD_2table(fore_logo_info=info_height_dic[pair[1]]['info'],
                                                   fore_logo_height=info_height_dic[pair[1]]['height'],
@@ -326,7 +326,7 @@ def main():
                 print("Calculating significance of KLDs between", cpair[0], "and", cpair[1])
                 pairs = list(set(logo_dict[cpair[0]].pairs) & set(logo_dict[cpair[1]].pairs))
                 singles = list(set(logo_dict[cpair[0]].singles) & set(logo_dict[cpair[1]].singles))
-                klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepair, singles)
+                klddifference = MolecularInformation.FunctionLogoDifference(pos, types, pairs, basepairs, singles)
                 logo_dict_pair = {key: logo_dict[key] for key in [cpair[0], cpair[1]]}
                 kld_pvalues, CI_lower, CI_upper, permnum_dic, pmethodtype_dic, bt_dic, ft_dic, shape_dic, scale_dic, excnum_dic, ADtest_dic = klddifference.calculate_kld_significance(
                     logo_dict_pair, kld_infos, args.kldperms,
