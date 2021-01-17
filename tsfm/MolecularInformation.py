@@ -511,14 +511,15 @@ class FunctionLogoResults:
                         else:
                             output_string += "NA"
                             output_string += "\tNA"
-                            
+
                     output_string += "\t"
                     for aainfo in sorted(self.height[coord][pairtype].items(), key=itemgetter(1), reverse=True):
                         output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
                             if coord in self.p['p']:
                                 output_string += ":{:08.6f}".format(self.p['p'][coord][pairtype][aainfo[0].upper()])
-                                output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(
+                                    self.p['p_corrected'][coord][pairtype][aainfo[0].upper()])
                             else:
                                 output_string += ":NA"
                                 output_string += ":NA"
@@ -546,8 +547,10 @@ class FunctionLogoResults:
                         output_string += "{}:{:05.3f}".format(aainfo[0], aainfo[1])
                         if (self.p):
                             if coord in self.inverse_p['p']:
-                                output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][pairtype][aainfo[0].upper()])
-                                output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][pairtype][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(
+                                    self.inverse_p['p'][coord][pairtype][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(
+                                    self.inverse_p['p_corrected'][coord][pairtype][aainfo[0].upper()])
                             else:
                                 output_string += ":NA"
                                 output_string += ":NA"
@@ -576,7 +579,8 @@ class FunctionLogoResults:
                         if (self.p):
                             if coord in self.p['p']:
                                 output_string += ":{:08.6f}".format(self.p['p'][coord][base][aainfo[0].upper()])
-                                output_string += ":{:08.6f}".format(self.p['p_corrected'][coord][base][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(
+                                    self.p['p_corrected'][coord][base][aainfo[0].upper()])
                             else:
                                 output_string += ":NA"
                                 output_string += ":NA"
@@ -606,7 +610,8 @@ class FunctionLogoResults:
                         if (self.p):
                             if coord in self.inverse_p['p']:
                                 output_string += ":{:08.6f}".format(self.inverse_p['p'][coord][base][aainfo[0].upper()])
-                                output_string += ":{:08.6f}".format(self.inverse_p['p_corrected'][coord][base][aainfo[0].upper()])
+                                output_string += ":{:08.6f}".format(
+                                    self.inverse_p['p_corrected'][coord][base][aainfo[0].upper()])
                             else:
                                 output_string += ":NA"
                                 output_string += ":NA"
@@ -768,7 +773,7 @@ class FunctionLogoDist:
         self.bpheight_sorted_keys = sorted(self.bpheightdist.keys())
         self.ssinfo_sorted_keys = sorted(self.singleinfodist.keys())
         self.ssheight_sorted_keys = sorted(self.singleheightdist.keys())
-          
+
     def stat_test(self, info, height, correction, test, features):
         """
         Performs statistical tests and multiple test correction.
@@ -799,27 +804,28 @@ class FunctionLogoDist:
         test_ss_letter = []
 
         for coord in info:
-            for pairtype in info[coord]: 
+            for pairtype in info[coord]:
                 if "," in str(coord) and (features == "pairs" or features == "both"):
                     bp_coords.append(coord)
                     if test == "stacks" or test == "both":
                         P[coord][pairtype] = self.rtp(self.bpinfodist, info[coord][pairtype], self.bpinfo_sorted_keys)
                     if test == "letters" or test == "both":
                         for aa in height[coord][pairtype]:
-                            p[coord][pairtype][aa] = self.rtp(self.bpheightdist,info[coord][pairtype] * height[coord][pairtype][aa],self.bpheight_sorted_keys)
-                            
+                            p[coord][pairtype][aa] = self.rtp(self.bpheightdist,
+                                                              info[coord][pairtype] * height[coord][pairtype][aa],
+                                                              self.bpheight_sorted_keys)
+
                 elif features == "singles" or features == "both":
                     ss_coords.append(coord)
                     if test == "stacks" or test == "both":
-                        P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype], self.ssinfo_sorted_keys)
+                        P[coord][pairtype] = self.rtp(self.singleinfodist, info[coord][pairtype],
+                                                      self.ssinfo_sorted_keys)
                     if test == "letters" or test == "both":
                         for aa in height[coord][pairtype]:
                             p[coord][pairtype][aa] = self.rtp(self.singleheightdist,
-                                                          info[coord][pairtype] * height[coord][pairtype][aa],
-                                                          self.ssheight_sorted_keys)
+                                                              info[coord][pairtype] * height[coord][pairtype][aa],
+                                                              self.ssheight_sorted_keys)
 
- 
- 
         if test == "stacks" or test == "both":
             if features == "pairs" or features == "both":
                 bp_coords.sort()
@@ -831,28 +837,30 @@ class FunctionLogoDist:
                 for coord in ss_coords:
                     for pairtype in sorted(P[coord]):
                         test_ss_stack.append(P[coord][pairtype])
-                        
+
         if test == "letters" or test == "both":
-            if features == "pairs" or features == "both":                  
+            if features == "pairs" or features == "both":
                 for coord in bp_coords:
                     for pairtype in sorted(p[coord]):
                         for aa in sorted(p[coord][pairtype]):
                             test_bp_letter.append(p[coord][pairtype][aa])
-                            
+
             if features == "singles" or features == "both":
                 for coord in ss_coords:
                     for pairtype in sorted(p[coord]):
                         for aa in sorted(p[coord][pairtype]):
                             test_ss_letter.append(p[coord][pairtype][aa])
 
-        test_bpss_results = smm.multipletests(test_bp_stack + test_ss_stack + test_bp_letter + test_ss_letter, method=correction)[1].tolist()
+        test_bpss_results = \
+        smm.multipletests(test_bp_stack + test_ss_stack + test_bp_letter + test_ss_letter, method=correction)[
+            1].tolist()
 
         if test == "stacks" or test == "both":
             if features == "pairs" or features == "both":
                 for coord in bp_coords:
                     for pairtype in sorted(P[coord]):
                         P_corrected[coord][pairtype] = test_bpss_results.pop(0)
-                        
+
             if features == "singles" or features == "both":
                 for coord in ss_coords:
                     for pairtype in sorted(P[coord]):
@@ -865,12 +873,11 @@ class FunctionLogoDist:
                         for aa in sorted(p[coord][pairtype]):
                             p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
 
-            if features == "singles" or features == "both":             
+            if features == "singles" or features == "both":
                 for coord in ss_coords:
                     for pairtype in sorted(p[coord]):
                         for aa in sorted(p[coord][pairtype]):
                             p_corrected[coord][pairtype][aa] = test_bpss_results.pop(0)
-
 
         return {'P': P, 'p': p, "P_corrected": P_corrected, "p_corrected": p_corrected}
 
@@ -917,7 +924,7 @@ class FunctionLogo:
             notation in cove, infernal, or text format.
         kind (:obj:`str`): secondary structure notation format.
     """
-    
+
     def __init__(self, struct_file, kind=None, exact_init=None, inverse_init=None):
         if exact_init:
             self.exact = exact_init
@@ -927,7 +934,7 @@ class FunctionLogo:
             self.inverse_exact = inverse_init
         else:
             self.inverse_exact = []
-        
+
         if kind:
             if kind == "s":
                 self.basepairs = []
@@ -935,7 +942,7 @@ class FunctionLogo:
                 self.parse_struct(struct_file, kind)
         else:
             self.basepairs = struct_file
-        
+
         self.pos = 0
         self.sequences = []
         self.pairs = set()
@@ -1175,7 +1182,7 @@ class FunctionLogo:
             method (:obj:`str`): Entropy estimation method. Either NSB or Miller-Maddow.
             proc (:obj:`int`): Number of concurrent processes to run.
         Return:
-        perm_dist (:class:`FunctionLogoDist`): Discrete distribution of 
+        perm_dist (:class:`FunctionLogoDist`): Discrete distribution of
             functional information estimated from permuted datasets.
         """
         bp_info = []
@@ -1305,10 +1312,10 @@ class FunctionLogo:
         Exact method of small sample size correction.
         Calculate the exact method of sample size correction for up to N samples.
         Computational intensive portion of the calculation is implemented as a C
-        extension. This method is fully described in Schneider et al 1986. 
-        This calculation is polynomial in sample size. It becomes prohibitively 
-        expensive to calculate beyond a sample size of 16. The correction 
-        factor of each sample size will be calculated in parallel up to 
+        extension. This method is fully described in Schneider et al 1986.
+        This calculation is polynomial in sample size. It becomes prohibitively
+        expensive to calculate beyond a sample size of 16. The correction
+        factor of each sample size will be calculated in parallel up to
         :obj:`proc` at a time.
         Args:
             n (:obj:`int`): Calculate correction up to this sample size.
@@ -1693,36 +1700,39 @@ class FunctionLogoDifference:
 
         #  _______________________ ID logo Calculations ___________________________________________________
 
-    def calculate_logoID_infos(self, info_b, info_f):
+    def calculate_logoID_infos(self, info_b, info_f, features):
 
         """
         Calculate information for id-logo (information difference of foreground and background).
         """
 
         id_info = defaultdict(lambda: defaultdict(float))
-        for k in range(self.pos):
 
-            logo_b = info_b[k]
-            logo_f = info_f[k]
+        if features == "singles" or features == "both":
+            for k in range(self.pos):
 
-            for c in self.singles:
-                id_info[k][c] = logo_f[c] - logo_b[c]
-                if id_info[k][c] < 0:
-                    id_info[k][c] = 0
+                logo_b = info_b[k]
+                logo_f = info_f[k]
 
-        for k in self.basepairs:
+                for c in self.singles:
+                    id_info[k][c] = logo_f[c] - logo_b[c]
+                    if id_info[k][c] < 0:
+                        id_info[k][c] = 0
 
-            logo_b = info_b[k]
-            logo_f = info_f[k]
+        if features == "pairs" or features == "both":
+            for k in self.basepairs:
 
-            for c in self.pairs:
-                id_info[k][c] = logo_f[c] - logo_b[c]
-                if id_info[k][c] < 0:
-                    id_info[k][c] = 0
+                logo_b = info_b[k]
+                logo_f = info_f[k]
+
+                for c in self.pairs:
+                    id_info[k][c] = logo_f[c] - logo_b[c]
+                    if id_info[k][c] < 0:
+                        id_info[k][c] = 0
 
         return id_info
 
-    def calculate_logoID_heights(self, info, ratios):
+    def calculate_logoID_heights(self, info, ratios, features):
 
         """
         Calculate height of each symbol within a stack for id-logo.
@@ -1730,56 +1740,60 @@ class FunctionLogoDifference:
 
         id_height = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
         # adding zero to all the functions that do not exist within a stack
-        for single in range(self.pos):
-            for state in self.singles:
-                for p in self.functions:  # back_self.post[single][state]:
-                    if info[single][state] == 0:
-                        id_height[single][state][p] = 0
-                    else:
-                        id_height[single][state][p] = info[single][state] * ratios[single][state][p] / sum(
-                            ratios[single][state].values())
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
+                    for p in self.functions:  # back_self.post[single][state]:
+                        if info[single][state] == 0:
+                            id_height[single][state][p] = 0
+                        else:
+                            id_height[single][state][p] = info[single][state] * ratios[single][state][p] / sum(
+                                ratios[single][state].values())
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                for p in self.functions:
-                    if info[pair][state] == 0:
-                        id_height[pair][state][p] = 0
-                    else:
-                        id_height[pair][state][p] = info[pair][state] * ratios[pair][state][p] / sum(
-                            ratios[pair][state].values())
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    for p in self.functions:
+                        if info[pair][state] == 0:
+                            id_height[pair][state][p] = 0
+                        else:
+                            id_height[pair][state][p] = info[pair][state] * ratios[pair][state][p] / sum(
+                                ratios[pair][state].values())
 
         # adding zero to all the functions that do not exist within a stack
-        for pair in self.basepairs:
-            for state in self.pairs:
-                for t in self.functions:
-                    if t not in id_height[pair][state]:
-                        id_height[pair][state][t] = 0
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    for t in self.functions:
+                        if t not in id_height[pair][state]:
+                            id_height[pair][state][t] = 0
 
-        for single in range(self.pos):
-            for state in self.singles:
-                for t in self.functions:
-                    if t not in id_height[single][state]:
-                        id_height[single][state][t] = 0
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
+                    for t in self.functions:
+                        if t not in id_height[single][state]:
+                            id_height[single][state][t] = 0
 
-        for single in range(self.pos):
-            for state in self.singles:
-                mysum = sum(id_height[single][state].values())
-                for p in id_height[single][state]:
-                    if mysum != 0:
-                        id_height[single][state][p] = id_height[single][state][p] / mysum
+            for single in range(self.pos):
+                for state in self.singles:
+                    mysum = sum(id_height[single][state].values())
+                    for p in id_height[single][state]:
+                        if mysum != 0:
+                            id_height[single][state][p] = id_height[single][state][p] / mysum
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                mysum = sum(id_height[pair][state].values())
-                for p in id_height[pair][state]:
-                    if mysum != 0:
-                        id_height[pair][state][p] = id_height[pair][state][p] / mysum
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    mysum = sum(id_height[pair][state].values())
+                    for p in id_height[pair][state]:
+                        if mysum != 0:
+                            id_height[pair][state][p] = id_height[pair][state][p] / mysum
 
         return id_height
 
     # __________________________________________________________________________
 
-    def calculate_prob_dist_pseudocounts(self, logo_dict1, logo_dict2):
+    def calculate_prob_dist_pseudocounts(self, logo_dict1, logo_dict2,features):
         """
         Calculate posterior probability p(y|x) of each symbol within for each feature using pseudo counts.
         """
@@ -1791,85 +1805,91 @@ class FunctionLogoDifference:
             kld_prior_dist[p] = logo_dict1.functions[p] / functions_array[functions_array != 0].sum()
 
         # calculating the post of background/foreground
-        for single in range(self.pos):
-            for state in self.singles:
-                state_counts1 = logo_dict1.get([single], state)
-                state_counts2 = logo_dict2.get([single], state)
-                state_counts = logo_dict1.get([single], state)
-                if len(state_counts1.keys()) < 21 or len(
-                        state_counts2.keys()) < 21:
-                    for t in self.functions:
-                        if t not in state_counts:
-                            state_counts[t] = 1
-                        else:
-                            state_counts[t] += 1
-                for p in self.functions:
-                    kld_post_dist[single][state][p] = state_counts[p] / (sum(state_counts.values()))
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
+                    state_counts1 = logo_dict1.get([single], state)
+                    state_counts2 = logo_dict2.get([single], state)
+                    state_counts = logo_dict1.get([single], state)
+                    if len(state_counts1.keys()) < 21 or len(
+                            state_counts2.keys()) < 21:
+                        for t in self.functions:
+                            if t not in state_counts:
+                                state_counts[t] = 1
+                            else:
+                                state_counts[t] += 1
+                    for p in self.functions:
+                        kld_post_dist[single][state][p] = state_counts[p] / (sum(state_counts.values()))
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                state_counts1 = logo_dict1.get(pair, state)
-                state_counts2 = logo_dict2.get(pair, state)
-                state_counts = logo_dict1.get(pair, state)
-                if len(state_counts1.keys()) < 21 or len(
-                        state_counts2.keys()) < 21:
-                    for t in self.functions:
-                        if t not in state_counts:
-                            state_counts[t] = 1
-                        else:
-                            state_counts[t] += 1
-                for p in self.functions:
-                    kld_post_dist[pair][state][p] = state_counts[p] / (sum(state_counts.values()))
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    state_counts1 = logo_dict1.get(pair, state)
+                    state_counts2 = logo_dict2.get(pair, state)
+                    state_counts = logo_dict1.get(pair, state)
+                    if len(state_counts1.keys()) < 21 or len(
+                            state_counts2.keys()) < 21:
+                        for t in self.functions:
+                            if t not in state_counts:
+                                state_counts[t] = 1
+                            else:
+                                state_counts[t] += 1
+                    for p in self.functions:
+                        kld_post_dist[pair][state][p] = state_counts[p] / (sum(state_counts.values()))
 
         return kld_post_dist, kld_prior_dist
 
-    def calculate_prob_dist_nopseudocounts(self, logo_dict):
+    def calculate_prob_dist_nopseudocounts(self, logo_dict,features):
         """
         Calculate posterior probability p(y|x) of each symbol within a stack for KLD-logo without pseudocounts.
         """
         kld_post_dist = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
 
-        for single in range(self.pos):
-            for state in self.singles:
-                state_counts = logo_dict.get([single], state)
-                for p in self.functions:
-                    if sum(state_counts.values()) == 0:
-                        kld_post_dist[single][state][p] = 0
-                    else:
-                        kld_post_dist[single][state][p] = state_counts[p] / (sum(state_counts.values()))
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
+                    state_counts = logo_dict.get([single], state)
+                    for p in self.functions:
+                        if sum(state_counts.values()) == 0:
+                            kld_post_dist[single][state][p] = 0
+                        else:
+                            kld_post_dist[single][state][p] = state_counts[p] / (sum(state_counts.values()))
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                state_counts = logo_dict.get(pair, state)
-                for p in self.functions:
-                    if sum(state_counts.values()) == 0:
-                        kld_post_dist[pair][state][p] = 0
-                    else:
-                        kld_post_dist[pair][state][p] = state_counts[p] / (sum(state_counts.values()))
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    state_counts = logo_dict.get(pair, state)
+                    for p in self.functions:
+                        if sum(state_counts.values()) == 0:
+                            kld_post_dist[pair][state][p] = 0
+                        else:
+                            kld_post_dist[pair][state][p] = state_counts[p] / (sum(state_counts.values()))
 
         return kld_post_dist
 
-    def calculate_ratios(self, back_prior, fore_prior, back_post, nopseudo_post_fore):
+    def calculate_ratios(self, back_prior, fore_prior, back_post, nopseudo_post_fore, features):
         """
         Calculates the ratios of symbols within each stack of ID and KLD logos
         """
 
         ratios = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
 
-        for single in range(self.pos):
-            for state in self.singles:
-                for p in self.functions:
-                    ratios[single][state][p] = (nopseudo_post_fore[single][state][p] / fore_prior[p]) / (
-                            back_post[single][state][p] / back_prior[p])
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
+                    for p in self.functions:
+                        ratios[single][state][p] = (nopseudo_post_fore[single][state][p] / fore_prior[p]) / (
+                                back_post[single][state][p] / back_prior[p])
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                for p in self.functions:
-                    ratios[pair][state][p] = (nopseudo_post_fore[pair][state][p] / fore_prior[p]) / (
-                            back_post[pair][state][p] / back_prior[p])
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    for p in self.functions:
+                        ratios[pair][state][p] = (nopseudo_post_fore[pair][state][p] / fore_prior[p]) / (
+                                back_post[pair][state][p] / back_prior[p])
         return ratios
 
-    def calculate_kld(self, logo_dict, key_back, key_fore, back_prior, fore_prior, back_post, fore_post, ratios):
+    def calculate_kld(self, logo_dict, key_back, key_fore, back_prior, fore_prior, back_post, fore_post, ratios,features):
         """
         Calculate height of each symbol within a stack for kld-logo.
         The height of the individual letters in a stack will be proportional to this ratio
@@ -1883,84 +1903,90 @@ class FunctionLogoDifference:
         for t in self.functions:
             kld_prior += fore_prior[t] * np.log2(fore_prior[t] / back_prior[t])
 
-        for single in range(self.pos):
-            for state in self.singles:
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
 
-                state_counts_back = logo_dict[key_back].get([single], state)
-                state_counts_fore = logo_dict[key_fore].get([single], state)
+                    state_counts_back = logo_dict[key_back].get([single], state)
+                    state_counts_fore = logo_dict[key_fore].get([single], state)
 
-                if sum(state_counts_back.values()) == 0:  # < 6:
-                    kld_dic[single][state] = 0
-                    continue
-                if sum(state_counts_fore.values()) == 0:
-                    kld_dic[single][state] = 0
-                    continue
+                    if sum(state_counts_back.values()) == 0:  # < 6:
+                        kld_dic[single][state] = 0
+                        continue
+                    if sum(state_counts_fore.values()) == 0:
+                        kld_dic[single][state] = 0
+                        continue
 
-                for p in self.functions:
-                    kld_dic[single][state] += fore_post[single][state][p] * np.log2(
-                        fore_post[single][state][p] / back_post[single][state][p])
+                    for p in self.functions:
+                        kld_dic[single][state] += fore_post[single][state][p] * np.log2(
+                            fore_post[single][state][p] / back_post[single][state][p])
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                state_counts_back = logo_dict[key_back].get(pair, state)
-                state_counts_fore = logo_dict[key_fore].get(pair, state)
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    state_counts_back = logo_dict[key_back].get(pair, state)
+                    state_counts_fore = logo_dict[key_fore].get(pair, state)
 
-                if sum(state_counts_back.values()) == 0:  # < 6:
-                    kld_dic[pair][state] = 0
-                    continue
-                if sum(state_counts_fore.values()) == 0:
-                    kld_dic[pair][state] = 0
-                    continue
+                    if sum(state_counts_back.values()) == 0:  # < 6:
+                        kld_dic[pair][state] = 0
+                        continue
+                    if sum(state_counts_fore.values()) == 0:
+                        kld_dic[pair][state] = 0
+                        continue
 
-                for p in self.functions:
-                    kld_dic[pair][state] += fore_post[pair][state][p] * np.log2(
-                        fore_post[pair][state][p] / back_post[pair][state][p])
+                    for p in self.functions:
+                        kld_dic[pair][state] += fore_post[pair][state][p] * np.log2(
+                            fore_post[pair][state][p] / back_post[pair][state][p])
 
         # kld_heights: a dictionary for the height of each symbol within a stack for kld-logo.
         kld_heights = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
 
-        for single in range(self.pos):
-            for state in self.singles:
-                for p in self.functions:  # back_post[single][state]:
-                    if kld_dic[single][state] == 0:
-                        kld_heights[single][state][p] = 0
-                    else:
-                        kld_heights[single][state][p] = kld_dic[single][state] * ratios[single][state][p] / sum(
-                            ratios[single][state].values())
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
+                    for p in self.functions:  # back_post[single][state]:
+                        if kld_dic[single][state] == 0:
+                            kld_heights[single][state][p] = 0
+                        else:
+                            kld_heights[single][state][p] = kld_dic[single][state] * ratios[single][state][p] / sum(
+                                ratios[single][state].values())
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                for p in self.functions:
-                    if kld_dic[pair][state] == 0:
-                        kld_heights[pair][state][p] = 0
-                    else:
-                        kld_heights[pair][state][p] = kld_dic[pair][state] * ratios[pair][state][p] / sum(
-                            ratios[pair][state].values())
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    for p in self.functions:
+                        if kld_dic[pair][state] == 0:
+                            kld_heights[pair][state][p] = 0
+                        else:
+                            kld_heights[pair][state][p] = kld_dic[pair][state] * ratios[pair][state][p] / sum(
+                                ratios[pair][state].values())
 
-        for single in range(self.pos):
-            for state in self.singles:
-                mysum = sum(kld_heights[single][state].values())
-                for p in kld_heights[single][state]:
-                    if mysum != 0:
-                        kld_heights[single][state][p] = kld_heights[single][state][p] / mysum
+        if features == "singles" or features == "both":
+            for single in range(self.pos):
+                for state in self.singles:
+                    mysum = sum(kld_heights[single][state].values())
+                    for p in kld_heights[single][state]:
+                        if mysum != 0:
+                            kld_heights[single][state][p] = kld_heights[single][state][p] / mysum
 
-        for pair in self.basepairs:
-            for state in self.pairs:
-                mysum = sum(kld_heights[pair][state].values())
-                for p in kld_heights[pair][state]:
-                    if mysum != 0:
-                        kld_heights[pair][state][p] = kld_heights[pair][state][p] / mysum
+        if features == "pairs" or features == "both":
+            for pair in self.basepairs:
+                for state in self.pairs:
+                    mysum = sum(kld_heights[pair][state].values())
+                    for p in kld_heights[pair][state]:
+                        if mysum != 0:
+                            kld_heights[pair][state][p] = kld_heights[pair][state][p] / mysum
 
         return kld_dic, kld_heights
 
     def func_ID_KLD_2table(self, fore_logo_info,
-                            fore_logo_height,
-                            fore_idlogo_info,
-                            back_idlogo_info,
-                            fore_idlogo_height,
-                            back_idlogo_height,
-                            kld_info,
-                            kld_height, back, fore):
+                           fore_logo_height,
+                           fore_idlogo_info,
+                           back_idlogo_info,
+                           fore_idlogo_height,
+                           back_idlogo_height,
+                           kld_info,
+                           kld_height, back, fore):
         """
          Writes a text table for creating bubble plots. table need to be mapped to sprinzl coordinates.
         """
@@ -2002,7 +2028,8 @@ class FunctionLogoDifference:
 
     #  _______________________ KLD/ID logo significance calculations ___________________________________________________
 
-    def calculate_kld_significance(self, logo_dict, kld_infos, permute_num, proc, pmethod, exceedances, targetperms, peaks, alpha):
+    def calculate_kld_significance(self, logo_dict, kld_infos, permute_num, proc, pmethod, exceedances, targetperms,
+                                   peaks, alpha, features):
 
         pvalue = {}
         CI_lower = {}
@@ -2050,14 +2077,14 @@ class FunctionLogoDifference:
                     end_pair = len(self.basepairs) // proc + len(self.basepairs) % proc
                     end_single = self.pos // proc + self.pos % proc
                     perm_jobs.append((list(range(start_single, end_single)), permute_num, logo_dict, kld, start_pair,
-                                      end_pair, pmethod, exceedances, targetperms, peaks, alpha))
+                                      end_pair, pmethod, exceedances, targetperms, peaks, alpha,features))
                 else:
                     start_pair = end_pair
                     end_pair = start_pair + len(self.basepairs) // proc
                     start_single = end_single
                     end_single = end_single + self.pos // proc
                     perm_jobs.append((list(range(start_single, end_single)), permute_num, logo_dict, kld, start_pair,
-                                      end_pair, pmethod, exceedances, targetperms, peaks, alpha))
+                                      end_pair, pmethod, exceedances, targetperms, peaks, alpha,features))
 
             significant_calc_outputs = pool.starmap(self.perm_kld_calc_pvalue, perm_jobs, 1)
 
@@ -2079,7 +2106,8 @@ class FunctionLogoDifference:
 
         return pvalue, CI_lower, CI_upper, permnum, ptype, b_freq_table, f_freq_table, gpd_shape, gpd_scale, gpd_exceedances_size, gpd_ADtest
 
-    def perm_kld_calc_pvalue(self, positions, permute_num, logo_dic, kld_infos, start_pair, end_pair, pmethod, exceedances, targetperms, peaks, alpha):
+    def perm_kld_calc_pvalue(self, positions, permute_num, logo_dic, kld_infos, start_pair, end_pair, pmethod,
+                             exceedances, targetperms, peaks, alpha,features):
 
         significant_calc_outputs = {}
         pvalue = {}
@@ -2108,52 +2136,53 @@ class FunctionLogoDifference:
             gpd_exceedances_size[pair[0]] = defaultdict(defaultdict)
             gpd_ADtest[pair[0]] = defaultdict(defaultdict)
 
-            for single in positions:
-                for state in self.singles:
+            if features == "singles" or features == "both":
+                for single in positions:
+                    for state in self.singles:
+                        state_counts_back = logo_dic[pair[0]].get([single], state)
+                        state_counts_fore = logo_dic[pair[1]].get([single], state)
+                        if sum(state_counts_back.values()) == 0 or sum(state_counts_fore.values()) == 0:
+                            continue
 
-                    state_counts_back = logo_dic[pair[0]].get([single], state)
-                    state_counts_fore = logo_dic[pair[1]].get([single], state)
-                    if sum(state_counts_back.values()) == 0 or sum(state_counts_fore.values()) == 0:
-                        continue
+                        (
+                            pvalue[pair[0]][single][state],
+                            CI_lower[pair[0]][single][state],
+                            CI_upper[pair[0]][single][state],
+                            permnum[pair[0]][single][state],
+                            ptype[pair[0]][single][state],
+                            b_freq_table[pair[0]][single][state],
+                            f_freq_table[pair[0]][single][state],
+                            gpd_shape[pair[0]][single][state],
+                            gpd_scale[pair[0]][single][state],
+                            gpd_exceedances_size[pair[0]][single][state],
+                            gpd_ADtest[pair[0]][single][state],
+                        ) = self.calc_KLD_pvalue(permute_num, state_counts_back, state_counts_fore,
+                                                 sum(state_counts_back.values()), kld_infos[pair[0]][single][state],
+                                                 pmethod, exceedances, targetperms, peaks, alpha)
 
-                    (
-                        pvalue[pair[0]][single][state],
-                        CI_lower[pair[0]][single][state],
-                        CI_upper[pair[0]][single][state],
-                        permnum[pair[0]][single][state],
-                        ptype[pair[0]][single][state],
-                        b_freq_table[pair[0]][single][state],
-                        f_freq_table[pair[0]][single][state],
-                        gpd_shape[pair[0]][single][state],
-                        gpd_scale[pair[0]][single][state],
-                        gpd_exceedances_size[pair[0]][single][state],
-                        gpd_ADtest[pair[0]][single][state],
-                    ) = self.calc_KLD_pvalue(permute_num, state_counts_back, state_counts_fore,
-                                             sum(state_counts_back.values()), kld_infos[pair[0]][single][state],
-                                             pmethod, exceedances, targetperms, peaks, alpha)
+            if features == "pairs" or features == "both":
+                for basepair in self.basepairs[start_pair:end_pair]:
+                    for state in kld_infos[pair[0]][basepair]:
+                        state_counts_back = logo_dic[pair[0]].get(basepair, state)
+                        state_counts_fore = logo_dic[pair[1]].get(basepair, state)
+                        if sum(state_counts_back.values()) == 0 or sum(state_counts_fore.values()) == 0:
+                            continue
 
-            for basepair in self.basepairs[start_pair:end_pair]:
-                for state in kld_infos[pair[0]][basepair]:
-                    state_counts_back = logo_dic[pair[0]].get(basepair, state)
-                    state_counts_fore = logo_dic[pair[1]].get(basepair, state)
-                    if sum(state_counts_back.values()) == 0 or sum(state_counts_fore.values()) == 0:
-                        continue
-
-                    (
-                        pvalue[pair[0]][basepair][state],
-                        CI_lower[pair[0]][basepair][state],
-                        CI_upper[pair[0]][basepair][state],
-                        permnum[pair[0]][basepair][state],
-                        ptype[pair[0]][basepair][state],
-                        b_freq_table[pair[0]][basepair][state],
-                        f_freq_table[pair[0]][basepair][state],
-                        gpd_shape[pair[0]][basepair][state],
-                        gpd_scale[pair[0]][basepair][state],
-                        gpd_exceedances_size[pair[0]][basepair][state],
-                        gpd_ADtest[pair[0]][basepair][state],
-                    ) = self.calc_KLD_pvalue(permute_num, state_counts_back, state_counts_fore,
-                                             sum(state_counts_back.values()), kld_infos[pair[0]][basepair][state],
-                                             pmethod, exceedances, targetperms, peaks, alpha)
+                        (
+                            pvalue[pair[0]][basepair][state],
+                            CI_lower[pair[0]][basepair][state],
+                            CI_upper[pair[0]][basepair][state],
+                            permnum[pair[0]][basepair][state],
+                            ptype[pair[0]][basepair][state],
+                            b_freq_table[pair[0]][basepair][state],
+                            f_freq_table[pair[0]][basepair][state],
+                            gpd_shape[pair[0]][basepair][state],
+                            gpd_scale[pair[0]][basepair][state],
+                            gpd_exceedances_size[pair[0]][basepair][state],
+                            gpd_ADtest[pair[0]][basepair][state],
+                        ) = self.calc_KLD_pvalue(permute_num, state_counts_back, state_counts_fore,
+                                                 sum(state_counts_back.values()), kld_infos[pair[0]][basepair][state],
+                                                 pmethod, exceedances, targetperms, peaks, alpha)
 
         significant_calc_outputs["pvalue"] = pvalue
         significant_calc_outputs["CI_lower"] = CI_lower
@@ -2168,7 +2197,8 @@ class FunctionLogoDifference:
         significant_calc_outputs["ADtest"] = gpd_ADtest
         return significant_calc_outputs
 
-    def calc_KLD_pvalue(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, pmethod, exceedances, targetperms, peaks, alpha):
+    def calc_KLD_pvalue(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, pmethod, exceedances,
+                        targetperms, peaks, alpha):
 
         if pmethod == "ECDF_pseudo":
             perm_kld_values = self.calc_permvalues_kld(maxPerm, class_counts_b, class_counts_f, back_size)
@@ -2176,7 +2206,8 @@ class FunctionLogoDifference:
         if pmethod == "ECDF":
             return self.calc_pecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, alpha)
         if pmethod == "GPD":
-            return self.calc_pgpd_ecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, targetperms, peaks, alpha)
+            return self.calc_pgpd_ecdf_kld(maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances,
+                                           targetperms, peaks, alpha)
 
     def calc_permvalues_kld(self, maxPerm, class_counts_b, class_counts_f, back_size):
 
@@ -2301,7 +2332,8 @@ class FunctionLogoDifference:
         P = (exceedances_count + 1) / (len(permKLDs) + 1)
         return P, None, None, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
-    def calc_pgpd_ecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, targetperms, peaks, alpha):
+    def calc_pgpd_ecdf_kld(self, maxPerm, class_counts_b, class_counts_f, back_size, orig_kld, exceedances, targetperms,
+                           peaks, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -2489,7 +2521,8 @@ class FunctionLogoDifference:
             permutedList.extend(sublists[i])
         return permutedList
 
-    def calculate_id_significance(self, logo_dict, id_infos, permute_num, proc, max, entropy, pmethod, exceedances, targetperms, peaks, alpha):
+    def calculate_id_significance(self, logo_dict, id_infos, permute_num, proc, max, entropy, pmethod, exceedances,
+                                  targetperms, peaks, alpha,features):
 
         pvalue = {}
         CI_lower = {}
@@ -2536,7 +2569,7 @@ class FunctionLogoDifference:
                     end_single = self.pos // proc + self.pos % proc
                     perm_jobs.append(
                         (list(range(start_single, end_single)), permute_num, logo_dict, id, start_pair, end_pair, max,
-                         entropy, pmethod, targetperms, alpha))
+                         entropy, pmethod, exceedances, targetperms, peaks, alpha,features))
                 else:
                     start_pair = end_pair
                     end_pair = start_pair + len(self.basepairs) // proc
@@ -2544,7 +2577,7 @@ class FunctionLogoDifference:
                     end_single = end_single + self.pos // proc
                     perm_jobs.append(
                         (list(range(start_single, end_single)), permute_num, logo_dict, id, start_pair, end_pair, max,
-                         entropy, pmethod, exceedances, targetperms, peaks, alpha))
+                         entropy, pmethod, exceedances, targetperms, peaks, alpha,features))
             significant_calc_outputs = pool.starmap(self.cal_perm_id_pvalue, perm_jobs, 1)
 
         for x in significant_calc_outputs:
@@ -2566,7 +2599,7 @@ class FunctionLogoDifference:
         return pvalue, CI_lower, CI_upper, permnum, ptype, b_freq_table, f_freq_table, gpd_shape, gpd_scale, gpd_exceedances_size, gpd_ADtest
 
     def cal_perm_id_pvalue(self, positions, permute_num, logo_dic, id_infos, start_pair, end_pair, max, entropy,
-                           pmethod, exceedances, targetperms, peaks, alpha):
+                           pmethod, exceedances, targetperms, peaks, alpha,features):
 
         significant_calc_outputs = {}
         pvalue = {}
@@ -2594,99 +2627,105 @@ class FunctionLogoDifference:
             gpd_exceedances_size[pair[0]] = defaultdict(defaultdict)
             gpd_ADtest[pair[0]] = defaultdict(defaultdict)
 
-            for single in positions:
-                for state in self.singles:
-                    state_counts_back = logo_dic[pair[0]].get([single], state)
-                    state_counts_fore = logo_dic[pair[1]].get([single], state)
-                    if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
-                        continue
+            if features == "singles" or features == "both":
+                for single in positions:
+                    for state in self.singles:
+                        state_counts_back = logo_dic[pair[0]].get([single], state)
+                        state_counts_fore = logo_dic[pair[1]].get([single], state)
+                        if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
+                            continue
 
-                    if entropy == "NSB":
-                        (
-                            pvalue[pair[0]][single][state],
-                            CI_lower[pair[0]][single][state],
-                            CI_upper[pair[0]][single][state],
-                            permnum[pair[0]][single][state],
-                            ptype[pair[0]][single][state],
-                            b_freq_table[pair[0]][single][state],
-                            f_freq_table[pair[0]][single][state],
-                            gpd_shape[pair[0]][single][state],
-                            gpd_scale[pair[0]][single][state],
-                            gpd_exceedances_size[pair[0]][single][state],
-                            gpd_ADtest[pair[0]][single][state],
-                        ) = self.calc_ID_pvalue_NSB(permute_num, state_counts_back,
-                                                    state_counts_fore,
-                                                    sum(state_counts_back.values()),
-                                                    logo_dic[pair[0]].functions,
-                                                    logo_dic[pair[1]].functions, max,
-                                                    id_infos[pair[0]][single][state], pmethod, exceedances, targetperms, peaks, alpha)
+                        if entropy == "NSB":
+                            (
+                                pvalue[pair[0]][single][state],
+                                CI_lower[pair[0]][single][state],
+                                CI_upper[pair[0]][single][state],
+                                permnum[pair[0]][single][state],
+                                ptype[pair[0]][single][state],
+                                b_freq_table[pair[0]][single][state],
+                                f_freq_table[pair[0]][single][state],
+                                gpd_shape[pair[0]][single][state],
+                                gpd_scale[pair[0]][single][state],
+                                gpd_exceedances_size[pair[0]][single][state],
+                                gpd_ADtest[pair[0]][single][state],
+                            ) = self.calc_ID_pvalue_NSB(permute_num, state_counts_back,
+                                                        state_counts_fore,
+                                                        sum(state_counts_back.values()),
+                                                        logo_dic[pair[0]].functions,
+                                                        logo_dic[pair[1]].functions, max,
+                                                        id_infos[pair[0]][single][state], pmethod, exceedances, targetperms,
+                                                        peaks, alpha)
 
-                    if entropy == "MM":
-                        (
-                            pvalue[pair[0]][single][state],
-                            CI_lower[pair[0]][single][state],
-                            CI_upper[pair[0]][single][state],
-                            permnum[pair[0]][single][state],
-                            ptype[pair[0]][single][state],
-                            b_freq_table[pair[0]][single][state],
-                            f_freq_table[pair[0]][single][state],
-                            gpd_shape[pair[0]][single][state],
-                            gpd_scale[pair[0]][single][state],
-                            gpd_exceedances_size[pair[0]][single][state],
-                            gpd_ADtest[pair[0]][single][state],
-                        ) = self.calc_ID_pvalue_MM(permute_num, state_counts_back,
-                                                   state_counts_fore,
-                                                   sum(state_counts_back.values()),
-                                                   logo_dic[pair[0]].functions,
-                                                   logo_dic[pair[1]].functions, max,
-                                                   id_infos[pair[0]][single][state], pmethod, exceedances, targetperms, peaks, alpha)
+                        if entropy == "MM":
+                            (
+                                pvalue[pair[0]][single][state],
+                                CI_lower[pair[0]][single][state],
+                                CI_upper[pair[0]][single][state],
+                                permnum[pair[0]][single][state],
+                                ptype[pair[0]][single][state],
+                                b_freq_table[pair[0]][single][state],
+                                f_freq_table[pair[0]][single][state],
+                                gpd_shape[pair[0]][single][state],
+                                gpd_scale[pair[0]][single][state],
+                                gpd_exceedances_size[pair[0]][single][state],
+                                gpd_ADtest[pair[0]][single][state],
+                            ) = self.calc_ID_pvalue_MM(permute_num, state_counts_back,
+                                                       state_counts_fore,
+                                                       sum(state_counts_back.values()),
+                                                       logo_dic[pair[0]].functions,
+                                                       logo_dic[pair[1]].functions, max,
+                                                       id_infos[pair[0]][single][state], pmethod, exceedances, targetperms,
+                                                       peaks, alpha)
 
-            for basepair in self.basepairs[start_pair:end_pair]:
-                for state in id_infos[pair[0]][basepair]:
-                    state_counts_back = logo_dic[pair[0]].get(basepair, state)
-                    state_counts_fore = logo_dic[pair[1]].get(basepair, state)
-                    if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
-                        continue
+            if features == "pairs" or features == "both":
+                for basepair in self.basepairs[start_pair:end_pair]:
+                    for state in id_infos[pair[0]][basepair]:
+                        state_counts_back = logo_dic[pair[0]].get(basepair, state)
+                        state_counts_fore = logo_dic[pair[1]].get(basepair, state)
+                        if (sum(state_counts_back.values()) == 0) or (sum(state_counts_fore.values()) == 0):
+                            continue
 
-                    if entropy == "NSB":
-                        (
-                            pvalue[pair[0]][basepair][state],
-                            CI_lower[pair[0]][basepair][state],
-                            CI_upper[pair[0]][basepair][state],
-                            permnum[pair[0]][basepair][state],
-                            ptype[pair[0]][basepair][state],
-                            b_freq_table[pair[0]][basepair][state],
-                            f_freq_table[pair[0]][basepair][state],
-                            gpd_shape[pair[0]][basepair][state],
-                            gpd_scale[pair[0]][basepair][state],
-                            gpd_exceedances_size[pair[0]][basepair][state],
-                            gpd_ADtest[pair[0]][basepair][state],
-                        ) = self.calc_ID_pvalue_NSB(permute_num, state_counts_back,
-                                                    state_counts_fore,
-                                                    sum(state_counts_back.values()),
-                                                    logo_dic[pair[0]].functions,
-                                                    logo_dic[pair[1]].functions, max,
-                                                    id_infos[pair[0]][basepair][state], pmethod, exceedances, targetperms, peaks, alpha)
+                        if entropy == "NSB":
+                            (
+                                pvalue[pair[0]][basepair][state],
+                                CI_lower[pair[0]][basepair][state],
+                                CI_upper[pair[0]][basepair][state],
+                                permnum[pair[0]][basepair][state],
+                                ptype[pair[0]][basepair][state],
+                                b_freq_table[pair[0]][basepair][state],
+                                f_freq_table[pair[0]][basepair][state],
+                                gpd_shape[pair[0]][basepair][state],
+                                gpd_scale[pair[0]][basepair][state],
+                                gpd_exceedances_size[pair[0]][basepair][state],
+                                gpd_ADtest[pair[0]][basepair][state],
+                            ) = self.calc_ID_pvalue_NSB(permute_num, state_counts_back,
+                                                        state_counts_fore,
+                                                        sum(state_counts_back.values()),
+                                                        logo_dic[pair[0]].functions,
+                                                        logo_dic[pair[1]].functions, max,
+                                                        id_infos[pair[0]][basepair][state], pmethod, exceedances,
+                                                        targetperms, peaks, alpha)
 
-                    if entropy == "MM":
-                        (
-                            pvalue[pair[0]][basepair][state],
-                            CI_lower[pair[0]][basepair][state],
-                            CI_upper[pair[0]][basepair][state],
-                            permnum[pair[0]][basepair][state],
-                            ptype[pair[0]][basepair][state],
-                            b_freq_table[pair[0]][basepair][state],
-                            f_freq_table[pair[0]][basepair][state],
-                            gpd_shape[pair[0]][basepair][state],
-                            gpd_scale[pair[0]][basepair][state],
-                            gpd_exceedances_size[pair[0]][basepair][state],
-                            gpd_ADtest[pair[0]][basepair][state],
-                        ) = self.calc_ID_pvalue_MM(permute_num, state_counts_back,
-                                                   state_counts_fore,
-                                                   sum(state_counts_back.values()),
-                                                   logo_dic[pair[0]].functions,
-                                                   logo_dic[pair[1]].functions, max,
-                                                   id_infos[pair[0]][basepair][state], pmethod, exceedances, targetperms, peaks, alpha)
+                        if entropy == "MM":
+                            (
+                                pvalue[pair[0]][basepair][state],
+                                CI_lower[pair[0]][basepair][state],
+                                CI_upper[pair[0]][basepair][state],
+                                permnum[pair[0]][basepair][state],
+                                ptype[pair[0]][basepair][state],
+                                b_freq_table[pair[0]][basepair][state],
+                                f_freq_table[pair[0]][basepair][state],
+                                gpd_shape[pair[0]][basepair][state],
+                                gpd_scale[pair[0]][basepair][state],
+                                gpd_exceedances_size[pair[0]][basepair][state],
+                                gpd_ADtest[pair[0]][basepair][state],
+                            ) = self.calc_ID_pvalue_MM(permute_num, state_counts_back,
+                                                       state_counts_fore,
+                                                       sum(state_counts_back.values()),
+                                                       logo_dic[pair[0]].functions,
+                                                       logo_dic[pair[1]].functions, max,
+                                                       id_infos[pair[0]][basepair][state], pmethod, exceedances,
+                                                       targetperms, peaks, alpha)
 
         significant_calc_outputs["pvalue"] = pvalue
         significant_calc_outputs["CI_lower"] = CI_lower
@@ -2702,7 +2741,7 @@ class FunctionLogoDifference:
         return significant_calc_outputs
 
     def calc_ID_pvalue_NSB(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                           max, orig_id,  pmethod, exceedances, targetperms, peaks, alpha):
+                           max, orig_id, pmethod, exceedances, targetperms, peaks, alpha):
 
         if orig_id == 0:
             return 1, None, None, None, None, None, None, None, None, None, None
@@ -3027,7 +3066,7 @@ class FunctionLogoDifference:
         return P, None, None, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
     def calc_ID_pvalue_MM(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                          max, orig_id, pmethod,  exceedances, targetperms, peaks, alpha):
+                          max, orig_id, pmethod, exceedances, targetperms, peaks, alpha):
 
         if orig_id == 0:
             return 1, None, None, None, None, None, None, None, None, None, None
@@ -3041,7 +3080,7 @@ class FunctionLogoDifference:
         if pmethod == "GPD":
             return self.calc_pgpd_ecdf_id_mm(maxPerm, class_counts_b, class_counts_f, back_size, b_functions,
                                              f_functions,
-                                             max, orig_id,  exceedances, targetperms, peaks, alpha)
+                                             max, orig_id, exceedances, targetperms, peaks, alpha)
 
     def calc_permvalues_id_mm(self, numPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
                               max):
@@ -3214,7 +3253,7 @@ class FunctionLogoDifference:
         return P, None, None, permcount, "p_ecdf_with_pseudo", b_aaclasstable, f_aaclasstable, None, None, None, None
 
     def calc_pgpd_ecdf_id_mm(self, maxPerm, class_counts_b, class_counts_f, back_size, b_functions, f_functions,
-                             max, orig_id,  exceedances, targetperms, peaks, alpha):
+                             max, orig_id, exceedances, targetperms, peaks, alpha):
         b_aaclasstable = ""
         f_aaclasstable = ""
         aaclasslist = []
@@ -3377,7 +3416,6 @@ class FunctionLogoDifference:
                     for state in sorted(pvalues[key][coord]):
                         test_ss.append(pvalues[key][coord][state])
 
-
                 test_ss_results = smm.multipletests(test_ss, method=correction)[1].tolist()
 
                 for coord in ss_coords:
@@ -3403,12 +3441,14 @@ class FunctionLogoDifference:
                     for state in sorted(pvalues[key][coord]):
                         P_corrected[key][coord][state] = test_bp_results.pop(0)
 
-
         return P_corrected
 
-    def write_pvalues(self, P, CI_lower, CI_upper, corrected_P, height, logo_dic, prefix, permnum, ptype, bt, ft, shape, scale, excnum, ADtest):
+    def write_pvalues(self, P, CI_lower, CI_upper, corrected_P, height, logo_dic, prefix, permnum, ptype, bt, ft, shape,
+                      scale, excnum, ADtest):
         tableDict = {}
-        nameSet = ["Coord", "State", "Statistic", "Sample-Sz-Back", "Sample-Sz-Fore", "P-value", "CI.Lower", "CI.Upper", "Adjusted-P", "Permutations", "P-Val-Method", "GPD-shape", "GPD-scale", "Peaks", "ADtest-P-val", "Freqs-Back", "Freqs-Fore"]
+        nameSet = ["Coord", "State", "Statistic", "Sample-Sz-Back", "Sample-Sz-Fore", "P-value", "CI.Lower", "CI.Upper",
+                   "Adjusted-P", "Permutations", "P-Val-Method", "GPD-shape", "GPD-scale", "Peaks", "ADtest-P-val",
+                   "Freqs-Back", "Freqs-Fore"]
         for name in nameSet:
             tableDict[name] = np.zeros(self.pos * len(self.singles) + len(self.basepairs) * len(self.pairs), )
 
@@ -3420,23 +3460,22 @@ class FunctionLogoDifference:
                                  [state for basepair in self.basepairs for state in P[key[0]][basepair]]
 
             tableDict['Statistic'] = [height[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
-                                 [height[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                   P[key[0]][basepair]]
+                                     [height[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                      P[key[0]][basepair]]
 
             tableDict['Sample-Sz-Back'] = [sum((logo_dic[key[0]].get([pos], state)).values()) for pos in range(self.pos)
-                                          for state in self.singles] + \
-                                         [sum((logo_dic[key[0]].get(basepair, state)).values()) for basepair in
-                                          self.basepairs for state in P[key[0]][basepair]]
+                                           for state in self.singles] + \
+                                          [sum((logo_dic[key[0]].get(basepair, state)).values()) for basepair in
+                                           self.basepairs for state in P[key[0]][basepair]]
 
             tableDict['Sample-Sz-Fore'] = [sum((logo_dic[key[1]].get([pos], state)).values()) for pos in range(self.pos)
-                                          for state in self.singles] + \
-                                         [sum((logo_dic[key[1]].get(basepair, state)).values()) for basepair in
-                                          self.basepairs for state in P[key[1]][basepair]]
-            
+                                           for state in self.singles] + \
+                                          [sum((logo_dic[key[1]].get(basepair, state)).values()) for basepair in
+                                           self.basepairs for state in P[key[1]][basepair]]
+
             tableDict['P-value'] = [P[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
                                    [P[key[0]][basepair][state] for basepair in self.basepairs for state in
                                     P[key[0]][basepair]]
-   
 
             tableDict['CI.Lower'] = [CI_lower[key[0]][pos][state] for pos in range(self.pos) for state in
                                      self.singles] + \
@@ -3447,48 +3486,48 @@ class FunctionLogoDifference:
                                     [CI_upper[key[0]][basepair][state] for basepair in self.basepairs for state in
                                      CI_upper[key[0]][basepair]]
             tableDict['Adjusted-P'] = [corrected_P[key[0]][pos][state] for pos in range(self.pos) for state in
+                                       self.singles] + \
+                                      [corrected_P[key[0]][basepair][state] for basepair in self.basepairs for state
+                                       in
+                                       P[key[0]][basepair]]
+            tableDict['Permutations'] = [permnum[key[0]][pos][state] for pos in range(self.pos) for state in
                                          self.singles] + \
-                                        [corrected_P[key[0]][basepair][state] for basepair in self.basepairs for state
-                                         in
-                                         P[key[0]][basepair]]
-            tableDict['Permutations'] = [permnum[key[0]][pos][state] for pos in range(self.pos) for state in self.singles] + \
-                                   [permnum[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                    permnum[key[0]][basepair]]
+                                        [permnum[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                         permnum[key[0]][basepair]]
             tableDict['P-Val-Method'] = [ptype[key[0]][pos][state] for pos in range(self.pos) for state in
-                                        self.singles] + \
-                                       [ptype[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                        ptype[key[0]][basepair]]
+                                         self.singles] + \
+                                        [ptype[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                         ptype[key[0]][basepair]]
             tableDict['GPD-shape'] = [shape[key[0]][pos][state] for pos in range(self.pos) for state in
-                                  self.singles] + \
-                                 [shape[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                  shape[key[0]][basepair]]
+                                      self.singles] + \
+                                     [shape[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                      shape[key[0]][basepair]]
 
             tableDict['GPD-scale'] = [scale[key[0]][pos][state] for pos in range(self.pos) for state in
-                                  self.singles] + \
-                                 [scale[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                  scale[key[0]][basepair]]
-     
+                                      self.singles] + \
+                                     [scale[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                      scale[key[0]][basepair]]
+
             tableDict['Peaks'] = [excnum[key[0]][pos][state] for pos in range(self.pos) for state in
-                                   self.singles] + \
-                                  [excnum[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                   excnum[key[0]][basepair]]
+                                  self.singles] + \
+                                 [excnum[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                  excnum[key[0]][basepair]]
             tableDict['ADtest-P-val'] = [ADtest[key[0]][pos][state] for pos in range(self.pos) for state in
-                                   self.singles] + \
-                                  [ADtest[key[0]][basepair][state] for basepair in self.basepairs for state in
-                                   ADtest[key[0]][basepair]]
+                                         self.singles] + \
+                                        [ADtest[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                         ADtest[key[0]][basepair]]
             tableDict['Freqs-Back'] = [bt[key[0]][pos][state] for pos in range(self.pos) for state in
-                               self.singles] + \
-                              [bt[key[0]][basepair][state] for basepair in self.basepairs for state in
-                               bt[key[0]][basepair]]
+                                       self.singles] + \
+                                      [bt[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                       bt[key[0]][basepair]]
 
             tableDict['Freqs-Fore'] = [ft[key[0]][pos][state] for pos in range(self.pos) for state in
-                               self.singles] + \
-                              [ft[key[0]][basepair][state] for basepair in self.basepairs for state in
-                               ft[key[0]][basepair]]
-
+                                       self.singles] + \
+                                      [ft[key[0]][basepair][state] for basepair in self.basepairs for state in
+                                       ft[key[0]][basepair]]
 
             pandasTable = pd.DataFrame(tableDict)
             filename = prefix + '_' + key[1] + '_' + key[0] + "_stats.txt"
             pandasTable.to_csv(filename, index=None, sep='\t')
 
-      
+
