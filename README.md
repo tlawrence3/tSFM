@@ -1,4 +1,3 @@
-
 # Installation
 1. Download tSFM and example data using the below bash command or the zip link: 
 ```bash
@@ -34,6 +33,7 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
 [Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.](https://doi.org/10.1371/journal.pntd.0007983)
 
 1. Recreating the function logos for the human tRNA data. This directory contains all of the aligned tRNA sequences used for analysis in Kelly et al. 2020.
+
    1. First we need to change into the example data directory
    ```shell
    cd Kelly2020_data
@@ -43,6 +43,7 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
    ```shell
    tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 HOMO/HOMO
    ```
+   
    3. Lets break this command down so we can understand the options   
       a. The below `-e` option sets the entropy estimator to NSB. This can also be set to `Miller` to use the Miller-Madow estimator.
       ```shell
@@ -72,12 +73,20 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
 ```shell
 for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 $d${d%/}; done
 ```
-3. Recreating ID/KLD logos and data table for bubble plots for `HOMO` versus `MAJOR` 
+3. To create ID/KLD logos and data table for bubble plots for clade `HOMO` versus `MAJOR` we can run the below command. Note that option --bubbles or -B requires designation of a specific clade to contrast against using option --clade. 
 ```shell
-tsfm -c tRNA_L_skel_Leish.sites74.struct.txt -e Miller -x 5 --idlogos --kldlogos --bt MAJOR/MAJOR HOMO/HOMO
+tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B --clade HOMO MAJOR/MAJOR HOMO/HOMO
 ```
+    a. The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. 
+    
+    b. An example of a record from the output text file is shown below. This example shows at feature 1A of ID logo: the total height of stack-bar in column `gainbits`, and the height of symbol K in this stack-bar in column `gainfht`. Also, it shows at feature 1A of KLD logo: the total height of stack-bar in column `convbits` and the height of symbol K in this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl` are set to 0 and will be filled later prior to creating the bubble plots by mapping each feature to the tRNA sprinzl coordinates.
+    
+        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
+        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-: 
+        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
+    
 
-# Statistical significance testing
+# Statistical significance testing for CIFs
 tSFM implements statisitical significance testing using permutation based null distributions and corrects multiple testing using FDR and FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
 1. To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
@@ -93,32 +102,64 @@ tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 10
    -P 100
    ```
 
-2. To calculate the significance of KLD-values with 100 permutations for clade humans and clade MAJOR against each other we can use this command:
-```shell
-tsfm --kldperms 100 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 HOMO/HOMO MAJOR/MAJOR
-```
-   The `--kldperms` option will set the number of permutations to compute significance of Kullback-Leibler Divergences (KLD values) to 100
-   ```shell
-   --kldperms 100
-   ```
+# Statistical significance testing for CIFs Divergences (ID and KLD)
+tSFM implements statistical significance testing for CIFs divergences using permutation based null distributions. Pvalues can be calculated with three methods `GPD`, `ECDF` and `ECDF_pseudo` indicated by the option `-m`. `ECDF_pseudo` is the Monte Carlo permutation based approach calculated according to the formula (number of exceedances + 1)/(number of permutations + 1). `ECDF` is similar to the `ECDF_pseudo` except that when the number of permutation replicates that exceed the original stat exceeds the value of `--exceedances` the Pecdf will be calculated according to the formula (number of exceedances)/(number of permutations) and returned. Method `GPD` is implemented according to the "Peaks-over-Threshhold" (PoT) tail approximation approach described as algorithm APPROXIMATE in the manuscript. The default method is GPD. tSFM also calculates the confidence intervals for all the pvalues except for the ones with zero exceedances calculated with pseudo counts.
 
-3. To calculate the significance of ID-values for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations we can use this command:
-```shell
-tsfm --idperms 100 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
-```
-   The `--idperms` will set the number of permutations to compute significance of Information Differences (ID values) to 100
-   ```shell
-   --idperms 100
-   ```
-   The `--clade` option will contrast two clades MAJOR and ENRIETTII against HOMO
-   ```shell
-   --clade HOMO
-   ```
+1. To calculate the significance of KLD-values with 100 permutations for clade humans versus clade MAJOR we can use three methods of GPD, ECDF and ECDF_pseudo described with three examples below:
+    1. Method `ECDF_pseudo` 
+    ```shell
+    tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
+    ```
+        a. The `--kldperms` option will set the number of permutations to compute significance of KLD values to 100.
+    
+    
+    2. Method `ECDF`.
+    ```shell
+    tsfm --kldperms 100 --exceedances 5 -m ECDF --alpha 0.03 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
+    ```
+        a. The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Default is 0.05.
+    
+    
+    3. Method `GPD`. In addition to the previous options, there are options `--targetperms` and `--peaks` that are created for method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. 
+    ```shell
+    tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
+    ```
+        a. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
+       
+         b. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number. 
+       
+         c. The default for option `peaks` is 250; However in the algorithm APROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
+         
+2. The output of KLD and ID logo significance from the examples described above will be two text files named `KLD_HOMO_MAJOR_stats.txt` and `KLD_MAJOR_HOMO_stats.txt`. 
+    a. An example of a record from the output text file is shown below. This record shows the significance of the KLD statistic at feature 2U along with other information at this feature including: confidence interval in columns `CI.Lower` and `CI.Upper`, adjusted p-value in column `Adjusted-P`, number of permutations with which the pvalue is calculated in column `Permutations`, the method used for calculating the p-value in column `P-Val-Method` which can take the values: `p_ecdf`,  `p_ecdf_with_pseudo`, `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the pvalue is calculated with GPD, the parameters of GPD calculation will be shown in columns `GPD-shape`, `GPD-scale` and `Peaks`. Also the column `ADtest-P-val` shows the pvalue of the goodness of fit of the extreme permutation values to GPD distribution.      
+    
+        Coord|State|Statistic|Sample-Sz-Back|Sample-Sz-Fore|P-value|CI.Lower|CI.Upper|Adjusted-P|Permutations|P-Val-Method|GPD-shape|GPD-scale|Peaks|ADtest-P-val|Freqs-Back|Freqs-Fore
+        :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-:| :-: | :-: |:-:
+        2|U|0.75|30|72|2.46e-14|0.0|3.22e-05|7.07e-13|70.0|p_gpd|0.15|0.00037|13.0|0.97|D13E16Y1|D24E24N24s
 
-# Recreating the supplemental figure from the tSFM publication
-Warning: this will take ~14 hours on 24 cores
+    
+3. To calculate the significance of ID-values of single-site features only, for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations using the method GPD we can use this command: (note that running this command can take about 30 minutes.)
 ```shell
-tsfm --kldperms 10000 --idperms 10000 -c tRNA_L_skel_Leish.sites74.struct.cove -e NSB -x 5 --clade HOMO HOMO/HOMO ENRIETTII/ENRIETTII MAJOR/MAJOR
+tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 -s -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
+```
+    a) The option `--idperms` will set the number of permutations to compute significance of ID values to 100
+    ```shell
+    --idperms 100
+    ```
+   
+    b) The option `--clade` will contrast two clades MAJOR and ENRIETTII against HOMO
+    ```shell
+    --clade HOMO
+    ```
+   
+    c) The option `--targetperms` will set the permutation number at which we attempt to fit the extreme permutation values to GPD.
+    ```shell
+    --targetperms 50
+    ```
+
+4. To calculate the significance of KLD-values of paired features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
+```shell
+tsfm --kldperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 -n -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
 ```
 
 # Usage
@@ -206,3 +247,210 @@ optional arguments:
                         argument to the program, stripped of its path. Default
                         is to compute contrasts for all pairs of clades.
 ```
+
+# Recreating the supplemental figure from the tSFM publication
+1. Creating the supplemental figure <KLD-Significance_ENRIETTII_MAJOR.eps>
+    
+    1. Create the table of statistics for KLD logos of clade `ENRIETTII` vs `HOMO` using the pvalue-calculation-method `GPD` with maximum permutation number = 10000, target permutation number 500, and calculate the Confidence Interval of p-values with 5% significance level. The running time on an Intel Core i7 Dell XPS was ~34 minutes. The outputs are two text files: KLD_ENRIETTII_HOMO_stats.txt and KLD_HOMO_ENRIETTII_stats.txt 
+    ```shell
+    mkdir GPD
+    cd Kelly2020_data
+    tsfm --kldperms 10000 -m GPD -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO ENRIETTII/ENRIETTII
+    mv KLD_ENRIETTII_HOMO_stats.txt KLD_HOMO_ENRIETTII_stats.txt GPD
+    ```
+    
+    2. Create the table of statistics for KLD logos of clade `MAJOR` vs `HOMO` using the pvalue-calculation-method `GPD` with maximum permutation number = 10000, target permutation number 500, and calculate the Confidence Interval of p-values with 5% significance level. The running time on an Intel Core i7 Dell XPS was ~52.6 minutes. The outputs are two text files: KLD_MAJOR_HOMO_stats.txt and KLD_HOMO_MAJOR_stats.txt
+    ```shell
+    tsfm --kldperms 10000 -m GPD -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
+    mv KLD_MAJOR_HOMO_stats.txt KLD_HOMO_MAJOR_stats.txt GPD
+    ```
+    
+    3. Create the figure using the KLD tables in GPD folder by running this R script:
+    ```R
+    library(latex2exp)
+    library(ggplot2)
+    library(ggpubr)
+    #setwd("PATH/TO/WHERE/THE/FOLDERS/GPD/ECDF/ECDF_pseudo/ARE/LOCATED") # make sure to set your working directory to where the input data folders GPD, ECDF and ECDF_pseudo are located.
+    spetralc <-c("#D53E4F" ,"#F46D43" ,"#FDAE61" , "#66C2A5" ,"#3288BD","#313695")
+    breaksarray <- c(1,2,4,10,30,80,200,500)
+    legendbreaks <- logb(breaksarray, base = 2)
+    legendlables <- as.character(breaksarray)
+    KLD_paths <-
+      c(
+        "GPD/KLD_MAJOR_HOMO_stats.txt",
+        "GPD/KLD_HOMO_MAJOR_stats.txt",
+        "GPD/KLD_ENRIETTII_HOMO_stats.txt",
+        "GPD/KLD_HOMO_ENRIETTII_stats.txt"
+      )
+    xlabels <- c("Kullback-Leibler Divergence","Kullback-Leibler Divergence","Kullback-Leibler Divergence","Kullback-Leibler Divergence")
+    clades <- c("MAJOR (n=664 sequences) against Homo (m=431 sequences)", "HOMO against MAJOR","ENRIETTII (n=160 sequences) against Homo     (m=431 sequences)", "HOMO against ENRIETTII")
+    plotls <- list()
+    for (i in 1:length(KLD_paths)) {
+      signTable <- read.table(KLD_paths[i], header = TRUE, sep = "\t")
+      signTable <- signTable[signTable$Sample.Sz.Back != 0 & signTable$Sample.Sz.Fore != 0 & signTable$Statistic != 0, ]
+      signTable$harmonicmean <- 0
+      for (j in 1:nrow(signTable)) {
+        signTable$harmonicmean[j] = 1 / mean(1 / c(signTable$Sample.Sz.Back[j], signTable$Sample.Sz.Fore[j]))
+      }
+      p <- ggplot(signTable, aes_string( x = round(signTable$Statistic, 4), y = -log(signTable$P.value, base = 2),colour =         logb(signTable$harmonicmean, 2))) + 
+        geom_point(aes_string( shape=signTable$P.Val.Method, colour = logb(signTable$harmonicmean, 2),size = (signTable$Permutations)))+ 
+        scale_colour_gradientn( colours = spetralc, breaks = legendbreaks, labels = legendlables, guide = "colourbar", limits = c(0, 9.2)) + ylim(0,60)+# xlim(0,xlimits[i])+
+        scale_size_continuous(limits = c(10,10001),breaks = c(10,2000,5000,10001),labels = c("10","2000","5000","10000"))+
+        geom_errorbar(aes(ymin=-log(P.value + CI.Upper, base = 2), ymax=-log(P.value - CI.Lower, base = 2)))+
+        scale_shape_manual( values = c(2,3,4,1), 
+                        breaks = c( "p_ecdf",  "p_ecdf_with_pseudo", "p_ecdf_with_pseudo (p_gpd=0)", "p_gpd" ),
+                        labels = c( "Pecdf", "Pecdf with pseudo", "Pecdf with_pseudo (pgpd=0)", "Pgpd" ))+
+        ggtitle(clades[i]) + ylab(TeX("$Surprisal (-log_2(p))$")) + xlab(xlabels[i]) + labs(color = "Sample Size", shape = "PmethodType",size = "Permutation number") + 
+        theme(
+          axis.text = element_text(size = 13, family = "serif"),
+          axis.title = element_text(size = 14, family = "serif"),
+          legend.text = element_text(size = 12.5, family = "serif"),
+          legend.title = element_text(size = 14, family = "serif"),
+          plot.title = element_text(hjust = 0.5, family = "serif", size = 15, face = "bold" ), 
+          legend.key.height = unit(0.9, "cm"),
+          plot.margin=unit(c(0.2,0.2,0.5,0.2), "cm")
+        )
+      plotls[[i]] <- p  
+    }
+    setEPS()
+    postscript("KLD-Significance_ENRIETTII_MAJOR.eps", width = 16, height = 8,fonts=c("serif", "Palatino"))
+    p <- ggarrange( plotls[[1]], plotls[[2]], plotls[[3]], plotls[[4]],ncol = 2, nrow = 2, common.legend = TRUE,legend.grob =         get_legend(plotls[[2]]), legend = "right",labels = c("A", "B", "C","D"))
+    print(p)
+    dev.off()
+    ```
+
+
+
+2. Creating the supplemental figure <ID-Significance_ENRIETTII_MAJOR.eps>
+
+    1. Create the table of statistics for ID logos of clade `MAJOR` vs `HOMO` using the pvalue-calculation-method `GPD` with maximum permutation number = 10000, target permutation number 500, and calculate the Confidence Interval of p-values with 5% significance level. This will use the default entropy estimator NSB with default Maximum conditional sample size 5. The running time on an Intel Core i7 Dell XPS was ~4.76 hrs. The outputs are two text files: ID_MAJOR_HOMO_stats.txt and ID_HOMO_MAJOR_stats.txt
+    ```shell
+    tsfm --idperms 10000 -m GPD -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
+    mv ID_MAJOR_HOMO_stats.txt ID_HOMO_MAJOR_stats.txt GPD
+    ```
+    
+    2. Create the table of statistics for ID logos of clade `ENRIETTII` vs `HOMO` using the pvalue-calculation-method `GPD` with maximum permutation number = 10000, target permutation number 500, and calculate the Confidence Interval of p-values with 5% significance level. Default -e NSB -x 5. The running time on an Intel Core i7 Dell XPS was ~4.89 hrs. The outputs are two text files: ID_ENRIETTII_HOMO_stats.txt and ID_HOMO_ENRIETTII_stats.txt
+    ```shell
+    tsfm --idperms 10000 -m GPD -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO ENRIETTII/ENRIETTII
+    mv ID_ENRIETTII_HOMO_stats.txt ID_HOMO_ENRIETTII_stats.txt GPD
+    ```
+    
+    3. Create the figure using the ID tables in GPD folder by running this R script:
+    ```R
+    library(latex2exp)
+    library(ggplot2)
+    library(ggpubr)
+    #setwd("PATH/TO/WHERE/THE/FOLDERS/GPD/ECDF/ECDF_pseudo/ARE/LOCATED") # make sure to set your working directory to where the input data folders GPD, ECDF and ECDF_pseudo are located.
+    spetralc <-c("#D53E4F" ,"#F46D43" ,"#FDAE61" , "#66C2A5" ,"#3288BD","#313695")
+    breaksarray <- c(1,2,4,10,30,80,200,500)
+    legendbreaks <- logb(breaksarray, base = 2)
+    legendlables <- as.character(breaksarray)
+    ID_paths <-
+      c(
+        "GPD/ID_MAJOR_HOMO_stats.txt",
+        "GPD/ID_HOMO_MAJOR_stats.txt",
+        "GPD/ID_ENRIETTII_HOMO_stats.txt",
+        "GPD/ID_HOMO_ENRIETTII_stats.txt"
+      )
+    xlabels <- c("Information Difference","Information Difference","Information Difference","Information Difference")
+    clades <- c("MAJOR (n=664 sequences) against Homo (m=431 sequences)", "HOMO against MAJOR", "ENRIETTII (n=160 sequences) against Homo (m=431 sequences)", "HOMO against ENRIETTII")
+    plotls <- list()
+    for (i in 1:length(ID_paths)) {
+      signTable <- read.table(ID_paths[i], header = TRUE, sep = "\t")
+      signTable <- signTable[signTable$Sample.Sz.Back != 0 & signTable$Sample.Sz.Fore != 0 & signTable$Statistic != 0, ]
+      signTable$harmonicmean <- 0
+      for (j in 1:nrow(signTable)) {
+        signTable$harmonicmean[j] = 1 / mean(1 / c(signTable$Sample.Sz.Back[j], signTable$Sample.Sz.Fore[j]))
+      }
+      p <- ggplot(signTable, aes_string( x = round(signTable$Statistic, 4), y = -log(signTable$P.value, base = 2),colour =         logb(signTable$harmonicmean, 2))) + 
+        geom_point(aes_string( shape=signTable$P.Val.Method, colour = logb(signTable$harmonicmean, 2),size = (signTable$Permutations)))+ 
+        scale_colour_gradientn( colours = spetralc, breaks = legendbreaks, labels = legendlables, guide = "colourbar", limits = c(0, 9.2)) + ylim(0,60)+# xlim(0,xlimits[i])+
+        scale_size_continuous(limits = c(10,10001),breaks = c(10,2000,5000,10001),labels = c("10","2000","5000","10000"))+
+        geom_errorbar(aes(ymin=-log(P.value + CI.Upper, base = 2), ymax=-log(P.value - CI.Lower, base = 2)))+
+        scale_shape_manual( values = c(2,3,4,1), 
+                        breaks = c( "p_ecdf",  "p_ecdf_with_pseudo", "p_ecdf_with_pseudo (p_gpd=0)", "p_gpd" ),
+                        labels = c( "Pecdf", "Pecdf with pseudo", "Pecdf with_pseudo (pgpd=0)", "Pgpd" ))+
+        ggtitle(clades[i]) + ylab(TeX("$Surprisal (-log_2(p))$")) + xlab(xlabels[i]) + labs(color = "Sample Size", shape = "PmethodType",size = "Permutation number") + 
+        theme(
+          axis.text = element_text(size = 13, family = "serif"),
+          axis.title = element_text(size = 14, family = "serif"),
+          legend.text = element_text(size = 12.5, family = "serif"),
+          legend.title = element_text(size = 14, family = "serif"),
+          plot.title = element_text(hjust = 0.5, family = "serif", size = 15, face = "bold" ), 
+          legend.key.height = unit(0.9, "cm"),
+          plot.margin=unit(c(0.2,0.2,0.5,0.2), "cm")
+        )
+      plotls[[i]] <- p  
+    }
+    setEPS()
+    postscript("ID-Significance_ENRIETTII_MAJOR.eps", width = 16, height = 8,fonts=c("serif", "Palatino"))
+    p <- ggarrange( plotls[[1]], plotls[[2]], plotls[[3]], plotls[[4]],ncol = 2, nrow = 2, common.legend = TRUE,legend.grob =         get_legend(plotls[[2]]), legend = "right",labels = c("A", "B", "C","D"))
+    print(p)
+    dev.off()
+    ```
+
+2. Creating the slope graph from tSFM manuscript. 
+
+    1. Create the table of statistics for KLD logos of clade `ENRIETTII` vs `HOMO` using the pvalue-calculation-method `ECDF_pseudo` (naive Monte Carlo method using pseudo-counts) with maximum permutation number = 10000. The running time on a Linux compute node with 20 cores at 2301 MHz and 120 GB RAM was ~7.72 hrs. The outputs are two text files: KLD_ENRIETTII_HOMO_stats.txt and KLD_HOMO_ENRIETTII_stats.txt
+    ```shell
+    mkdir ECDF_pseudo
+    tsfm --kldperms 10000 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
+    mv KLD_ENRIETTII_HOMO_stats.txt KLD_HOMO_ENRIETTII_stats.txt ECDF_pseudo
+    ```
+    
+    2. Create the table of statistics for KLD logos of clade `ENRIETTII` vs `HOMO` using the pvalue-calculation-method `ECDF` (Monte Carlo method terminating after M = 10 exceedances) with maximum permutation number = 10000. The running time on a Linux compute node with 20 cores at 2301 MHz and 120 GB RAM was ~4.86 hrs. The outputs are two text files: KLD_ENRIETTII_HOMO_stats.txt and KLD_HOMO_ENRIETTII_stats.txt
+    ```shell
+    mkdir ECDF
+    tsfm --kldperms 10000 -m ECDF -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
+    mv KLD_ENRIETTII_HOMO_stats.txt KLD_HOMO_ENRIETTII_stats.txt ECDF
+    ```
+    
+    3. Create the figure using the KLD tables for ENRIETTII against HOMO from three folders GPD, ECDF and ECDF_pseudo
+    ```R
+    library(latex2exp)
+    library(ggplot2)
+    library(ggpubr)
+    #setwd("PATH/TO/WHERE/THE/FOLDERS/GPD/ECDF/ECDF_pseudo/ARE/LOCATED") # make sure to set your working directory to where the input data folders GPD, ECDF and ECDF_pseudo are located.
+    signTable0 <- read.table("ECDF_pseudo/KLD_ENRIETTII_HOMO_stats.txt", header = TRUE, sep = "\t")
+    signTable1 <- read.table("ECDF/KLD_ENRIETTII_HOMO_stats.txt", header = TRUE, sep = "\t")
+    signTable2 <- read.table("GPD/KLD_ENRIETTII_HOMO_stats.txt", header = TRUE, sep = "\t")
+    signTable0 <- signTable0[signTable0$Sample.Sz.Back != 0 & signTable0$Sample.Sz.Fore != 0 & signTable0$Statistic != 0,]
+    signTable0$method <- "ECDF-with-pseudo"
+    signTable1 <- signTable1[signTable1$Sample.Sz.Back != 0 & signTable1$Sample.Sz.Fore != 0 & signTable1$Statistic != 0,]
+    signTable1$method <- "ECDF"
+    signTable2 <- signTable2[signTable2$Sample.Sz.Back != 0 & signTable2$Sample.Sz.Fore != 0 & signTable2$Statistic != 0,]
+    signTable2$method <- "GPD with Initial-Target-Permnum = 500"
+    signTable0$P.Val.Method <- "p_ecdf_with_pseudo" 
+    common_cols <- intersect(colnames(signTable0), colnames(signTable1))
+    bindeddf <- rbind(
+      subset(signTable0, select = common_cols), 
+      subset(signTable1, select = common_cols),
+      subset(signTable2, select = common_cols)
+    )
+    bindeddf$coordstate <- paste(bindeddf$Coord,bindeddf$State,sep = "")
+    bindeddf <- bindeddf[order(bindeddf$coordstate),]
+    bindeddf$method <- factor(bindeddf$method,levels = c("ECDF-with-pseudo","ECDF","GPD with Initial-Target-Permnum = 500"))
+    bindeddf$harmonicmean <- 0
+    for (j in 1:nrow(bindeddf)) {
+      bindeddf$harmonicmean[j] = 1 / mean(1 / c(bindeddf$Sample.Sz.Back[j], bindeddf$Sample.Sz.Fore[j]))
+    }
+    spetralc <-c("#D53E4F" ,"#F46D43" ,"#FDAE61" , "#66C2A5" ,"#3288BD","#313695")
+    breaksarray <- c(1,2,4,10,30,80,200,500)
+    legendbreaks <- logb(breaksarray, base = 2)
+    legendlables <- as.character(breaksarray)
+    p <- ggplot(data = bindeddf, aes( x = method ,  y =  jitter(-log(P.value, base = 2),factor = 80), group = coordstate )) +
+      geom_line(aes(color = logb(harmonicmean, base = 2)), size = 0.5) +
+      geom_point(aes(color = logb(harmonicmean, base = 2),shape=factor(P.Val.Method)), size = 2) +
+      scale_x_discrete(position = "top") + 
+      scale_colour_gradientn(  colours = spetralc, breaks = legendbreaks, labels = legendlables, guide = "colourbar", limits = c(0, 9.2) ) + 
+      theme( legend.key.height = unit(0.7, 'in'), plot.title = element_text(hjust = 0.5), text = element_text(size = 24,  family = "serif")) + 
+      scale_shape_manual(  values = c(2,3,4,1),  breaks = c( "p_ecdf", "p_ecdf_with_pseudo",  "p_ecdf_with_pseudo (p_gpd=0)", "p_gpd"),
+                           labels = c( "pecdf", "pecdf with pseudo", "pecdf with pseudo (pgpd=0)", "pgpd" ))+
+      labs(title = "" , colour = "Sample Size",shape="Pmethod", size = "Permutation number") +
+      xlab("") + ylab(TeX("$Surprisal (-log_2(p))$"))
+    setEPS()
+    postscript("KLD_ENRIETTII_Slopegraph_GPDvsECDF.eps", width = 18, height = 10,fonts=c("serif", "Palatino"))
+    print(p)
+    dev.off()
+    ```
+    
