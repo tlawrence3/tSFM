@@ -7,4 +7,4 @@ pandas
 patsy
 mpmath
 statsmodels
-scikit-gof
+git+https://github.com/wrwrwr/scikit-gof.git@952674f186c70077deb703b3ea39ee9bdd58a0aa
