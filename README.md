@@ -133,7 +133,7 @@ for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo
 Note that option --bubbles or -B requires designation of a specific clade to use as a reference clade (for gains and losses), using option --clade. 
 ```shell
 tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B --clade HOMO MAJOR/MAJOR HOMO/HOMO
-      
+```
          #bp |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
          :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
          bp:|	(0, 72)|	AU|	14|	2.789|	NA|	NA|	X:0.861:NA:NA  L:0.108:NA:NA  K:0.032:NA:NA 
