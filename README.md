@@ -101,37 +101,36 @@ Let us recreate function logos for the human tRNA data provided by this study.
    same directory where the program is run. This command produces the
    output file `HOMO_CIFs.txt`, more generally
    `<clade-prefix>_CIFs.txt`. The text output file has two sections,
-   one for paired-site features and one for single-site features. An
-   example of a record from each of these two sections is shown below.
-   Let us break this command down so we can understand the options:
-   
-   a.  The first record in the output file is for feature `(0, 72)AU`:
-       the number of sequences sharing this features is in column `N`,
-       the total information (the total height of the stack (in bits)
-       from function logo of feature `AU` at coordinate `(0,72)`) is
-       in column `info`, the p-value of the calculated info is in
-       column `p-value` and the multiple-test corrected significance
-       of the p-value is in the next column (this column is named with
-       the method used for multiple test correction for significance
-       calculations). Also, the last column shows a list of
-       information for each tRNA class at feature `(0, 72)AU` with the
-       format `<class>:<symbol-height>:<pvalue>:<BH>` which refers to
-       the tRNA functional class single letter symbol, the height of
-       the symbol within the stack, the p-value and the corrected
-       significance value, respectively.
-      
- #bp |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
- :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
- bp:|	(0, 72)|	AU|	14|	2.789|	NA|	NA|	X:0.861:NA:NA  L:0.108:NA:NA  K:0.032:NA:NA 
-        
-       b. The record for the single site is similar to the paired-site except that the first column is `ss` instead of `bp`.
-       
-         #ss |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
-         :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
-         ss: |	0	| C	| 13|	4.131	|NA	|NA	|Y:1.000:NA:NA
+   one for paired-site features and one for single-site features.
+   Examples of records from each of these two sections is shown below.
+
+   #bp |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
+   :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
+   bp:|	(0, 72)|	AU|	14|	2.789|	NA|	NA|	X:0.861:NA:NA  L:0.108:NA:NA  K:0.032:NA:NA 
+
+   The first record in the output file is for feature `(0, 72)AU`: the
+   number of sequences sharing this features is in column `N`, the
+   total information (the total height of the stack (in bits) from
+   function logo of feature `AU` at coordinate `(0,72)`) is in column
+   `info`, the p-value of the calculated info is in column `p-value`
+   and the multiple-test corrected significance of the p-value is in
+   the next column (this column is named with the method used for
+   multiple test correction for significance calculations). Also, the
+   last column shows a list of information for each tRNA class at
+   feature `(0, 72)AU` with the format
+   `<class>:<symbol-height>:<pvalue>:<BH>` which refers to the tRNA
+   functional class single letter symbol, the height of the symbol
+   within the stack, the p-value and the corrected significance value,
+   respectively.
+
+   A record for the single site is similar to the paired-site except that the first column is `ss` instead of `bp`.
+
+   #ss |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
+   :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
+   ss: |	0	| C	| 13|	4.131	|NA	|NA	|Y:1.000:NA:NA
 
 
-       c. The values for the p-values and the significance are NA because we did not calculate p-values in the command described above. See the section `Statistical significance testing for CIFs` below, which describes options for p-value calculations.
+   The values for the p-values and the significance are NA because we did not calculate p-values in the command described above. See the section `Statistical significance testing for CIFs` below, which describes options for p-value calculations.
          
    
 4. To avoid having to manually enter the names and prefixes for each of the parasite clades we can take a shortcut by using bash loops. The below command will loop through each folder and produce function logos for each clade in the running directory.
