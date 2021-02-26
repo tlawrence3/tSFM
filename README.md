@@ -65,19 +65,19 @@ Let us recreate function logos for the human tRNA data provided by this study.
 
       ```shell
         -c tRNA_L_skel_Leish.sites74.struct.cove
-        ```
+      ```
 	
       d. The below option indicates that we want graphical output of function logos in EPS format. If we excluded this option, tSFM would only produce the text output file with statistics on tRNA CIFs.
 
       ```shell
         --logo
-        ```
+      ```
 	
       e. The `-p` option indicates the number of processor cores we want to utilize during the calculations. Below we have indicated we want to use 10 cores.
 
       ```shell
         -p 10
-        ```
+      ```
 	
       f. Lastly, the below argument provides the path and clade prefix
       to the input alignment files containing our tRNA
@@ -95,7 +95,7 @@ Let us recreate function logos for the human tRNA data provided by this study.
 
       ```shell
         HOMO/HOMO
-        ```
+      ```
 	
 3. For each clade on input, tSFM produces a text output file in
     the same directory where the program is run. This command produces
