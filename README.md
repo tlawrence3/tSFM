@@ -207,21 +207,21 @@ exceedances calculated with pseudocounts.
     ```shell
     tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-        a. The `--kldperms` option will set the number of permutations to compute significance of KLD values to 100.
+    The `--kldperms` option will set the number of permutations to compute significance of KLD values to 100.
     
     
     2. Method `ECDF`.
     ```shell
     tsfm --kldperms 100 --exceedances 5 -m ECDF --alpha 0.03 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-        a. The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Its default is 0.05.
+    The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Its default is 0.05.
     
     
     3. Method `GPD`. In addition to the previous options, there are options `--targetperms` and `--peaks` specific to method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. 
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-        a. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
+         a. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
        
          b. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
        
