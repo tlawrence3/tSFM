@@ -46,10 +46,12 @@ Let us recreate function logos for the human tRNA data.
         ```shell
         -e NSB
         ```
+	
       b. The `-x` option indicates the maximum sample size for the calculation of the exact entropy correction (larger sample sizes use the estimator set with the `-e` option). Correction values can feasibly be calculated for sample sizes up to ~16, but the NSB estimator is preferred except for the smallest sample sizes.
         ```shell
         -x 1
         ```
+	
       c. The `-c` option provides the path to the file containing the
       secondary structure annotation in cove format for RNA input
       files. This is required for basepair function logos and can be
@@ -61,10 +63,12 @@ Let us recreate function logos for the human tRNA data.
         ```shell
         -c tRNA_L_skel_Leish.sites74.struct.cove
         ```
+	
       d. The below option indicates that we want graphical output of function logos in EPS format. If we excluded this option, tSFM would only produce the text output file with statistics on tRNA CIFs.
         ```shell
         --logo
         ```
+	
       e. The `-p` option indicates the number of processor cores we want to utilize during the calculations. Below we have indicated we want to use 10 cores.
         ```shell
         -p 10
