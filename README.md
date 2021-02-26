@@ -281,19 +281,19 @@ tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -
 ```
 
 The option `--idperms` will set the number of permutations to compute significance of ID values to 100
-    ```shell
-    --idperms 100
-    ```
+```shell
+--idperms 100
+```
    
 The option `--clade` will contrast two clades MAJOR and ENRIETTII against HOMO rather than all-against-all:
-    ```shell
-    --clade HOMO
-    ```
+```shell
+--clade HOMO
+```
    
 The option `--targetperms` will set the permutation number at which we attempt to fit the extreme permutation values to GPD.
-    ```shell
-    --targetperms 50
-    ```
+```shell
+--targetperms 50
+```
 
 To calculate the significance of KLD-values of paired-site features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
 ```shell
