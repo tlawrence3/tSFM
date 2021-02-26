@@ -18,8 +18,6 @@ in the Peaks-over-Threshold-GPD based p-value estimator.
 ```bash
 conda create -n tSFM python=3.8 pandas numpy cython pytest-runner pytest scipy patsy mpmath statsmodels
 conda activate tSFM
-pip install git+https://github.com/wrwrwr/scikit-gof.git@952674f186c70077deb703b3ea39ee9bdd58a0aa
-pip install git+https://github.com/wrwrwr/scikit-gof.git@b441372ecdbe110313720eea45d7e4833a279b24
 ```
 4. Now we can install tSFM and run a basic test the installation with the below commands:
 ```bash
