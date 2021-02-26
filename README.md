@@ -178,14 +178,16 @@ tSFM implements statisitical significance testing for CIFs and function logos us
 ```shell
 tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 100 HOMO/HOMO
 ```
-   The `-T` option will set the significance test for only CIF total stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter-heights within stacks. The default is to calculate significance for both stacks and letters, but for many applications and comparisons, we recommend to test only `stacks`. The difference plays into the number of comparisons or tests requiring correction, where generally fewer is better. If one is interested in only which CIFs are significant, use `stacks.` If one wants to test specific functional associations, use `letters,` otherwise use `both`. Similarly, you can restrict CIF calculation and significance testing to only single-site features with the `--single` option or to only paired-site features with the `--nosingle` option.
-    ```shell
+   The `-T` option will set the significance test for only CIF total stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter-heights within stacks. The default is to calculate significance for both stacks and letters, but for many applications and comparisons, we recommend to test only `stacks`. The difference plays into the number of comparisons or tests requiring correction, where generally fewer is better. If one is interested in only which CIFs are significant, use `stacks.` If one wants to test specific functional associations, use `letters,` otherwise use `both`.
+
+   Similarly, you can restrict CIF calculation and significance testing to only single-site features with the `--single` option or to only paired-site features with the `--nosingle` option.
+   ```shell
     -T stacks 
-    ```
+   ```
    The `-P` option will set the number of permutations for significance test of CIFs to 100. 
-    ```shell
+   ```shell
     -P 100
-    ```
+   ```
 
 # Statistical Significance Testing for CIF Divergences 
 tSFM implements statistical significance testing for CIF divergences, specifically Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
