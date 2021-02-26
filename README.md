@@ -230,11 +230,11 @@ pseudocounts.
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-     i. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
+     1. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
        
-     ii. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
+     1. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
        
-     iii. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
+     1. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
          
 2. The output of KLD and ID logo significance from the examples described above will be two text files named `KLD_HOMO_MAJOR_stats.txt` and `KLD_MAJOR_HOMO_stats.txt`. 
    An example of a record from the output text file is shown below. This record shows the significance of the KLD statistic at feature U2 along with other information at this feature including: confidence interval (with level determined by option `--alpha`) in columns `CI.Lower` and `CI.Upper`, multiple-test adjusted p-value in column `Adjusted-P`, number of permutations with which the p-value is calculated in column `Permutations`, the method used for calculating the p-value in column `P-Val-Method` which can take the values: `p_ecdf`,  `p_ecdf_with_pseudo`, `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the p-value is calculated with GPD, the parameters of the GPD calculation will be shown in columns `GPD-shape`, `GPD-scale` and `Peaks` describing the maximum likelihood estimated parameters of the GPD distribution and the number of peaks over threshold. Also the column `ADtest-P-val` shows the pvalue of the goodness-of-fit test of the extreme permutation values to the GPD distribution.      
