@@ -180,31 +180,38 @@ tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 10
 ```
    The `-T` option will set the significance test for only CIF total stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter-heights within stacks. The default is to calculate significance for both stacks and letters, but for many applications and comparisons, we recommend to test only `stacks`. The difference plays into the number of comparisons or tests requiring correction, where generally fewer is better. If one is interested in only which CIFs are significant, use `stacks.` If one wants to test specific functional associations, use `letters,` otherwise use `both`.
 
-   Similarly, you can restrict CIF calculation and significance testing to only single-site features with the `--single` option or to only paired-site features with the `--nosingle` option.
-   ```shell
-    -T stacks 
-   ```
-   The `-P` option will set the number of permutations for significance test of CIFs to 100. 
-   ```shell
-    -P 100
-   ```
+   Similarly, you can restrict CIF calculation and significance
+   testing to only single-site features with the `--single` option or
+   to only paired-site features with the `--nosingle` option. The `-P`
+   option will set the number of permutations for significance test of
+   CIFs to 100.
 
 # Statistical Significance Testing for CIF Divergences 
 tSFM implements statistical significance testing for CIF divergences, specifically Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
 using permutation-based null distributions. P-values can be calculated
 by one of three algorithms called `ECDF`, `ECDF_pseudo`, and `GPD` chosen by the user through
-the option `-m`. The algorithm `ECDF_pseudo` is the Monte Carlo permutation-based
-approximation calculated according to the formula (number of exceedances +
-1)/(number of permutations + 1), where `exceedances` means the fraction of permutation replicates yielding statistics as large or larger than the observed divergence. Algorithm `ECDF` is similar to
-`ECDF_pseudo` except that when the number of permutation exceedances reaches the value of option `--exceedances` (with default 10) the
-p-value will be calculated according to the formula (number of
-exceedances)/(number of permutations) and returned, otherwise when there are fewer exceedances, the `ECDF_pseudo` formula is used. Algorithm `GPD` is
-implemented according to the "Peaks-over-Threshhold" (PoT) tail-approximation approach described as algorithm APPROXIMATE in the
-manuscript, which includes the `ECDF` and `ECDF_pseudo` algorithms as special cases. The default method is `GPD`. tSFM also calculates the
-confidence intervals for all the p-values except for the ones with zero
-exceedances calculated with pseudocounts.
+the option `-m`.
+
+The algorithm `ECDF_pseudo` is the Monte Carlo permutation-based
+approximation calculated according to the formula (number of
+exceedances + 1)/(number of permutations + 1), where `exceedances`
+means the fraction of permutation replicates yielding statistics as
+large or larger than the observed divergence. Algorithm `ECDF` is
+similar to `ECDF_pseudo` except that when the number of permutation
+exceedances reaches the value of option `--exceedances` (with default
+10) the p-value will be calculated according to the formula (number of
+exceedances)/(number of permutations) and returned, otherwise when
+there are fewer exceedances, the `ECDF_pseudo` formula is
+used. Algorithm `GPD` is implemented according to the
+"Peaks-over-Threshhold" (PoT) tail-approximation approach described as
+algorithm APPROXIMATE in the manuscript, which includes the `ECDF` and
+`ECDF_pseudo` algorithms as special cases. The default method is
+`GPD`. tSFM also calculates the confidence intervals for all the
+p-values except for the ones with zero exceedances calculated with
+pseudocounts.
 
 1. To calculate the significance of KLD divergence values with 100 permutations for the contrast of the human and MAJOR clades, we can choose among the three algorithms of GPD, ECDF and ECDF_pseudo as in the three examples below:
+
     a. Method `ECDF_pseudo` 
     ```shell
     tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
