@@ -114,7 +114,7 @@ tSFM may be used to analyze any protein or RNA families. As a quick introduction
          bp:|	(0, 72)|	AU|	14|	2.789|	NA|	NA|	X:0.861:NA:NA  L:0.108:NA:NA  K:0.032:NA:NA 
         
        b. The record for the single site is similar to the paired-site except that the first column is `ss` instead of `bp`.
-         
+       
          #ss |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
          :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
          ss: |	0	| C	| 13|	4.131	|NA	|NA	|Y:1.000:NA:NA  
@@ -143,12 +143,11 @@ height of stack-bar in column `convbits` and the height of symbol K in
 this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl`
 are set to 0 and will be filled later prior to creating the bubble
 plots by mapping each feature to the tRNA sprinzl coordinates.
-    
-        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
-        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-: 
-        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
-    
 
+        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
+        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: 
+        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
+	
 # Statistical significance testing for CIFs
 tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
