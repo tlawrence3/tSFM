@@ -28,19 +28,19 @@ tSFM may be used to analyze any protein or RNA families. As a quick introduction
 [Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.](https://doi.org/10.1371/journal.pntd.0007983)
 
 
-1. Let us recreate function logos for the human tRNA data.
+Let us recreate function logos for the human tRNA data.
 
-   1. First we need to change into the example data directory. This directory contains all of the aligned tRNA sequences used for analysis in Kelly *et al.* 2020.
+1. First we need to change into the example data directory. This directory contains all of the aligned tRNA sequences used for analysis in Kelly *et al.* 2020.
     ```shell
     cd Kelly2020_data
     ```
    
-   2. To create single site and basepair RNA function logos for the human tRNA data we can use this command:
+2. To create single site and basepair RNA function logos for the human tRNA data we can use the command:
     ```shell
     tsfm -e NSB -x 1 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 HOMO/HOMO 
     ```
    
-   3. Let us break this command down so we can understand the options:
+    Let us break this command down so we can understand the options:
    
       a. The below `-e` option sets the entropy estimator to the Bayesian estimator NSB (which is the default). This can also be set to the older and more inaccurate Miller-Madow estimator with argument `Miller`.
         ```shell
@@ -87,7 +87,7 @@ tSFM may be used to analyze any protein or RNA families. As a quick introduction
         HOMO/HOMO
         ```
 	
-    4. For each clade on input, tSFM produces a text output file in
+3. For each clade on input, tSFM produces a text output file in
     the same directory where the program is run. This command produces
     the output file `HOMO_CIFs.txt`, more generally
     `<clade-prefix>_CIFs.txt`. The text output file has two sections, one for
@@ -123,24 +123,23 @@ tSFM may be used to analyze any protein or RNA families. As a quick introduction
        c. The values for the p-values and the significance are NA because we did not calculate p-values in the command described above. See the section `Statistical significance testing for CIFs` below, which describes options for p-value calculations.
          
    
-2. To avoid having to manually enter the names and prefixes for each of the parasite clades we can take a shortcut by using bash loops. The below command will loop through each folder and produce function logos for each clade in the running directory.
+4. To avoid having to manually enter the names and prefixes for each of the parasite clades we can take a shortcut by using bash loops. The below command will loop through each folder and produce function logos for each clade in the running directory.
 
 ```shell
 for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 $d${d%/}; done
 ```
 
-3. To create ID/KLD logos and the data table for the bubble plots in Kelly *et al.* 2020. for clades `HOMO` versus `MAJOR` we can run the below command.
+5. To create ID/KLD logos and the data table for the bubble plots in Kelly *et al.* 2020. for clades `HOMO` versus `MAJOR`, we can run the below command.
 Note that option --bubbles or -B requires designation of a specific clade to use as a reference clade (for gains and losses), using option --clade.
+
 ```shell
 tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B --clade HOMO MAJOR/MAJOR HOMO/HOMO
 ```
 
-	a. The text output of this command will be two files
+6. The text output of this command will be two files
         `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt`
         which can be used to create the bubble plots. Here "F" stands
-        for "Foreground" and "B" for "Background."
-
-	b.An example of a record from the output text file is shown
+        for "Foreground" and "B" for "Background." An example of a record from the output text file is shown
         below. This example shows at feature 1A of ID logo: the total
         height of stack-bar in column `gainbits`, and the height of
         symbol K in this stack-bar in column `gainfht`. Also, it shows
@@ -154,7 +153,7 @@ tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B
         |:-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
         |K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0 |
 
-# Statistical significance testing for CIFs
+# Statistical Significance Testing for CIFs
 tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
 1. To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
