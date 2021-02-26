@@ -43,14 +43,14 @@ Let us recreate function logos for the human tRNA data.
     Let us break this command down so we can understand the options:
    
       a. The below `-e` option sets the entropy estimator to the Bayesian estimator NSB (which is the default). This can also be set to the older and more inaccurate Miller-Madow estimator with argument `Miller`.
-        ```shell
-        -e NSB
-        ```
+         ```shell
+         -e NSB
+         ```
 	
       b. The `-x` option indicates the maximum sample size for the calculation of the exact entropy correction (larger sample sizes use the estimator set with the `-e` option). Correction values can feasibly be calculated for sample sizes up to ~16, but the NSB estimator is preferred except for the smallest sample sizes.
-        ```shell
-        -x 1
-        ```
+         ```shell
+         -x 1
+         ```
 	
       c. The `-c` option provides the path to the file containing the
       secondary structure annotation in cove format for RNA input
