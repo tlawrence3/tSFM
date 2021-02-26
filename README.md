@@ -129,13 +129,18 @@ for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo
 ```
 
 3. To create ID/KLD logos and the data table for the bubble plots in Kelly *et al.* 2020. for clades `HOMO` versus `MAJOR` we can run the below command.
-Note that option --bubbles or -B requires designation of a specific clade to use as the background clade, using option --clade. 
+Note that option --bubbles or -B requires designation of a specific clade to use as a reference clade (for gains and losses), using option --clade. 
 ```shell
 tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B --clade HOMO MAJOR/MAJOR HOMO/HOMO
 ```
 The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. Here "F" stands for "Foreground" and "B" for "Background."
-    
-An example of a record from the output text file is shown below. This
+
+
+        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
+        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: 
+        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
+
+An example of a record from the output text file is shown above. This
 example shows at feature 1A of ID logo: the total height of stack-bar
 in column `gainbits`, and the height of symbol K in this stack-bar in
 column `gainfht`. Also, it shows at feature 1A of KLD logo: the total
@@ -144,9 +149,6 @@ this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl`
 are set to 0 and will be filled later prior to creating the bubble
 plots by mapping each feature to the tRNA sprinzl coordinates.
 
-        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
-        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: 
-        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
 	
 # Statistical significance testing for CIFs
 tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
