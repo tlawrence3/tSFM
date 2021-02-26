@@ -133,9 +133,16 @@ Note that option --bubbles or -B requires designation of a specific clade to use
 ```shell
 tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B --clade HOMO MAJOR/MAJOR HOMO/HOMO
 ```
-    a. The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. Here "F" stands for "Foreground" and "B" for "Background."
+The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. Here "F" stands for "Foreground" and "B" for "Background."
     
-    b. An example of a record from the output text file is shown below. This example shows at feature 1A of ID logo: the total height of stack-bar in column `gainbits`, and the height of symbol K in this stack-bar in column `gainfht`. Also, it shows at feature 1A of KLD logo: the total height of stack-bar in column `convbits` and the height of symbol K in this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl` are set to 0 and will be filled later prior to creating the bubble plots by mapping each feature to the tRNA sprinzl coordinates.
+An example of a record from the output text file is shown below. This
+example shows at feature 1A of ID logo: the total height of stack-bar
+in column `gainbits`, and the height of symbol K in this stack-bar in
+column `gainfht`. Also, it shows at feature 1A of KLD logo: the total
+height of stack-bar in column `convbits` and the height of symbol K in
+this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl`
+are set to 0 and will be filled later prior to creating the bubble
+plots by mapping each feature to the tRNA sprinzl coordinates.
     
         aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
         :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-: 
