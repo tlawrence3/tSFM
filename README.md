@@ -28,7 +28,7 @@ tSFM may be used to analyze any protein or RNA families. As a quick introduction
 [Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.](https://doi.org/10.1371/journal.pntd.0007983)
 
 
-Let us recreate function logos for the human tRNA data.
+Let us recreate function logos for the human tRNA data provided by this study.
 
 1. First we need to change into the example data directory. This directory contains all of the aligned tRNA sequences used for analysis in Kelly *et al.* 2020.
     ```shell
@@ -43,14 +43,16 @@ Let us recreate function logos for the human tRNA data.
     Let us break this command down so we can understand the options:
    
       a. The below `-e` option sets the entropy estimator to the Bayesian estimator NSB (which is the default). This can also be set to the older and more inaccurate Miller-Madow estimator with argument `Miller`.
-         ```shell
-         -e NSB
-         ```
+
+      ```shell
+	 -e NSB
+      ```
 	
       b. The `-x` option indicates the maximum sample size for the calculation of the exact entropy correction (larger sample sizes use the estimator set with the `-e` option). Correction values can feasibly be calculated for sample sizes up to ~16, but the NSB estimator is preferred except for the smallest sample sizes.
-         ```shell
-         -x 1
-         ```
+
+      ```shell
+	   -x 1
+      ```
 	
       c. The `-c` option provides the path to the file containing the
       secondary structure annotation in cove format for RNA input
