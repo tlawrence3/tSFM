@@ -190,7 +190,7 @@ will set the number of permutations for significance test of CIFs to
 tSFM implements statistical significance testing for CIF divergences, specifically Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
 using permutation-based null distributions. P-values can be calculated
 by one of three algorithms called `ECDF`, `ECDF_pseudo`, and `GPD` chosen by the user through
-the option `-m`.
+the option `-m`. The default method is `GPD`.
 
 The algorithm `ECDF_pseudo` is the Monte Carlo permutation-based
 approximation calculated according to the formula (number of
@@ -205,41 +205,35 @@ there are fewer exceedances, the `ECDF_pseudo` formula is
 used. Algorithm `GPD` is implemented according to the
 "Peaks-over-Threshhold" (PoT) tail-approximation approach described as
 algorithm APPROXIMATE in the manuscript, which includes the `ECDF` and
-`ECDF_pseudo` algorithms as special cases. The default method is
-`GPD`. tSFM also calculates the confidence intervals for all the
-p-values except for the ones with zero exceedances calculated with
-pseudocounts.
+`ECDF_pseudo` algorithms as special cases.  tSFM also calculates the confidence intervals for all the
+p-values except for those calculated with pseudocounts.
 
 1. To calculate the significance of KLD divergence values with 100 permutations for the contrast of the human and MAJOR clades, we can choose among the three algorithms of GPD, ECDF and ECDF_pseudo as in the three examples below:
 
-    a. Method `ECDF_pseudo` 
+    a. Method `ECDF_pseudo`: 
     ```shell
     tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
     The `--kldperms` option will set the number of permutations to compute significance of KLD values to 100.
     
     
-    b. Method `ECDF`.
+    b. Method `ECDF`:
     ```shell
     tsfm --kldperms 100 --exceedances 5 -m ECDF --alpha 0.03 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
     The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Its default is 0.05.
     
     
-    c. Method `GPD`. In addition to the previous options, there are options `--targetperms` and `--peaks` specific to method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. 
+    c. Method `GPD`: 
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-        1. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
-       
-        1. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
-       
-        1. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
+    In addition to the previous options, there are options `--targetperms` and `--peaks` specific to method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
          
-    d. The output of KLD and ID logo significance from the examples
-   described above will be two text files named
-   `KLD_HOMO_MAJOR_stats.txt` and `KLD_MAJOR_HOMO_stats.txt`.  An
-   example of a record from the output text file is shown below.
+The output of KLD and ID logo significance from the examples described
+   above will be two text files named `KLD_HOMO_MAJOR_stats.txt` and
+   `KLD_MAJOR_HOMO_stats.txt`.  An example of a record from the output
+   text file is shown below.
 
     
     Coord|State|Statistic|Sample-Sz-Back|Sample-Sz-Fore|P-value|CI.Lower|CI.Upper|Adjusted-P|Permutations|P-Val-Method|GPD-shape|GPD-scale|Peaks|ADtest-P-val|Freqs-Back|Freqs-Fore
