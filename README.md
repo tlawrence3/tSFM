@@ -23,50 +23,91 @@ tsfm -h
 ```
 
 # Quickstart tutorial
-As a quick introduction to the functionality of of tSFM we will be utilizing the data from: 
+As a quick introduction to the functionality of tSFM we will be utilizing data from: 
 
 [Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.](https://doi.org/10.1371/journal.pntd.0007983)
 
-1. Recreating the function logos for the human tRNA data. This directory contains all of the aligned tRNA sequences used for analysis in Kelly et al. 2020.
 
-   1. First we need to change into the example data directory
+1. tSFM may be used to analyze any protein or RNA families. Let us recreate function logos for the human tRNA data.
+
+   1. First we need to change into the example data directory. This directory contains all of the aligned tRNA sequences used for analysis in Kelly *et al.* 2020.
     ```shell
     cd Kelly2020_data
     ```
    
-   2. To create single site and basepair function logos for the human tRNA data using the NSB entropy estimator we can use this command:
+   2. To create single site and basepair RNA function logos for the human tRNA data we can use this command:
     ```shell
-    tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 HOMO/HOMO
+    tsfm -e NSB -x 1 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 HOMO/HOMO 
     ```
    
-   3. Lets break this command down so we can understand the options 
+   3. Let us break this command down so we can understand the options:
    
-      a. The below `-e` option sets the entropy estimator to NSB. This can also be set to `Miller` to use the Miller-Madow estimator.
+      a. The below `-e` option sets the entropy estimator to the Bayesian estimator NSB (which is the default). This can also be set to the older and more inaccurate Miller-Madow estimator with argument `Miller`.
         ```shell
         -e NSB
         ```
-      b. The `-x` option indicates the maximum sample size for the calculation of the exact entropy correction. Correction values can be feasibly calculated for sample sizes up to ~16.
+      b. The `-x` option indicates the maximum sample size for the calculation of the exact entropy correction (larger sample sizes use the estimator set with the `-e` option). Correction values can feasibly be calculated for sample sizes up to ~16, but the NSB estimator is preferred except for the smallest sample sizes.
         ```shell
-        -x 5
+        -x 1
         ```
-      c. The `-c` option provides the path to the file containing the secondary structure annotation in cove format. This is required for basepair function logos and can be provided in `inferenal`, `cove`, or `text` format. These format as described in below in Appendix section. 
+      c. The `-c` option provides the path to the file containing the
+      secondary structure annotation in cove format for RNA input
+      files. This is required for basepair function logos and can be
+      provided in `infernal`, `cove`, or `text` formats. These formats
+      are described in below in the Appendix section. The secondary
+      structure annotation must conform to and encode the RNA
+      structural alignment common to the input alignment files and
+      usually must be prepared together with them.
         ```shell
         -c tRNA_L_skel_Leish.sites74.struct.cove
         ```
-      d. The below option indicates that we want graphic output of function logos. If we excluded this option, tSFM would only produce the text output file.
+      d. The below option indicates that we want graphical output of function logos in EPS format. If we excluded this option, tSFM would only produce the text output file with statistics on tRNA CIFs.
         ```shell
         --logo
         ```
-      c. The `-p` option indicates the number of processor cores we want to utilize during the calculations. Below we have indicated we want to use 10 cores.
+      e. The `-p` option indicates the number of processor cores we want to utilize during the calculations. Below we have indicated we want to use 10 cores.
         ```shell
         -p 10
         ```
-      e. Lastly, the below argument provides the path and prefix to the alignment files containing our tRNA sequences. For function/ID/KLD logos tSFM expects alignments partitioned into "taxa" by the prefix and functional class by the postfix. For example, in the `HOMO` directory, we have the alignement file `HOMO_A.aln`, which the prefix `HOMO` indicates the "taxa" and the postfix `_A` indicates the alignment file contains sequences for the Alanine functional class.  
+	
+      f. Lastly, the below argument provides the path and clade prefix
+      to the input alignment files containing our tRNA
+      sequences. Multiple sets of input files for multiple clades can
+      be processed at the same time by providing multiple
+      arguments. tSFM expects input alignment files in ClustalW
+      format, all named with a common prefix corresponding to their
+      clade followed by a distinct one-letter symbol for the
+      functional class of sequences in the alignment, separated by an
+      underscore character.  For example, in the `HOMO` directory, we
+      have multiple alignment files including `HOMO_A.aln`, in which
+      the prefix `HOMO` indicates the clade and the postfix `_A`
+      indicates the alignment file containing sequences for the
+      tRNA-Ala functional class.
         ```shell
         HOMO/HOMO
         ```
-   4. The text output of this command is `HOMO_CIFs.txt`, named as `<cladename>_CIFs.txt`. This file has two sections for paired-site features and single site features. An example of a record from  each of these two sections is shown below. 
-      a.  The record from the first table shows at feature `(0, 72)AU`: the number of sequences sharing this features in column `N`, the total hight of the stack (in bits) from function logo of state `AU` at coordinate `(0,72)` in column `info`, the p-value of the calculated info in column `p-value` and the significance of the pvalue in the next column (this column is names with the method used for multiple test correction for significance calculations). Also, the last column shows a list of information for each tRNA class at feature `(0, 72)AU` with the format `<class>:<symbol-height>:<pvalue>:<BH>` which refers to the tRNA functional class single letter symbol, the hight of the symbol within the stack, the pvalue and the significance, respectively. 
+	
+    4. For each clade on input, tSFM produces a text output file in
+    the same directory where the program is run. This command produces
+    the output file `HOMO_CIFs.txt`, more generally
+    `<clade-prefix>_CIFs.txt`. The text output file has two sections, one for
+    paired-site features and one for single-site features. An example
+    of a record from each of these two sections is shown below.
+
+       a.  The first record in the output file is for feature `(0,
+       72)AU`: the number of sequences sharing this features is in column
+       `N`, the total information (the total height of the stack (in bits) from function logo
+       of feature `AU` at coordinate `(0,72)`) is in column `info`, the
+       p-value of the calculated info is in column `p-value` and the
+       multiple-test corrected significance of the p-value is in the next column (this column is
+       named with the method used for multiple test correction for
+       significance calculations). Also, the last column shows a list
+       of information for each tRNA class at feature `(0, 72)AU` with
+       the format `<class>:<symbol-height>:<pvalue>:<BH>` which refers
+       to the tRNA functional class single letter symbol, the height of
+       the symbol within the stack, the p-value and the corrected significance value,
+       respectively.
+      
       
          #bp |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
          :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
@@ -74,22 +115,25 @@ As a quick introduction to the functionality of of tSFM we will be utilizing the
         
        b. The record for the single site is similar to the paired-site except that the first column is `ss` instead of `bp`.
          
-         #SS |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
+         #ss |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
          :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
          ss: |	0	| C	| 13|	4.131	|NA	|NA	|Y:1.000:NA:NA  
          
-       c. The records for the pvalue and the significance are set to NA because we did not calculate the pvalues in the command described above. Section `Statistical significance testing for CIFs` will describe the options required for pvalue calculations.
+       c. The values for the p-values and the significance are NA because we did not calculate p-values in the command described above. See the section `Statistical significance testing for CIFs` below, which describes options for p-value calculations.
          
    
-2. To avoid having to manually enter the command to calculate function logos for each of the parasite clades we can take a shortcut by using bash loops. The below command will loop through each folder and produce function logos for each clade.
+2. To avoid having to manually enter the names and prefixes for each of the parasite clades we can take a shortcut by using bash loops. The below command will loop through each folder and produce function logos for each clade in the running directory.
+
 ```shell
 for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 $d${d%/}; done
 ```
-3. To create ID/KLD logos and data table for bubble plots for clade `HOMO` versus `MAJOR` we can run the below command. Note that option --bubbles or -B requires designation of a specific clade to contrast against using option --clade. 
+
+3. To create ID/KLD logos and the data table for the bubble plots in Kelly *et al.* 2020. for clades `HOMO` versus `MAJOR` we can run the below command. Note that option --bubbles or -B requires designation of a specific clade to use as the background clade, using option --clade. 
 ```shell
 tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B --clade HOMO MAJOR/MAJOR HOMO/HOMO
 ```
-    a. The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. 
+
+    a. The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. Here "F" stands for "Foreground" and "B" for "Background."
     
     b. An example of a record from the output text file is shown below. This example shows at feature 1A of ID logo: the total height of stack-bar in column `gainbits`, and the height of symbol K in this stack-bar in column `gainfht`. Also, it shows at feature 1A of KLD logo: the total height of stack-bar in column `convbits` and the height of symbol K in this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl` are set to 0 and will be filled later prior to creating the bubble plots by mapping each feature to the tRNA sprinzl coordinates.
     
@@ -99,13 +143,13 @@ tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B
     
 
 # Statistical significance testing for CIFs
-tSFM implements statisitical significance testing using permutation based null distributions and corrects multiple testing using FDR and FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
+tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
 1. To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
 ```shell
 tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 100 HOMO/HOMO
 ```
-   The `-T` option will set the significance test for only CIF stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter- heights. the default is for both.
+   The `-T` option will set the significance test for only CIF total stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter-heights within stacks. The default is to calculate significance for both stacks and letters, but for many applications and comparisons, we recommend to test only `stacks`. The difference plays into the number of comparisons or tests requiring correction, where generally fewer is better. If one is interested in only which CIFs are significant, use `stacks.` If one wants to test specific functional associations, use `letters,` otherwise use `both`. Similarly, you can restrict CIF calculation and significance testing to only single-site features with the `--single` option or to only paired-site features with the `--nosingle` option.
     ```shell
     -T stacks 
     ```
@@ -114,10 +158,22 @@ tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 10
     -P 100
     ```
 
-# Statistical significance testing for CIFs Divergences (ID and KLD)
-tSFM implements statistical significance testing for CIFs divergences using permutation based null distributions. Pvalues can be calculated with three methods `GPD`, `ECDF` and `ECDF_pseudo` indicated by the option `-m`. `ECDF_pseudo` is the Monte Carlo permutation based approach calculated according to the formula (number of exceedances + 1)/(number of permutations + 1). `ECDF` is similar to the `ECDF_pseudo` except that when the number of permutation replicates that exceed the original stat exceeds the value of `--exceedances` the Pecdf will be calculated according to the formula (number of exceedances)/(number of permutations) and returned. Method `GPD` is implemented according to the "Peaks-over-Threshhold" (PoT) tail approximation approach described as algorithm APPROXIMATE in the manuscript. The default method is GPD. tSFM also calculates the confidence intervals for all the pvalues except for the ones with zero exceedances calculated with pseudo counts.
+# Statistical significance testing for CIF Divergences --- Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
+tSFM implements statistical significance testing for CIF divergences
+using permutation-based null distributions. P-values can be calculated
+by one of three algorithms called `ECDF`, `ECDF_pseudo`, and `GPD` chosen by the user through
+the option `-m`. The algorithm `ECDF_pseudo` is the Monte Carlo permutation-based
+approximation calculated according to the formula (number of exceedances +
+1)/(number of permutations + 1), where `exceedances` means the fraction of permutation replicates yielding statistics as large or larger than the observed divergence. Algorithm `ECDF` is similar to
+`ECDF_pseudo` except that when the number of permutation exceedances reaches the value of option `--exceedances` (with default 10) the
+p-value will be calculated according to the formula (number of
+exceedances)/(number of permutations) and returned, otherwise when there are fewer exceedances, the `ECDF_pseudo` formula is used. Algorithm `GPD` is
+implemented according to the "Peaks-over-Threshhold" (PoT) tail-approximation approach described as algorithm APPROXIMATE in the
+manuscript, which includes the `ECDF` and `ECDF_pseudo` algorithms as special cases. The default method is `GPD`. tSFM also calculates the
+confidence intervals for all the p-values except for the ones with zero
+exceedances calculated with pseudocounts.
 
-1. To calculate the significance of KLD-values with 100 permutations for clade humans versus clade MAJOR we can use three methods of GPD, ECDF and ECDF_pseudo described with three examples below:
+1. To calculate the significance of KLD divergence values with 100 permutations for the contrast of the human and MAJOR clades, we can choose among the three algorithms of GPD, ECDF and ECDF_pseudo as in the three examples below:
     1. Method `ECDF_pseudo` 
     ```shell
     tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
@@ -129,30 +185,30 @@ tSFM implements statistical significance testing for CIFs divergences using perm
     ```shell
     tsfm --kldperms 100 --exceedances 5 -m ECDF --alpha 0.03 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-        a. The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Default is 0.05.
+        a. The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Its default is 0.05.
     
     
-    3. Method `GPD`. In addition to the previous options, there are options `--targetperms` and `--peaks` that are created for method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. 
+    3. Method `GPD`. In addition to the previous options, there are options `--targetperms` and `--peaks` specific to method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. 
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
         a. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
        
-         b. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number. 
+         b. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
        
-         c. The default for option `peaks` is 250; However in the algorithm APROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
+         c. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
          
 2. The output of KLD and ID logo significance from the examples described above will be two text files named `KLD_HOMO_MAJOR_stats.txt` and `KLD_MAJOR_HOMO_stats.txt`. 
-    a. An example of a record from the output text file is shown below. This record shows the significance of the KLD statistic at feature 2U along with other information at this feature including: confidence interval in columns `CI.Lower` and `CI.Upper`, adjusted p-value in column `Adjusted-P`, number of permutations with which the pvalue is calculated in column `Permutations`, the method used for calculating the p-value in column `P-Val-Method` which can take the values: `p_ecdf`,  `p_ecdf_with_pseudo`, `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the pvalue is calculated with GPD, the parameters of GPD calculation will be shown in columns `GPD-shape`, `GPD-scale` and `Peaks`. Also the column `ADtest-P-val` shows the pvalue of the goodness of fit of the extreme permutation values to GPD distribution.      
+    a. An example of a record from the output text file is shown below. This record shows the significance of the KLD statistic at feature U2 along with other information at this feature including: confidence interval (with level determined by option `--alpha`) in columns `CI.Lower` and `CI.Upper`, multiple-test adjusted p-value in column `Adjusted-P`, number of permutations with which the p-value is calculated in column `Permutations`, the method used for calculating the p-value in column `P-Val-Method` which can take the values: `p_ecdf`,  `p_ecdf_with_pseudo`, `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the p-value is calculated with GPD, the parameters of the GPD calculation will be shown in columns `GPD-shape`, `GPD-scale` and `Peaks` describing the maximum likelihood estimated parameters of the GPD distribution and the number of peaks over threshold. Also the column `ADtest-P-val` shows the pvalue of the goodness-of-fit test of the extreme permutation values to the GPD distribution.      
     
         Coord|State|Statistic|Sample-Sz-Back|Sample-Sz-Fore|P-value|CI.Lower|CI.Upper|Adjusted-P|Permutations|P-Val-Method|GPD-shape|GPD-scale|Peaks|ADtest-P-val|Freqs-Back|Freqs-Fore
         :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-:| :-: | :-: |:-:
         2|U|0.75|30|72|2.46e-14|0.0|3.22e-05|7.07e-13|70.0|p_gpd|0.15|0.00037|13.0|0.97|D13E16Y1|D24E24N24s
 
     
-3. To calculate the significance of ID-values of single-site features only, for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations using the method GPD we can use this command: (note that running this command can take about 30 minutes.)
+3. To calculate the significance of ID-values of single-site features only, for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations using the method GPD we can use this command (note that running this command can take about 30 minutes.)
 ```shell
-tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 -s -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
+tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
 ```
     a) The option `--idperms` will set the number of permutations to compute significance of ID values to 100
     ```shell
@@ -169,9 +225,9 @@ tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 -s -e NSB 
     --targetperms 50
     ```
 
-4. To calculate the significance of KLD-values of paired features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
+4. To calculate the significance of KLD-values of paired-site features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
 ```shell
-tsfm --kldperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 -n -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
+tsfm --kldperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --nosingle -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
 ```
 
 # Usage
