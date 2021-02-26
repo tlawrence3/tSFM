@@ -62,17 +62,20 @@ Let us recreate function logos for the human tRNA data provided by this study.
       structure annotation must conform to and encode the RNA
       structural alignment common to the input alignment files and
       usually must be prepared together with them.
-        ```shell
+
+      ```shell
         -c tRNA_L_skel_Leish.sites74.struct.cove
         ```
 	
       d. The below option indicates that we want graphical output of function logos in EPS format. If we excluded this option, tSFM would only produce the text output file with statistics on tRNA CIFs.
-        ```shell
+
+      ```shell
         --logo
         ```
 	
       e. The `-p` option indicates the number of processor cores we want to utilize during the calculations. Below we have indicated we want to use 10 cores.
-        ```shell
+
+      ```shell
         -p 10
         ```
 	
@@ -89,7 +92,8 @@ Let us recreate function logos for the human tRNA data provided by this study.
       the prefix `HOMO` indicates the clade and the postfix `_A`
       indicates the alignment file containing sequences for the
       tRNA-Ala functional class.
-        ```shell
+
+      ```shell
         HOMO/HOMO
         ```
 	
