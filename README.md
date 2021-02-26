@@ -136,9 +136,9 @@ tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B
 The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. Here "F" stands for "Foreground" and "B" for "Background."
 
 
-        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
-        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: 
-        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
+        |aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl |
+        |:-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+        |K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0 |
 
 An example of a record from the output text file is shown above. This
 example shows at feature 1A of ID logo: the total height of stack-bar
