@@ -22,13 +22,13 @@ python setup.py install
 tsfm -h
 ```
 
-# Quickstart tutorial
-As a quick introduction to the functionality of tSFM we will be utilizing data from: 
+# Quickstart Tutorial
+tSFM may be used to analyze any protein or RNA families. As a quick introduction to the functionality of tSFM we will be utilizing data from: 
 
 [Kelly, P., F. Hadi-Nezhad, D. Y. Liu, T. J. Lawrence, R. G. Linington, M. Ibba, and D. H. Ardell. 2020. Targeting tRNA-synthetase interactions towards novel therapeutic discovery against eukaryotic pathogens. PLOS Neglected Tropical Diseases 14: e0007983.](https://doi.org/10.1371/journal.pntd.0007983)
 
 
-1. tSFM may be used to analyze any protein or RNA families. Let us recreate function logos for the human tRNA data.
+1. Let us recreate function logos for the human tRNA data.
 
    1. First we need to change into the example data directory. This directory contains all of the aligned tRNA sequences used for analysis in Kelly *et al.* 2020.
     ```shell
@@ -128,11 +128,11 @@ As a quick introduction to the functionality of tSFM we will be utilizing data f
 for d in */; do tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -p 10 $d${d%/}; done
 ```
 
-3. To create ID/KLD logos and the data table for the bubble plots in Kelly *et al.* 2020. for clades `HOMO` versus `MAJOR` we can run the below command. Note that option --bubbles or -B requires designation of a specific clade to use as the background clade, using option --clade. 
+3. To create ID/KLD logos and the data table for the bubble plots in Kelly *et al.* 2020. for clades `HOMO` versus `MAJOR` we can run the below command.
+Note that option --bubbles or -B requires designation of a specific clade to use as the background clade, using option --clade. 
 ```shell
 tsfm -c tRNA_L_skel_Leish.sites74.struct.cove -e MM -x 5 --idlogos --kldlogos -B --clade HOMO MAJOR/MAJOR HOMO/HOMO
 ```
-
     a. The text output of this command will be two files `F_HOMO_B_MAJOR_Table.txt` and `F_MAJOR_B_HOMO_Table.txt` which can be used to create the bubble plots. Here "F" stands for "Foreground" and "B" for "Background."
     
     b. An example of a record from the output text file is shown below. This example shows at feature 1A of ID logo: the total height of stack-bar in column `gainbits`, and the height of symbol K in this stack-bar in column `gainfht`. Also, it shows at feature 1A of KLD logo: the total height of stack-bar in column `convbits` and the height of symbol K in this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl` are set to 0 and will be filled later prior to creating the bubble plots by mapping each feature to the tRNA sprinzl coordinates.
