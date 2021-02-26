@@ -174,7 +174,7 @@ Let us recreate function logos for the human tRNA data provided by this study.
 # Statistical Significance Testing for CIFs
 tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
-To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
+To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use the command:
 ```shell
 tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 100 HOMO/HOMO
 ```
@@ -187,7 +187,7 @@ will set the number of permutations for significance test of CIFs to
 100.
 
 # Statistical Significance Testing for CIF Divergences 
-tSFM implements statistical significance testing for CIF divergences, specifically Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
+tSFM implements statistical significance testing for CIF divergences, specifically Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos
 using permutation-based null distributions. P-values can be calculated
 by one of three algorithms called `ECDF`, `ECDF_pseudo`, and `GPD` chosen by the user through
 the option `-m`. The default method is `GPD`.
@@ -210,43 +210,43 @@ p-values except for those calculated with pseudocounts.
 
 To calculate the significance of KLD divergence values with 100
 permutations for the contrast of the human and MAJOR clades, we can
-choose among the three algorithms of GPD, ECDF and ECDF_pseudo as in
+specify which algorithm to use as demonstrated in
 the three examples below:
 
 1. Method `ECDF_pseudo`: 
     ```shell
     tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-    The `--kldperms` option will set the number of permutations to compute significance of KLD values to 100.
+    The `--kldperms` option will set the number of permutations to compute the significance of KLD values to 100. More than one input clade must be specified.
     
     
 2. Method `ECDF`:
     ```shell
-    tsfm --kldperms 100 --exceedances 5 -m ECDF --alpha 0.03 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
+    tsfm --kldperms 100  -m ECDF --alpha 0.01 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-    The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Its default is 0.05.
+    The `--alpha` option will set the significance level to compute the confidence interval of p-values. Its default is 0.05.
     
     
 3. Method `GPD`: 
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-
-In addition to the previous options, there are options `--targetperms`
-and `--peaks` specific to method `GPD`. Options `targetperms` and
-`peaks` are referred to as variables T and U, respectively in the
-algorithm APPROXIMATE. Also the option `exceedances` is referred to as
-parameter S and is used for both methods `ECDF` and `GPD`. The default
-value for option `targetperms` is 500. The value of the option
-`targetperms` should be less than the maximum permutation number
-indicated with option `--kldperms` or `--idperms`. The default value
-of `exceedances` is 10. This number also needs to be less than the
-maximum permutation number and need not be (much) larger than 10,
-which is a standard rule-of-thumb for estimation of binomial
-proportions. The default for option `peaks` is 250; However in the
-algorithm APPROXIMATE the peak will be set to the minimum of 250 and
-one-third of the permutations. The value of option peaks needs to be
-less than the maximum permutation number.
+    In addition to the previous options, there are options
+    `--targetperms` and `--peaks` specific to method `GPD`. Options
+    `targetperms` and `peaks` are referred to as variables T and U,
+    respectively in the algorithm APPROXIMATE in the tSFM paper. Also,
+    the option `exceedances` is referred to as parameter S and is used
+    for both methods `ECDF` and `GPD`. The default value for option
+    `targetperms` is 500. The value of the option `targetperms` should
+    be less than the maximum permutation number indicated with option
+    `--kldperms` or `--idperms`. The default value of `exceedances` is
+    10. This number also needs to be less than the maximum permutation
+    number and need not be (much) larger than 10, which is a standard
+    rule-of-thumb for estimation of binomial proportions. The default
+    for option `peaks` is 250; In the algorithm APPROXIMATE
+    the number of peaks over threshold will be set to the minimum of this value and one-third of the
+    permutations. The value of option peaks needs to be less than the
+    maximum permutation number.
          
 The output of KLD and ID logo significance from the examples described
 above will be two text files named `KLD_HOMO_MAJOR_stats.txt` and
@@ -276,7 +276,9 @@ To calculate the significance of ID-values of single-site features
 only, for clade HOMO against clades MAJOR and ENRIETTII with 100
 permutations using the method GPD we can use this command (note that
 running this command can take about 30 minutes.)
-```shell tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII ```
+```shell
+tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
+```
 
 The option `--idperms` will set the number of permutations to compute significance of ID values to 100
     ```shell
