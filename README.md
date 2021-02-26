@@ -118,7 +118,14 @@ tSFM may be used to analyze any protein or RNA families. As a quick introduction
          #ss |	coord	| state	| N |	info	|p-value|	BH|class:height:p-value:BH
          :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: 
          ss: |	0	| C	| 13|	4.131	|NA	|NA	|Y:1.000:NA:NA  
-         
+
+
+
+        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
+        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: 
+        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
+	
+
        c. The values for the p-values and the significance are NA because we did not calculate p-values in the command described above. See the section `Statistical significance testing for CIFs` below, which describes options for p-value calculations.
          
    
@@ -144,10 +151,6 @@ this stack-bar in column `convfht`. The columns `x`, `y` and `sprinzl`
 are set to 0 and will be filled later prior to creating the bubble
 plots by mapping each feature to the tRNA sprinzl coordinates.
 
-        aa | coord | state | fbits | fht | gainbits | gainfht | lossbits | lossfht | convbits | convfht | x | y | sprinzl 
-        :-: | :-: | :-: | :--: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: 
-        K | 1 | A | 2.7602 | 0.0 |	0.7285 |	0.0 |	0.0	| 0.0	| 0.2913|	0.0	|0.0|	0.0|	0.0
-	
 # Statistical significance testing for CIFs
 tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
