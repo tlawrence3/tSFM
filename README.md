@@ -174,17 +174,17 @@ Let us recreate function logos for the human tRNA data provided by this study.
 # Statistical Significance Testing for CIFs
 tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
 
-1. To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
+To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use this command:
 ```shell
 tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 100 HOMO/HOMO
 ```
-   The `-T` option will set the significance test for only CIF total stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter-heights within stacks. The default is to calculate significance for both stacks and letters, but for many applications and comparisons, we recommend to test only `stacks`. The difference plays into the number of comparisons or tests requiring correction, where generally fewer is better. If one is interested in only which CIFs are significant, use `stacks.` If one wants to test specific functional associations, use `letters,` otherwise use `both`.
+The `-T` option will set the significance test for only CIF total stack-heights. This can also be set to `letters` to calculate the significance for only CIF letter-heights within stacks. The default is to calculate significance for both stacks and letters, but for many applications and comparisons, we recommend to test only `stacks`. The difference plays into the number of comparisons or tests requiring correction, where generally fewer is better. If one is interested in only which CIFs are significant, use `stacks.` If one wants to test specific functional associations, use `letters,` otherwise use `both`.
 
-   Similarly, you can restrict CIF calculation and significance
-   testing to only single-site features with the `--single` option or
-   to only paired-site features with the `--nosingle` option. The `-P`
-   option will set the number of permutations for significance test of
-   CIFs to 100.
+Similarly, you can restrict CIF calculation and significance testing
+to only single-site features with the `--single` option or to only
+paired-site features with the `--nosingle` option. The `-P` option
+will set the number of permutations for significance test of CIFs to
+100.
 
 # Statistical Significance Testing for CIF Divergences 
 tSFM implements statistical significance testing for CIF divergences, specifically Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
@@ -230,21 +230,39 @@ pseudocounts.
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-     1. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
+        1. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
        
-     1. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
+        1. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
        
-     1. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
+        1. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
          
-2. The output of KLD and ID logo significance from the examples described above will be two text files named `KLD_HOMO_MAJOR_stats.txt` and `KLD_MAJOR_HOMO_stats.txt`. 
-   An example of a record from the output text file is shown below. This record shows the significance of the KLD statistic at feature U2 along with other information at this feature including: confidence interval (with level determined by option `--alpha`) in columns `CI.Lower` and `CI.Upper`, multiple-test adjusted p-value in column `Adjusted-P`, number of permutations with which the p-value is calculated in column `Permutations`, the method used for calculating the p-value in column `P-Val-Method` which can take the values: `p_ecdf`,  `p_ecdf_with_pseudo`, `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the p-value is calculated with GPD, the parameters of the GPD calculation will be shown in columns `GPD-shape`, `GPD-scale` and `Peaks` describing the maximum likelihood estimated parameters of the GPD distribution and the number of peaks over threshold. Also the column `ADtest-P-val` shows the pvalue of the goodness-of-fit test of the extreme permutation values to the GPD distribution.      
+    d. The output of KLD and ID logo significance from the examples
+   described above will be two text files named
+   `KLD_HOMO_MAJOR_stats.txt` and `KLD_MAJOR_HOMO_stats.txt`.  An
+   example of a record from the output text file is shown below.
+
     
     Coord|State|Statistic|Sample-Sz-Back|Sample-Sz-Fore|P-value|CI.Lower|CI.Upper|Adjusted-P|Permutations|P-Val-Method|GPD-shape|GPD-scale|Peaks|ADtest-P-val|Freqs-Back|Freqs-Fore
     :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-:| :-: | :-: |:-:
     2|U|0.75|30|72|2.46e-14|0.0|3.22e-05|7.07e-13|70.0|p_gpd|0.15|0.00037|13.0|0.97|D13E16Y1|D24E24N24s
 
-    
-3. To calculate the significance of ID-values of single-site features only, for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations using the method GPD we can use this command (note that running this command can take about 30 minutes.)
+    This record shows the significance of the KLD statistic at feature
+    U2 along with other information at this feature including:
+    confidence interval (with level determined by option `--alpha`) in
+    columns `CI.Lower` and `CI.Upper`, multiple-test adjusted p-value
+    in column `Adjusted-P`, number of permutations with which the
+    p-value is calculated in column `Permutations`, the method used
+    for calculating the p-value in column `P-Val-Method` which can
+    take the values: `p_ecdf`, `p_ecdf_with_pseudo`,
+    `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the p-value is
+    calculated with GPD, the parameters of the GPD calculation will be
+    shown in columns `GPD-shape`, `GPD-scale` and `Peaks` describing
+    the maximum likelihood estimated parameters of the GPD
+    distribution and the number of peaks over threshold. Also the
+    column `ADtest-P-val` shows the pvalue of the goodness-of-fit test
+    of the extreme permutation values to the GPD distribution.
+
+2. To calculate the significance of ID-values of single-site features only, for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations using the method GPD we can use this command (note that running this command can take about 30 minutes.)
 ```shell
 tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
 ```
@@ -264,7 +282,7 @@ tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -
     --targetperms 50
     ```
 
-4. To calculate the significance of KLD-values of paired-site features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
+3. To calculate the significance of KLD-values of paired-site features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
 ```shell
 tsfm --kldperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --nosingle -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
 ```
