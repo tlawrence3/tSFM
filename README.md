@@ -248,12 +248,13 @@ pseudocounts.
 ```shell
 tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
 ```
+
     a. The option `--idperms` will set the number of permutations to compute significance of ID values to 100
     ```shell
     --idperms 100
     ```
    
-    b. The option `--clade` will contrast two clades MAJOR and ENRIETTII against HOMO
+    b. The option `--clade` will contrast two clades MAJOR and ENRIETTII against HOMO rather than all-against-all:
     ```shell
     --clade HOMO
     ```
