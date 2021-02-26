@@ -187,8 +187,8 @@ tsfm -e NSB -x 5 -c tRNA_L_skel_Leish.sites74.struct.cove --logo -T stacks -P 10
     -P 100
     ```
 
-# Statistical significance testing for CIF Divergences --- Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
-tSFM implements statistical significance testing for CIF divergences
+# Statistical Significance Testing for CIF Divergences 
+tSFM implements statistical significance testing for CIF divergences, specifically Information Difference (ID) logos and Kullback-Leibler Divergence (KLD) logos.
 using permutation-based null distributions. P-values can be calculated
 by one of three algorithms called `ECDF`, `ECDF_pseudo`, and `GPD` chosen by the user through
 the option `-m`. The algorithm `ECDF_pseudo` is the Monte Carlo permutation-based
