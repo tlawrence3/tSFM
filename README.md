@@ -203,36 +203,36 @@ confidence intervals for all the p-values except for the ones with zero
 exceedances calculated with pseudocounts.
 
 1. To calculate the significance of KLD divergence values with 100 permutations for the contrast of the human and MAJOR clades, we can choose among the three algorithms of GPD, ECDF and ECDF_pseudo as in the three examples below:
-    1. Method `ECDF_pseudo` 
+    a. Method `ECDF_pseudo` 
     ```shell
     tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
     The `--kldperms` option will set the number of permutations to compute significance of KLD values to 100.
     
     
-    2. Method `ECDF`.
+    b. Method `ECDF`.
     ```shell
     tsfm --kldperms 100 --exceedances 5 -m ECDF --alpha 0.03 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
     The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Its default is 0.05.
     
     
-    3. Method `GPD`. In addition to the previous options, there are options `--targetperms` and `--peaks` specific to method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. 
+    c. Method `GPD`. In addition to the previous options, there are options `--targetperms` and `--peaks` specific to method `GPD`. Options `targetperms` and `peaks` are referred to as variables T and U, respectively in the algorithm APPROXIMATE. Also the option `exceedances` is referred to as parameter S and is used for both methods `ECDF` and `GPD`. 
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
-         a. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
+     i. The default value for option `targetperms` is 500. The value of the option `targetperms` should be less than the maximum permutation number indicated with option `--kldperms` or `--idperms`.
        
-         b. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
+     ii. The default value of `exceedances` is 10. This number also needs to be less than the maximum permutation number and need not be (much) larger than 10, which is a standard rule-of-thumb for estimation of binomial proportions.
        
-         c. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
+     iii. The default for option `peaks` is 250; However in the algorithm APPROXIMATE the peak will be set to the minimum of 250 and one-third of the permutations. The value of option peaks needs to be less than the maximum permutation number.
          
 2. The output of KLD and ID logo significance from the examples described above will be two text files named `KLD_HOMO_MAJOR_stats.txt` and `KLD_MAJOR_HOMO_stats.txt`. 
-    a. An example of a record from the output text file is shown below. This record shows the significance of the KLD statistic at feature U2 along with other information at this feature including: confidence interval (with level determined by option `--alpha`) in columns `CI.Lower` and `CI.Upper`, multiple-test adjusted p-value in column `Adjusted-P`, number of permutations with which the p-value is calculated in column `Permutations`, the method used for calculating the p-value in column `P-Val-Method` which can take the values: `p_ecdf`,  `p_ecdf_with_pseudo`, `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the p-value is calculated with GPD, the parameters of the GPD calculation will be shown in columns `GPD-shape`, `GPD-scale` and `Peaks` describing the maximum likelihood estimated parameters of the GPD distribution and the number of peaks over threshold. Also the column `ADtest-P-val` shows the pvalue of the goodness-of-fit test of the extreme permutation values to the GPD distribution.      
+   An example of a record from the output text file is shown below. This record shows the significance of the KLD statistic at feature U2 along with other information at this feature including: confidence interval (with level determined by option `--alpha`) in columns `CI.Lower` and `CI.Upper`, multiple-test adjusted p-value in column `Adjusted-P`, number of permutations with which the p-value is calculated in column `Permutations`, the method used for calculating the p-value in column `P-Val-Method` which can take the values: `p_ecdf`,  `p_ecdf_with_pseudo`, `p_ecdf_with_pseudo (p_gpd=0)` and `p_gpd`. If the p-value is calculated with GPD, the parameters of the GPD calculation will be shown in columns `GPD-shape`, `GPD-scale` and `Peaks` describing the maximum likelihood estimated parameters of the GPD distribution and the number of peaks over threshold. Also the column `ADtest-P-val` shows the pvalue of the goodness-of-fit test of the extreme permutation values to the GPD distribution.      
     
-        Coord|State|Statistic|Sample-Sz-Back|Sample-Sz-Fore|P-value|CI.Lower|CI.Upper|Adjusted-P|Permutations|P-Val-Method|GPD-shape|GPD-scale|Peaks|ADtest-P-val|Freqs-Back|Freqs-Fore
-        :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-:| :-: | :-: |:-:
-        2|U|0.75|30|72|2.46e-14|0.0|3.22e-05|7.07e-13|70.0|p_gpd|0.15|0.00037|13.0|0.97|D13E16Y1|D24E24N24s
+    Coord|State|Statistic|Sample-Sz-Back|Sample-Sz-Fore|P-value|CI.Lower|CI.Upper|Adjusted-P|Permutations|P-Val-Method|GPD-shape|GPD-scale|Peaks|ADtest-P-val|Freqs-Back|Freqs-Fore
+    :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |:-:| :-: | :-: |:-:
+    2|U|0.75|30|72|2.46e-14|0.0|3.22e-05|7.07e-13|70.0|p_gpd|0.15|0.00037|13.0|0.97|D13E16Y1|D24E24N24s
 
     
 3. To calculate the significance of ID-values of single-site features only, for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations using the method GPD we can use this command (note that running this command can take about 30 minutes.)
@@ -259,7 +259,7 @@ tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -
 tsfm --kldperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --nosingle -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
 ```
 
-# Usage
+# Usage and Options to tSFM
 ```
 file_prefix             One or more paths/file-prefix strings corresponding to
                         sets of input files compiled for a single clade in
@@ -364,7 +364,7 @@ optional arguments:
 
 ```
 
-# Recreating the supplemental figure from the tSFM publication
+# Recreating the Figure and Supplemental Figures from the tSFM Publication
 1. Creating the supplemental figure <KLD-Significance_ENRIETTII_MAJOR.eps>
     
     1. Create the table of statistics for KLD logos of clade `ENRIETTII` vs `HOMO` using the pvalue-calculation-method `GPD` with maximum permutation number = 10000, target permutation number 500, and calculate the Confidence Interval of p-values with 5% significance level. The running time on an Intel Core i7 Dell XPS was ~34 minutes. The outputs are two text files: KLD_ENRIETTII_HOMO_stats.txt and KLD_HOMO_ENRIETTII_stats.txt 
@@ -437,7 +437,7 @@ optional arguments:
 
 
 
-2. Creating the supplemental figure <ID-Significance_ENRIETTII_MAJOR.eps>
+2. Creating the Supplemental Figure <ID-Significance_ENRIETTII_MAJOR.eps>
 
     1. Create the table of statistics for ID logos of clade `MAJOR` vs `HOMO` using the pvalue-calculation-method `GPD` with maximum permutation number = 10000, target permutation number 500, and calculate the Confidence Interval of p-values with 5% significance level. This will use the default entropy estimator NSB with default Maximum conditional sample size 5. The running time on an Intel Core i7 Dell XPS was ~4.76 hrs. The outputs are two text files: ID_MAJOR_HOMO_stats.txt and ID_HOMO_MAJOR_stats.txt
     ```shell
