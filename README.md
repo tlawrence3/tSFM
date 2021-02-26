@@ -172,7 +172,17 @@ Let us recreate function logos for the human tRNA data provided by this study.
    the tRNA sprinzl coordinates.
 
 # Statistical Significance Testing for CIFs
-tSFM implements statisitical significance testing for CIFs and function logos using permutation-based null distributions and corrects for multiple tests using multiple user-determined FDR or FWER methods. The `-P` option indicates the number of permutations generated for building the null distributions and the `-C` option indicates the method for multiple testing correction.    
+
+tSFM implements statisitical significance testing for CIFs and
+function logos using permutation-based null distributions and corrects
+for multiple tests using multiple user-determined FDR or FWER
+methods. The `-P` option indicates the number of permutations
+generated for building the null distributions and the `-C` option
+indicates the method for multiple testing correction. Options include
+the Bonferroni, Sidak, Holm, Holm-Sidak, Simes-Hochberg, or Hommel
+methods for FWER control, or the Benjamini-Hochberg,
+Benjamini-Yekutieli or Gavrilov-Benjamini-Sarkar methods for FDR
+control. The default option is `BH` for the Benjamini-Hochberg FDR.
 
 To calculate the significance of CIFs stack-heights with 100 permutations for the humans tRNA data using the NSB entropy estimator we can use the command:
 ```shell
