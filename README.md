@@ -208,23 +208,26 @@ algorithm APPROXIMATE in the manuscript, which includes the `ECDF` and
 `ECDF_pseudo` algorithms as special cases.  tSFM also calculates the confidence intervals for all the
 p-values except for those calculated with pseudocounts.
 
-1. To calculate the significance of KLD divergence values with 100 permutations for the contrast of the human and MAJOR clades, we can choose among the three algorithms of GPD, ECDF and ECDF_pseudo as in the three examples below:
+To calculate the significance of KLD divergence values with 100
+permutations for the contrast of the human and MAJOR clades, we can
+choose among the three algorithms of GPD, ECDF and ECDF_pseudo as in
+the three examples below:
 
-    a. Method `ECDF_pseudo`: 
+1. Method `ECDF_pseudo`: 
     ```shell
     tsfm --kldperms 100 -m ECDF_pseudo -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
     The `--kldperms` option will set the number of permutations to compute significance of KLD values to 100.
     
     
-    b. Method `ECDF`:
+2. Method `ECDF`:
     ```shell
     tsfm --kldperms 100 --exceedances 5 -m ECDF --alpha 0.03 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
     The `--alpha` option will set the significance level to compute the confidence interval of pvalues. Its default is 0.05.
     
     
-    c. Method `GPD`: 
+3. Method `GPD`: 
     ```shell
     tsfm --kldperms 100 -m GPD --targetperms 70 --exceedances 5 --peaks 50 -c tRNA_L_skel_Leish.sites74.struct.cove HOMO/HOMO MAJOR/MAJOR
     ```
@@ -269,27 +272,28 @@ GPD distribution and the number of peaks over threshold. Also the
 column `ADtest-P-val` shows the pvalue of the goodness-of-fit test of
 the extreme permutation values to the GPD distribution.
 
-2. To calculate the significance of ID-values of single-site features only, for clade HOMO against clades MAJOR and ENRIETTII with 100 permutations using the method GPD we can use this command (note that running this command can take about 30 minutes.)
-```shell
-tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII
-```
+To calculate the significance of ID-values of single-site features
+only, for clade HOMO against clades MAJOR and ENRIETTII with 100
+permutations using the method GPD we can use this command (note that
+running this command can take about 30 minutes.)
+```shell tsfm --idperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --single -e NSB -x 5 --clade HOMO HOMO/HOMO MAJOR/MAJOR ENRIETTII/ENRIETTII ```
 
-    a. The option `--idperms` will set the number of permutations to compute significance of ID values to 100
+The option `--idperms` will set the number of permutations to compute significance of ID values to 100
     ```shell
     --idperms 100
     ```
    
-    b. The option `--clade` will contrast two clades MAJOR and ENRIETTII against HOMO rather than all-against-all:
+The option `--clade` will contrast two clades MAJOR and ENRIETTII against HOMO rather than all-against-all:
     ```shell
     --clade HOMO
     ```
    
-    c. The option `--targetperms` will set the permutation number at which we attempt to fit the extreme permutation values to GPD.
+The option `--targetperms` will set the permutation number at which we attempt to fit the extreme permutation values to GPD.
     ```shell
     --targetperms 50
     ```
 
-3. To calculate the significance of KLD-values of paired-site features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
+To calculate the significance of KLD-values of paired-site features only, for clade HOMO against clades MAJOR with 100 permutations using the method GPD use the command below. The consensus secondary structure of tRNAs indicated by option -c is required  to calculate functional information of base-pair features. 
 ```shell
 tsfm --kldperms 100 -m GPD --targetperms 50 --exceedances 5 --peaks 50 --nosingle -c tRNA_L_skel_Leish.sites74.struct.cove --clade HOMO HOMO/HOMO MAJOR/MAJOR
 ```
