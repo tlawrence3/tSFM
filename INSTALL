@@ -1,0 +1,16 @@
+<Install PyEnv>
+<Inside tSFM directory, do:>
+pyenv install 3.8
+pyenv local 3.8.20
+pip install uv
+uv sync
+python setup.py install
+(if necessary:
+ pip install numpy
+ pip install statsmodels
+ pip install cython mpmath
+)
+python setup.py install
+tsfm --help
+
+      

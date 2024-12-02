@@ -1,0 +1,23 @@
+[project]
+name = "tsfm"
+version = "1.1"
+description = "tRNA Structure-Function Mapper"
+readme = "README.md"
+
+requires-python = "==3.8.20"
+
+dependencies = [
+"numpy",
+"pandas",
+"cython", 
+"pytest-runner", 
+"pytest", 
+"scipy", 
+"patsy", 
+"mpmath", 
+"statsmodels"
+]
+
+[project.optional-dependencies]
+extra = [
+]

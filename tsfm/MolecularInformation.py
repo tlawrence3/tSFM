@@ -121,7 +121,7 @@ class DistanceCalculator:
         functionDict["bits"] = np.zeros(len(self.featureSet), )
 
         for result in ResultsDict:
-            pandasDict[result] = pd.DataFrame(functionDict, index=self.featureSet)
+            pandasDict[result] = pd.DataFrame(functionDict, index=list(self.featureSet))
             for coord in ResultsDict[result].basepairs:
                 if (coord in ResultsDict[result].info):
                     for pairtype in [pair for pair in ResultsDict[result].info[coord] if not "-" in pair]:
@@ -186,8 +186,10 @@ class DistanceCalculator:
                 if (row['bits'] == 0 and pandasDict[pair[1]].loc[i, 'bits'] == 0):
                     continue
                 else:
-                    distance += self.rJSD_distance(row.drop('bits').as_matrix(),
-                                                   pandasDict[pair[1]].loc[i,].drop('bits').as_matrix(),
+                    #import pdb;
+                    #pdb.set_trace()
+                    distance += self.rJSD_distance(row.drop('bits').to_numpy(),
+                                                   pandasDict[pair[1]].loc[i,].drop('bits').to_numpy(),
                                                    row['bits'], pandasDict[pair[1]].loc[i, 'bits'])
 
             jsdDistMatrix.loc[pair[0], pair[1]] = distance
